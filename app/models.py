@@ -13,7 +13,21 @@ class BaseModel(models.Model):
             Retorna:
                 - dict: Dicionário com os campos do modelo.
         """
-        return {field.name: getattr(self, field.name) for field in self._meta.fields}
+        data = {}
+        
+        for field in self._meta.fields:
+            if isinstance(field, models.ForeignKey):
+                related_instance = getattr(self, field.name)
+                if related_instance:
+                    data[field.name] = related_instance.dict()
+            elif isinstance(field, models.ManyToManyField):
+                related_instances = getattr(self, field.name).all()
+                data[field.name] = [instance.dict() for instance in related_instances]
+            else:
+                data[field.name] = getattr(self, field.name)
+
+        return data
+
 
     class Meta:
         abstract = True

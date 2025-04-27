@@ -26,3 +26,18 @@ class PayerController:
         payer_data['user_id'] = user.pk
         
         return PayerRepository.create(payer_data)
+
+    @classmethod
+    def update(cls, payer_id: int, payer_schema: PayerSchema.PatchIn) -> Payer:
+        """
+        Atualiza um pagador existente.
+
+        Parâmetros:
+            - payer_id: ID do pagador a ser atualizado.
+            - payer_schema: Schema do pagador a ser atualizado.
+
+        Retorna:
+            - Payer: Pagador atualizado.
+        """
+        payer = PayerRepository.get(pk=payer_id)
+        return PayerRepository.update(payer, **payer_schema.model_dump(exclude_none=True))

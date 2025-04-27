@@ -9,8 +9,8 @@ def test_create_payer(client: Client):
         'cpf': '13469282072',
     }
 
-    response = client.post('/api/payer/', data=data, content_type='application/json')  # Usando o client do Django
-    assert response.status_code == 201  # Verificando se o status code é 201
+    response = client.post('/api/payer/', data=data, content_type='application/json')
+    assert response.status_code == 201
 
     # Teardown
     Payer.objects.filter(name='teste').delete()

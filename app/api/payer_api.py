@@ -21,4 +21,8 @@ def create_payer(request: WSGIRequest, data: PayerSchema.In):
     return new_payer, 201
 
 
-
+@payer_router.patch('/{int:payer_id}', response={200: PayerSchema.Out})
+@endpoint
+def edit_payer(request: WSGIRequest, payer_id: int, data: PayerSchema.PatchIn):
+    payer: Payer = PayerController.update(payer_id, data)
+    return payer, 200
