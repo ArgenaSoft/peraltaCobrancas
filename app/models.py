@@ -1,13 +1,25 @@
 from django.db import models
 from django.contrib.auth.models import AbstractBaseUser
 
+
 class BaseModel(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
+    def dict(self):
+        """
+            Retorna um dicionário com os campos do modelo.
+
+            Retorna:
+                - dict: Dicionário com os campos do modelo.
+        """
+        return {field.name: getattr(self, field.name) for field in self._meta.fields}
+
     class Meta:
         abstract = True
 
+
+# Usuário logável
 class User(AbstractBaseUser, BaseModel):
     """
         Representa um Usuário que pode se logar no sistema
@@ -18,21 +30,13 @@ class User(AbstractBaseUser, BaseModel):
             - staff_level: Nível de acesso do Usuário (Funcionário ou
             Administrador).
     """
-    POSSIBLE_STAFF_LEVELS = (
-        ('staff', 'Funcionário'),
-        ('admin', 'Administrador'),
-    )
-
     USERNAME_FIELD = 'cpf'
 
     cpf = models.CharField(max_length=11, unique=True)
     is_active = models.BooleanField(default=True)
-    staff_level = models.CharField(
-        max_length=10,
-        choices=POSSIBLE_STAFF_LEVELS,
-        default='staff',)
 
 
+# Credor
 class Creditor(BaseModel):
     """
         Representa um Credor.
@@ -48,6 +52,7 @@ class Creditor(BaseModel):
     reissue_margin = models.SmallIntegerField()
 
 
+# Pagador
 class Payer(BaseModel):
     """
         Representa um Pagador.
@@ -62,6 +67,7 @@ class Payer(BaseModel):
     phone = models.CharField(max_length=20)
 
 
+# Acordo
 class Agreement(BaseModel):
     """
         Representa um Acordo.
@@ -76,6 +82,7 @@ class Agreement(BaseModel):
     creditor = models.ForeignKey(Creditor, on_delete=models.CASCADE)
 
 
+# Parcela
 class Installment(BaseModel):
     """
         Representa uma Parcela.
@@ -88,6 +95,7 @@ class Installment(BaseModel):
     agreement = models.ForeignKey(Agreement, on_delete=models.CASCADE, related_name='installments')
 
 
+# Boleto
 class Boleto(BaseModel):
     """
         Representa um Boleto.
