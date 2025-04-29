@@ -1,10 +1,26 @@
+import logging
+from typing import Tuple
+
+from django.core.paginator import Paginator, Page
+import faker
+
+from app.controllers import BaseController
 from app.controllers.user_controller import UserController
+from app.exceptions import HttpFriendlyException
 from app.models import Payer, User
 from app.repositories.payer_repository import PayerRepository
+from app.repositories.user_repository import UserRepository
 from app.schemas import PayerSchema, UserSchema
 
+lgr =  logging.getLogger(__name__)
 
-class PayerController:
+fake = faker.Faker()
+
+class PayerController(BaseController[PayerRepository, PayerSchema, Payer]):
+    REPOSITORY = PayerRepository
+    SCHEMA = PayerSchema
+    MODEL = Payer
+
     @classmethod
     def create(cls, payer_schema: PayerSchema.In) -> Payer:
         """
@@ -16,6 +32,9 @@ class PayerController:
         Retorna:
             - Payer: Pagador criado.
         """
+        if UserRepository.exists(payer_schema.cpf):
+            raise HttpFriendlyException(400, "Payer with this cpf already exists.")
+
         uc_schema: UserSchema.In = UserSchema.In(
             cpf=payer_schema.cpf,
             is_active=True
@@ -25,19 +44,24 @@ class PayerController:
         payer_data = payer_schema.model_dump(exclude_none=True)
         payer_data['user_id'] = user.pk
         
-        return PayerRepository.create(payer_data)
+        return cls.REPOSITORY.create(payer_data)
 
     @classmethod
-    def update(cls, payer_id: int, payer_schema: PayerSchema.PatchIn) -> Payer:
+    def filter(cls, filters: PayerSchema.List) -> Tuple[Page, Paginator]:
         """
-        Atualiza um pagador existente.
+        Lista pagadores com base nos filtros fornecidos.
 
         Parâmetros:
-            - payer_id: ID do pagador a ser atualizado.
-            - payer_schema: Schema do pagador a ser atualizado.
+            - filters: Filtros de paginação e pesquisa.
 
         Retorna:
-            - Payer: Pagador atualizado.
+            - List[Payer]: Lista de pagadores.
         """
-        payer = PayerRepository.get(pk=payer_id)
-        return PayerRepository.update(payer, **payer_schema.model_dump(exclude_none=True))
+        payers = cls.REPOSITORY.filter(filters.model_dump())
+        lgr.debug(filters.page_size)
+        paginator = Paginator(payers, filters.page_size)
+        page_number = filters.page
+
+        payers: Page = paginator.get_page(page_number)
+        return payers, paginator
+

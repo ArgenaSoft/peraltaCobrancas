@@ -132,3 +132,17 @@ class Boleto(BaseModel):
         default='pending',
     )
     due_date = models.DateField()
+
+
+class LoginCode(BaseModel):
+    """
+        Representa um código de login.
+
+        Atributos:
+            - code: Código de login.
+            - usuário: Usuário atrelado ao código.
+            - expiration_date: Data de expiração do código.
+    """
+    code = models.CharField(max_length=255)
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    expiration_date = models.DateTimeField()

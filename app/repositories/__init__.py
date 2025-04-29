@@ -1,8 +1,12 @@
+import logging
+from django.db.models.query import QuerySet
 
 from typing import Dict, Generic, Type, TypeVar
+from app.exceptions import HttpFriendlyException
 from app.models import BaseModel
 
 
+lgr = logging.getLogger(__name__)
 T = TypeVar("T", bound=BaseModel)
 
 class BaseRepository(Generic[T]):
@@ -27,13 +31,16 @@ class BaseRepository(Generic[T]):
             - Instância do modelo criada.
         """
         new_instance = cls.model()
+        model_fields = {field.name for field in cls.model._meta.get_fields() if not field.auto_created}
+
         for attr, value in data.items():
-            if hasattr(new_instance, attr):
+            lgr.debug(attr)
+            if attr in model_fields:
                 setattr(new_instance, attr, value)
-        
+
         new_instance.save()
         return new_instance
-
+        
     @classmethod
     def get(cls, **kwargs) -> T:
         """
@@ -45,7 +52,12 @@ class BaseRepository(Generic[T]):
         Retorna:
             - Instância do modelo correspondente.
         """
-        return cls.model.objects.get(**kwargs)
+        try:
+            return cls.model.objects.get(**kwargs)
+        except cls.model.MultipleObjectsReturned:
+            return cls.filter_first(**kwargs)
+        except cls.model.DoesNotExist:
+            raise HttpFriendlyException(404, f"{cls.model} Not Found")
 
     @classmethod
     def update(cls, instance: T, **kwargs) -> T:
@@ -61,6 +73,7 @@ class BaseRepository(Generic[T]):
         """
         for attr, value in kwargs.items():
             setattr(instance, attr, value)
+        
         instance.save()
         return instance
     
@@ -77,3 +90,45 @@ class BaseRepository(Generic[T]):
         """
         instance.delete()
         return None
+
+    @classmethod
+    def filter(cls, *args, **kwargs) -> QuerySet[T]:
+        """
+        Filtra instâncias do modelo com base nos atributos fornecidos.
+
+        Parâmetros:
+            - kwargs: Atributos do modelo a serem filtrados.
+
+        Retorna:
+            - Lista de instâncias do modelo correspondentes.
+        """
+        try:
+            return cls.model.objects.filter(**kwargs)
+        except cls.model.DoesNotExist:
+            raise HttpFriendlyException(404, f"{cls.model} Not Found")
+    
+    @classmethod
+    def filter_first(cls, **kwargs) -> T:
+        """
+        Filtra a primeira instância do modelo com base nos atributos fornecidos.
+
+        Parâmetros:
+            - kwargs: Atributos do modelo a serem filtrados.
+
+        Retorna:
+            - Instância do modelo correspondente.
+        """
+        return cls.filter(**kwargs).first()
+
+    @classmethod
+    def exists(cls, *args, **kwargs) -> bool:
+        """
+        Verifica se uma instância do modelo existe com base nos atributos fornecidos.
+
+        Parâmetros:
+            - kwargs: Atributos do modelo a serem verificados.
+
+        Retorna:
+            - bool: Verdadeiro se a instância existir, falso caso contrário.
+        """
+        return cls.model.objects.filter(**kwargs).exists()

@@ -4,6 +4,7 @@ from ninja import NinjaAPI
 from ninja.responses import Response
 
 from app.api.payer_api import payer_router
+from app.api.user_api import user_router
 from app.exceptions import HttpFriendlyException
 
 lgr = logging.getLogger(__name__)
@@ -19,3 +20,4 @@ def handle_friendly_exceptions(request, exc: HttpFriendlyException):
     return Response({"message": exc.message}, status=exc.status_code)
 
 api.add_router('/payer', payer_router)
+api.add_router('/user', user_router)
