@@ -93,3 +93,20 @@ class UserSchema(BaseSchema):
     class GetCode(Schema):
         cpf: str
         phone: str
+
+class AuthSchema(BaseSchema):
+    class AuthInput(Schema):
+        cpf: str
+        phone: str
+        code: str
+
+    class TokenOut(Schema):
+        access: str
+        refresh: str
+
+    class RefreshInput(Schema):
+        refresh: str
+
+    class TokenPair(Schema):
+        access: str
+        refresh: str

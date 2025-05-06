@@ -1,5 +1,6 @@
+import uuid
 from django.db import models
-from django.contrib.auth.models import AbstractBaseUser
+from django.contrib.auth.models import AbstractBaseUser, BaseUserManager
 
 
 class BaseModel(models.Model):
@@ -33,6 +34,16 @@ class BaseModel(models.Model):
         abstract = True
 
 
+class UserManager(BaseUserManager):
+    def create_user(self, cpf, **extra_fields):
+        if not cpf:
+            raise ValueError("CPF é obrigatório")
+        user = self.model(cpf=cpf, **extra_fields)
+        user.set_unusable_password()  # não usamos senha
+        user.save(using=self._db)
+        return user
+
+
 # Usuário logável
 class User(AbstractBaseUser, BaseModel):
     """
@@ -48,6 +59,10 @@ class User(AbstractBaseUser, BaseModel):
 
     cpf = models.CharField(max_length=11, unique=True)
     is_active = models.BooleanField(default=True)
+    objects = UserManager()
+
+    def __str__(self):
+        return self.cpf
 
 
 # Credor
@@ -146,3 +161,14 @@ class LoginCode(BaseModel):
     code = models.CharField(max_length=255)
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     expiration_date = models.DateTimeField()
+
+
+def generate_api_key():
+    return uuid.uuid4().hex
+
+class ApiConsumer(BaseModel):
+    name = models.CharField(max_length=255, unique=True)
+    api_key = models.CharField(max_length=32, unique=True, default=generate_api_key)
+
+    def __str__(self):
+        return self.name

@@ -1,6 +1,6 @@
 from zoneinfo import ZoneInfo
 
-from app.models import Payer, User
+from app.models import ApiConsumer, Payer, User
 import factory
 from factory.django import DjangoModelFactory
 from faker import Faker
@@ -26,3 +26,9 @@ class PayerFactory(TimestampedModelFactory):
     name = factory.Faker('name')
     phone = factory.Faker('phone_number')
     user = factory.SubFactory(UserFactory)
+
+class ApiConsumerFactory(TimestampedModelFactory):
+    class Meta:
+        model = ApiConsumer
+    
+    name = factory.Faker('company')
