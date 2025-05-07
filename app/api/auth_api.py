@@ -1,15 +1,15 @@
-from datetime import timedelta
 import logging
 
-from django.conf import settings
 from django.http import HttpRequest
 from django.contrib.auth import get_user_model
+from django.utils import timezone
 from ninja import Router
 from ninja import Router
 from ninja_jwt.tokens import RefreshToken
 
 from app.exceptions import HttpFriendlyException
 from app.models import ApiConsumer
+from app.repositories.login_code_repository import LoginCodeRepository
 from app.repositories.user_repository import UserRepository
 from app.schemas import AuthSchema
 
@@ -40,6 +40,19 @@ def login(request, data: AuthSchema.AuthInput):
         user = UserRepository.get(cpf=data.cpf, payer__phone=data.phone)
     except User.DoesNotExist:
         raise HttpFriendlyException(401, "CPF ou telefone inválidos")
+
+    login_code = LoginCodeRepository.get(
+        code=data.code,
+        user=user,  
+    )
+
+    if login_code.used:
+        raise HttpFriendlyException(400, "Código já usado") 
+
+    if login_code.expiration_date < timezone.now():
+        raise HttpFriendlyException(400, "Código expirou") 
+
+    LoginCodeRepository.update(login_code, used=True)
 
     token = get_token(user.id, "user")
     return {"access": str(token.access_token), "refresh": str(token)}

@@ -42,7 +42,7 @@ class BaseRepository(Generic[T]):
         return new_instance
         
     @classmethod
-    def get(cls, **kwargs) -> T:
+    def get(cls, friendly: bool = True, **kwargs) -> T:
         """
         Obtém uma instância do modelo com base nos atributos fornecidos.
 
@@ -57,7 +57,9 @@ class BaseRepository(Generic[T]):
         except cls.model.MultipleObjectsReturned:
             return cls.filter_first(**kwargs)
         except cls.model.DoesNotExist:
-            raise HttpFriendlyException(404, f"{cls.model} Not Found")
+            if not friendly:
+                raise
+            raise HttpFriendlyException(404, f"{cls.model.__name__} Not Found")
 
     @classmethod
     def update(cls, instance: T, **kwargs) -> T:

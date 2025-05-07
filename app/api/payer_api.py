@@ -1,13 +1,13 @@
 import logging
 
-from ninja import Query, Router
 from django.core.handlers.wsgi import WSGIRequest
+from ninja import Query, Router
+from ninja.responses import codes_4xx
 
 from app.api import endpoint
 from app.controllers.payer_controller import PayerController
 from app.models import Payer
 from app.schemas import PayerSchema
-from ninja.responses import codes_4xx
 
 payer_router = Router()
 lgr = logging.getLogger(__name__)

@@ -1,6 +1,8 @@
 from typing import Dict
+
 from django.core.handlers.wsgi import WSGIRequest
 from ninja import Query, Router
+from ninja.responses import codes_4xx
 
 from app.api import endpoint
 from app.controllers.login_code_controller import LoginCodeController
@@ -12,7 +14,7 @@ from app.schemas import UserSchema
 user_router = Router()
 
 
-@user_router.get('/get_code', response={201: Dict})
+@user_router.get('/get_code', response={201: Dict, codes_4xx: UserSchema.Error})
 @endpoint
 def get_code(request: WSGIRequest, data: Query[UserSchema.GetCode]):
     """

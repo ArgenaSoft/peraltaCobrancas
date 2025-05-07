@@ -18,7 +18,7 @@ def endpoint(func):
             response['code'] = code
         except HttpFriendlyException as e:
             response['code'] = e.status_code
-            data = BaseSchema.Error(message=e.message, code=e.status_code)
+            data = BaseSchema.Error(message=e.message, code=e.status_code, data=e.data)
         except Exception as e:
             lgr.error(f"Error in endpoint: {e}")
             raise

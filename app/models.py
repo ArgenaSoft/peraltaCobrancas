@@ -161,6 +161,7 @@ class LoginCode(BaseModel):
     code = models.CharField(max_length=255)
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     expiration_date = models.DateTimeField()
+    used = models.BooleanField(default=False)
 
 
 def generate_api_key():

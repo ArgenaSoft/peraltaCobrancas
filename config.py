@@ -2,3 +2,4 @@ PROD = 'prod'
 DEV = 'dev'
 
 ENV = DEV
+SMS_CODE_EXPIRATION_SECONDS = 60 * 5

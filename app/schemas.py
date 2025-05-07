@@ -9,6 +9,7 @@ class BaseSchema:
     class Error(Schema):
         code: int
         message: str
+        data: Optional[Dict] = None
 
     class List(Schema):
         page: Optional[int] = 1
