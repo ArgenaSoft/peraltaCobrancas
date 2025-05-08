@@ -8,7 +8,7 @@ from ninja import Router
 from ninja_jwt.tokens import RefreshToken
 
 from app.exceptions import HttpFriendlyException
-from app.models import ApiConsumer
+from app.models import ApiConsumer, LoginCode
 from app.repositories.login_code_repository import LoginCodeRepository
 from app.repositories.user_repository import UserRepository
 from app.schemas import AuthSchema
@@ -37,20 +37,25 @@ def get_token(entity_id: int, type: str) -> RefreshToken:
 @auth_router.post("/token", response=AuthSchema.TokenOut)
 def login(request, data: AuthSchema.AuthInput):
     try:
-        user = UserRepository.get(cpf=data.cpf, payer__phone=data.phone)
+        user = UserRepository.get(
+            cpf=data.cpf, 
+            payer__phone=data.phone,
+            friendly=False)
+        login_code = LoginCodeRepository.get(
+            code=data.code,
+            user=user,
+            friendly=False)
     except User.DoesNotExist:
-        raise HttpFriendlyException(401, "CPF ou telefone inválidos")
-
-    login_code = LoginCodeRepository.get(
-        code=data.code,
-        user=user,  
-    )
+        raise HttpFriendlyException(401, "Cpf ou telefone inválidos")
+    except LoginCode.DoesNotExist:
+        raise HttpFriendlyException(401, "Código inválido")
+    
 
     if login_code.used:
-        raise HttpFriendlyException(400, "Código já usado") 
+        raise HttpFriendlyException(401, "Código já usado") 
 
     if login_code.expiration_date < timezone.now():
-        raise HttpFriendlyException(400, "Código expirou") 
+        raise HttpFriendlyException(401, "Código expirou") 
 
     LoginCodeRepository.update(login_code, used=True)
 
