@@ -155,8 +155,9 @@ class LoginCode(BaseModel):
 
         Atributos:
             - code: Código de login.
-            - usuário: Usuário atrelado ao código.
+            - user: Usuário atrelado ao código.
             - expiration_date: Data de expiração do código.
+            - used: Se o código já foi usado
     """
     code = models.CharField(max_length=255)
     user = models.ForeignKey(User, on_delete=models.CASCADE)

@@ -2,7 +2,7 @@ from functools import wraps
 import logging
 
 from app.exceptions import HttpFriendlyException
-from app.schemas import BaseSchema
+from app.schemas import ErrorSchema
 
 
 lgr = logging.getLogger(__name__)
@@ -18,7 +18,7 @@ def endpoint(func):
             response['code'] = code
         except HttpFriendlyException as e:
             response['code'] = e.status_code
-            data = BaseSchema.Error(message=e.message, code=e.status_code, data=e.data)
+            data = ErrorSchema(message=e.message, code=e.status_code, data=e.data)
         except Exception as e:
             lgr.error(f"Error in endpoint: {e}")
             raise

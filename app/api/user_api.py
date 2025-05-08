@@ -8,13 +8,13 @@ from app.api import endpoint
 from app.controllers.login_code_controller import LoginCodeController
 from app.controllers.user_controller import UserController
 from app.models import LoginCode
-from app.schemas import UserSchema
+from app.schemas import ErrorSchema, UserSchema
 
 
 user_router = Router()
 
 
-@user_router.get('/get_code', response={201: Dict, codes_4xx: UserSchema.Error})
+@user_router.get('/get_code', response={201: Dict, codes_4xx: ErrorSchema})
 @endpoint
 def get_code(request: WSGIRequest, data: Query[UserSchema.GetCode]):
     """

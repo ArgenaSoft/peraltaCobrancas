@@ -2,6 +2,7 @@ from datetime import timedelta
 import logging
 from typing import Optional
 
+from django.conf import settings
 from faker import Faker
 from django.utils import timezone
 
@@ -28,7 +29,7 @@ class LoginCodeController:
             )
 
         code = 'PC' + fake.lexify('?????')
-        expiration = timezone.now() + timedelta(seconds=SMS_CODE_EXPIRATION_SECONDS)
+        expiration = timezone.now() + timedelta(seconds=settings.SMS_EXPIRATION)
 
         data = {
             'code': code, 

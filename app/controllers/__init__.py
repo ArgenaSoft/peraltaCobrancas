@@ -1,12 +1,11 @@
-from typing import Dict, Generic, List, TypeVar, Type
+from typing import Generic, List, TypeVar, Type
 
 from django.db.models import Model
 from ninja import Schema
 from app.repositories import BaseRepository
-from app.schemas import BaseSchema
 
 RepositoryT = TypeVar("RepositoryT", bound=BaseRepository)
-SchemaT = TypeVar("SchemaT", bound=Type[BaseSchema])
+SchemaT = TypeVar("SchemaT", bound=Type[Schema])
 ModelT = TypeVar("ModelT", bound=Model)
 
 

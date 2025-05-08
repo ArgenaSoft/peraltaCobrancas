@@ -1,9 +1,13 @@
+from datetime import timedelta
 from zoneinfo import ZoneInfo
 
-from app.models import ApiConsumer, Payer, User
+from django.conf import settings
+from django.utils import timezone
 import factory
 from factory.django import DjangoModelFactory
 from faker import Faker
+
+from app.models import ApiConsumer, LoginCode, Payer, User
 
 fake = Faker()
 
@@ -32,3 +36,12 @@ class ApiConsumerFactory(TimestampedModelFactory):
         model = ApiConsumer
     
     name = factory.Faker('company')
+
+class LoginCodeFactory(TimestampedModelFactory):
+    class Meta:
+        model = LoginCode
+
+    code = factory.Faker('numerify', text='######')
+    user = factory.SubFactory(UserFactory)
+    expiration_date = factory.LazyFunction(lambda: timezone.now() + timedelta(minutes=settings.SMS_EXPIRATION))
+    used = False

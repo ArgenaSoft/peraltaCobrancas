@@ -2,11 +2,11 @@ from django.test import Client
 
 from app.models import Payer
 
-def test_edit_payer(client: Client, payer: Payer):
+def test_edit_payer(system_client: Client, payer: Payer):
     data = payer.dict()
     data['name'] = 'Teste edição'
 
-    response = client.patch(f'/api/payer/{payer.id}', data=data, content_type='application/json')
+    response = system_client.patch(f'/api/payer/{payer.id}', data=data, content_type='application/json')
 
     assert response.status_code == 200  # Verificando se o status code é 200
     assert response.json()['name'] == data['name']  # Verificando se o nome foi atualizado corretamente

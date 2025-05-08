@@ -7,13 +7,13 @@ from ninja.responses import codes_4xx
 from app.api import endpoint
 from app.controllers.payer_controller import PayerController
 from app.models import Payer
-from app.schemas import PayerSchema
+from app.schemas import ErrorSchema, ListSchema, PaginatedOutSchema, PayerSchema
 
 payer_router = Router()
 lgr = logging.getLogger(__name__)
 
 
-@payer_router.post('/', response={201: PayerSchema.Out, codes_4xx: PayerSchema.Error})
+@payer_router.post('/', response={201: PayerSchema.Out, codes_4xx: ErrorSchema})
 @endpoint
 def create_payer(request: WSGIRequest, data: PayerSchema.In):
     new_payer: Payer = PayerController.create(data)
@@ -27,9 +27,9 @@ def edit_payer(request: WSGIRequest, payer_id: int, data: PayerSchema.PatchIn):
     return payer, 200
 
 
-@payer_router.get('/', response={200: PayerSchema.PaginatedOut})
+@payer_router.get('/', response={200: PaginatedOutSchema})
 @endpoint
-def list_payer(request: WSGIRequest, data: Query[PayerSchema.List]):
+def list_payer(request: WSGIRequest, data: Query[ListSchema]):
     payers_page, paginator = PayerController.filter(data)
     return {
         "page": payers_page,

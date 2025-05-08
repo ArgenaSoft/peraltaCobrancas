@@ -20,4 +20,5 @@ class UserController(BaseController[UserRepository, UserSchema, User]):
         Retorna:
             - User: Usuário criado.
         """
-        return UserRepository.create(user_schema.model_dump(exclude_none=True))
+        user = UserRepository.create(user_schema.model_dump(exclude_none=True))
+        return user

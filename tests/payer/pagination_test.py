@@ -1,11 +1,10 @@
 from django.test import Client
-from app.models import Payer
 
-def test_pagination_page_size(client: Client, payer_generator):
+def test_pagination_page_size(system_client: Client, payer_generator):
     payer_generator(10)
     page_size = 5
     page = 1
-    response = client.get(f'/api/payer/?page={page}&page_size={page_size}')
+    response = system_client.get(f'/api/payer/?page={page}&page_size={page_size}')
 
     assert response.status_code == 200
     data = response.json()

@@ -10,7 +10,7 @@ from app.exceptions import HttpFriendlyException
 from app.models import Payer, User
 from app.repositories.payer_repository import PayerRepository
 from app.repositories.user_repository import UserRepository
-from app.schemas import PayerSchema, UserSchema
+from app.schemas import ListSchema, PayerSchema, UserSchema
 
 lgr =  logging.getLogger(__name__)
 
@@ -32,7 +32,7 @@ class PayerController(BaseController[PayerRepository, PayerSchema, Payer]):
         Retorna:
             - Payer: Pagador criado.
         """
-        if UserRepository.exists(payer_schema.cpf):
+        if UserRepository.exists(cpf=payer_schema.cpf):
             raise HttpFriendlyException(400, "Payer with this cpf already exists.")
 
         uc_schema: UserSchema.In = UserSchema.In(
@@ -42,12 +42,12 @@ class PayerController(BaseController[PayerRepository, PayerSchema, Payer]):
 
         user: User = UserController.create(uc_schema)
         payer_data = payer_schema.model_dump(exclude_none=True)
-        payer_data['user_id'] = user.pk
+        payer_data['user'] = user
         
         return cls.REPOSITORY.create(payer_data)
 
     @classmethod
-    def filter(cls, filters: PayerSchema.List) -> Tuple[Page, Paginator]:
+    def filter(cls, filters: ListSchema) -> Tuple[Page, Paginator]:
         """
         Lista pagadores com base nos filtros fornecidos.
 
