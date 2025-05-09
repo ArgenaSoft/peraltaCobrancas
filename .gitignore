@@ -3,3 +3,6 @@ db.sqlite3
 __pycache__
 telas
 *.log
+node_modules
+static/CACHE
+static/src/output.css
