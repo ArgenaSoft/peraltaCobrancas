@@ -35,7 +35,7 @@ class AuthController:
 
         LoginCodeRepository.update(login_code, used=True)
 
-        token = cls._get_token(user.id, "user")
+        token = cls.get_token(user.id, "user")
         return token
 
     @classmethod
@@ -51,7 +51,7 @@ class AuthController:
             if token_type not in ['user', 'system']:
                 raise HttpFriendlyException(401, "Tipo de token inválido")
             
-            new_refresh = cls._get_token(entity_id, token_type)
+            new_refresh = cls.get_token(entity_id, token_type)
 
             # Retornar os novos tokens
             return {
@@ -64,7 +64,7 @@ class AuthController:
             raise HttpFriendlyException(401, f"Token inválido ou expirado: {str(e)}")
     
     @staticmethod
-    def _get_token(entity_id: int, type: str) -> RefreshToken:
+    def get_token(entity_id: int, type: str) -> RefreshToken:
         if type == "user":
             user = UserRepository.get(id=entity_id)
             token = RefreshToken.for_user(user)

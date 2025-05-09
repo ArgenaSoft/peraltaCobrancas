@@ -5,3 +5,4 @@ pytest==8.3.5
 pytest-django==4.11.1
 requests==2.32.3
 factory-boy==3.3.3
+django-ninja-jwt==5.3.7

@@ -1,6 +1,6 @@
 import pytest
 
-from app.api.auth_api import get_token
+from app.controllers.auth_controller import AuthController
 from app.models import ApiConsumer, LoginCode, Payer
 from tests.factories import ApiConsumerFactory, LoginCodeFactory, PayerFactory, UserFactory
 
@@ -15,7 +15,7 @@ def enable_db_access_for_all_tests(db):
 @pytest.fixture
 def user_client(client):
     user = UserFactory.create()
-    token = get_token(user.id, "user")
+    token = AuthController.get_token(user.id, "user")
     
     client.defaults['HTTP_AUTHORIZATION'] = f'Bearer {token.access_token}'
     
@@ -25,7 +25,7 @@ def user_client(client):
 @pytest.fixture
 def system_client(client):
     system: ApiConsumer = ApiConsumerFactory.create()
-    token = get_token(system.api_key, "system")
+    token = AuthController.get_token(system.api_key, "system")
     
     client.defaults['HTTP_AUTHORIZATION'] = f'Bearer {token.access_token}'
     
