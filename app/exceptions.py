@@ -9,3 +9,10 @@ class HttpFriendlyException(Exception):
         self.message = message
         self.data = data
 
+
+    def dict(self) -> Dict:
+        return {
+            "status_code": self.status_code,
+            "message": self.message,
+            "data": self.data
+        }

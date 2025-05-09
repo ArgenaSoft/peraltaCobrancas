@@ -34,6 +34,25 @@ class BaseModel(models.Model):
         abstract = True
 
 
+class Authenticatable(BaseModel):
+    """
+        Representa um modelo que pode ser autenticado.
+    """
+    is_human: bool = False
+
+    @property
+    def is_authenticated(self):
+        return True
+
+    @property
+    def is_anonymous(self):
+        return False
+
+    class Meta:
+        abstract = True
+    
+
+
 class UserManager(BaseUserManager):
     def create_user(self, cpf, **extra_fields):
         if not cpf:
@@ -45,7 +64,7 @@ class UserManager(BaseUserManager):
 
 
 # Usuário logável
-class User(AbstractBaseUser, BaseModel):
+class User(AbstractBaseUser, Authenticatable):
     """
         Representa um Usuário que pode se logar no sistema
 
@@ -56,6 +75,7 @@ class User(AbstractBaseUser, BaseModel):
             Administrador).
     """
     USERNAME_FIELD = 'cpf'
+    is_human = True
 
     cpf = models.CharField(max_length=11, unique=True)
     is_active = models.BooleanField(default=True)
@@ -168,7 +188,8 @@ class LoginCode(BaseModel):
 def generate_api_key():
     return uuid.uuid4().hex
 
-class ApiConsumer(BaseModel):
+class ApiConsumer(Authenticatable):
+    is_human = False
     name = models.CharField(max_length=255, unique=True)
     api_key = models.CharField(max_length=32, unique=True, default=generate_api_key)
 

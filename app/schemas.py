@@ -87,7 +87,7 @@ class PayerOutSchema(Schema):
     updated_at: datetime
 
 
-class AuthInputSchema(Schema):
+class LoginSchema(Schema):
     cpf: str
     phone: str
     code: str
@@ -102,7 +102,7 @@ class RefreshInputSchema(Schema):
     refresh: str
 
 
-class TokenPairSchema(Schema):
+class RefreshPairSchema(Schema):
     access: str
     refresh: str
 
@@ -116,9 +116,3 @@ class PayerSchema:
     In = PayerInSchema
     PatchIn = PayerPatchInSchema
     Out = PayerOutSchema
-
-class AuthSchema:
-    AuthInput = AuthInputSchema
-    TokenOut = TokenOutSchema
-    RefreshInput = RefreshInputSchema
-    TokenPair = TokenPairSchema
