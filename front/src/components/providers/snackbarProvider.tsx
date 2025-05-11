@@ -35,6 +35,7 @@ export const SnackbarProvider = ({ children }: any) => {
     const [snackCount, setSnackCount] = useState<number>(0);
 
     function show(title?: string, message?: string, classes?: string) {
+        console.log("Adicionando snack " + title);
         setSnacks({
             ...snacks,
             [snackCount]: {
@@ -50,6 +51,7 @@ export const SnackbarProvider = ({ children }: any) => {
     }
 
     function remove(id: number){
+        console.log("Removendo snack " + id);
         let newSnacks = {...snacks};
         delete newSnacks[id];
         setSnacks(newSnacks);

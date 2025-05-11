@@ -1,6 +1,5 @@
 from datetime import datetime
-from types import SimpleNamespace
-from typing import ClassVar, Dict, List, Optional, Type
+from typing import Dict, Optional
 
 from ninja import Schema
 from django.core.paginator import Paginator, Page
@@ -96,6 +95,7 @@ class LoginSchema(Schema):
 class TokenOutSchema(Schema):
     access: str
     refresh: str
+    username: str
 
 
 class RefreshInputSchema(Schema):

@@ -16,8 +16,12 @@ auth_router = Router()
 
 @auth_router.post("/token", response=TokenOutSchema)
 def login(request, data: LoginSchema):
-    token = AuthController.login(data)
-    return {"access": str(token.access_token), "refresh": str(token)}
+    token, payer_name = AuthController.login(data)
+    return {
+        "access": str(token.access_token), 
+        "refresh": str(token),
+        "username": payer_name
+    }
 
 
 @auth_router.post("/refresh", response=RefreshPairSchema)

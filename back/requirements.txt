@@ -6,3 +6,4 @@ pytest-django==4.11.1
 requests==2.32.3
 factory-boy==3.3.3
 django-ninja-jwt==5.3.7
+django-cors-headers==4.7.0

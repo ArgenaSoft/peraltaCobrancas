@@ -1,30 +1,37 @@
-from typing import Dict
+import logging
+from typing import Dict, Tuple
 from django.utils import timezone
+from app.repositories.payer_repository import PayerRepository
 from ninja_jwt.tokens import RefreshToken
 
 from app.exceptions import HttpFriendlyException
-from app.models import ApiConsumer, LoginCode, User
+from app.models import ApiConsumer, LoginCode, Payer, User
 from app.repositories.login_code_repository import LoginCodeRepository
 from app.repositories.user_repository import UserRepository
 from app.schemas import LoginSchema, RefreshInputSchema
 
+lgr = logging.getLogger(__name__)
 
 class AuthController:
     @classmethod
-    def login(cls, schema: LoginSchema) -> RefreshToken:
+    def login(cls, schema: LoginSchema) -> Tuple[RefreshToken, str]:
         try:
+            payer: Payer = PayerRepository.get(phone=schema.phone) 
             user = UserRepository.get(
                 cpf=schema.cpf, 
-                payer__phone=schema.phone,
+                payer=payer,
                 friendly=False)
             login_code = LoginCodeRepository.get(
                 code=schema.code,
                 user=user,
                 friendly=False)
         except User.DoesNotExist:
-            raise HttpFriendlyException(401, "Cpf ou telefone inválidos")
+            raise HttpFriendlyException(401, "Cpf ou telefone inválidos.")
+        except Payer.DoesNotExist:
+            lgr.error("Existe usuário sem payer no banco: %s", schema.cpf)
+            raise HttpFriendlyException(500, "Problema interno. Entre em contato com o suporte")
         except LoginCode.DoesNotExist:
-            raise HttpFriendlyException(401, "Código inválido")
+            raise HttpFriendlyException(401, "Código inválido.")
 
 
         if login_code.used:
@@ -36,7 +43,7 @@ class AuthController:
         LoginCodeRepository.update(login_code, used=True)
 
         token = cls.get_token(user.id, "user")
-        return token
+        return token, payer.name
 
     @classmethod
     def refresh_pair(cls, schema: RefreshInputSchema) -> Dict:
