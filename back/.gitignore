@@ -6,3 +6,4 @@ telas
 node_modules
 static/CACHE
 static/src/output.css
+.vscode
