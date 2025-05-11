@@ -15,6 +15,7 @@ interface SnackType {
 interface SnackbarProps extends SnackType {
     id: number;
 }
+
 const Snackbar = (props: SnackbarProps) => {
     const callback = props.callback ?? (() => {});
 
@@ -35,26 +36,36 @@ export const SnackbarProvider = ({ children }: any) => {
     const [snackCount, setSnackCount] = useState<number>(0);
 
     function show(title?: string, message?: string, classes?: string) {
-        console.log("Adicionando snack " + title);
-        setSnacks({
-            ...snacks,
-            [snackCount]: {
-                title: title,
-                message: message,
-                classes: classes
-            }
+        setSnackCount(prevCount => {
+            console.log(prevCount)
+            const id = prevCount;
+    
+            setSnacks(prev => ({
+                ...prev,
+                [id]: {
+                    title,
+                    message,
+                    classes,
+                    callback: remove
+                }
+            }));
+    
+            // remove após 4s
+            setTimeout(() => {
+                remove(id);
+            }, 4000);
+    
+            return prevCount + 1;
         });
-        setSnackCount(snackCount + 1);
-        setTimeout(() => {
-            remove(snackCount);
-        }, 4000);
     }
 
-    function remove(id: number){
+    function remove(id: number) {
         console.log("Removendo snack " + id);
-        let newSnacks = {...snacks};
-        delete newSnacks[id];
-        setSnacks(newSnacks);
+        setSnacks(prev => {
+            const newSnacks = { ...prev };
+            delete newSnacks[id];
+            return newSnacks;
+        });
     }
 
     return (

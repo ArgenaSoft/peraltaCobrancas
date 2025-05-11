@@ -92,7 +92,7 @@ export const AuthProvider = ({ children }: any) => {
                     <FontAwesomeIcon icon={faArrowRightFromBracket} size={"2x"} onClick={logout}/>
                 </div>
             }
-            <div className={`h-screen ${isLogged() ? "pt-[120px] px-[40px]": ""}`}>
+            <div className={`h-screen ${isClient && isLogged() ? "pt-[120px] px-[40px]": ""}`}>
                 {children}
             </div>
         </AuthContext.Provider>
