@@ -19,7 +19,7 @@ export default function Login() {
   async function getCode() {
     let response: GetCodeReturn = await callGetCode(cpf, phone);
     console.log(response.code);
-    show("Código enviado!", "Um código foi enviado para o seu telefone", "bg-dark-blue");
+    show("Código enviado!", "Um código foi enviado para o seu telefone", "info");
     setCodeSent(true);
   }
 
@@ -27,7 +27,7 @@ export default function Login() {
     if(codeSent){
       let succesful = await login(cpf, phone, code);
       if(succesful){
-        show("Sucesso", "Login realizado com sucesso", "bg-dark-blue");
+        show("Sucesso", "Login realizado com sucesso", "info");
         router.push("/");
       }else{
         console.log("Erro ao fazer login");
@@ -39,6 +39,8 @@ export default function Login() {
 
   return(
       <div className="flex flex-col gap-4 justify-center items-center h-screen">
+          {cpf}
+          {phone}
           <div className="max-w-[50%]">
               <img src="img//logo-blue.png" alt="Logo" />
           </div>
@@ -46,8 +48,8 @@ export default function Login() {
               {codeSent && 
                 <span className="text-black text-[12px]">Um código foi enviado para o número { phone }</span>
               }
-              <TextInput placeholder="CPF" value={cpf} callback={setCpf}/>
-              <TextInput placeholder="Telefone" value={phone} callback={setPhone}/>
+              <TextInput mask="___.___.___-__" replacement={{ _: /\d/ }}  placeholder="CPF" value={cpf} callback={setCpf}/>
+              <TextInput mask="(__) _____-____" replacement={{ "_": /\d/}} placeholder="Telefone" value={phone} callback={setPhone}/>
 
               {codeSent && 
                 <TextInput placeholder="Código" value={code} callback={setCode}/>

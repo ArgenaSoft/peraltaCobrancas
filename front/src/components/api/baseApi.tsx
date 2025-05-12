@@ -1,6 +1,7 @@
 import axios, { AxiosError, AxiosInstance, InternalAxiosRequestConfig } from "axios";
 import env from "../../../env";
 import { FriendlyError } from "../errors";
+import { emitSnack } from "../snackEmitter";
 
 function createApi({ withAuth = false }: { withAuth?: boolean }): AxiosInstance {
   const instance = axios.create({
@@ -31,12 +32,10 @@ function createApi({ withAuth = false }: { withAuth?: boolean }): AxiosInstance 
     },
     (error: AxiosError) => {
       if (error.response?.data?.message) {
-        return Promise.reject(new FriendlyError(error.response.data.message));
+        emitSnack("", error.response.data.message, "error");
       }
-      return Promise.reject(
-        new FriendlyError("Erro inesperado", error.message)
-      );
-
+      
+      return Promise.reject(error);
     }
   );
 
