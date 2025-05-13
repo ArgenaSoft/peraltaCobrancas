@@ -1,16 +1,15 @@
 from app.controllers import BaseController
 from app.models import User
 from app.repositories.user_repository import UserRepository
-from app.schemas import UserSchema
+from app.schemas.user_schemas import UserInSchema
 
 
-class UserController(BaseController[UserRepository, UserSchema, User]):
+class UserController(BaseController[UserRepository, User]):
     REPOSITORY = UserRepository
-    SCHEMA = UserSchema
     MODEL = User
 
     @classmethod
-    def create(cls, user_schema: UserSchema.In) -> User:
+    def create(cls, user_schema: UserInSchema) -> User:
         """
         Cria um novo pagador.
 

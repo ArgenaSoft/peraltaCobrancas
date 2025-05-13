@@ -1,17 +1,15 @@
-from typing import Generic, List, TypeVar, Type
+from typing import Generic, List, TypeVar
 
 from django.db.models import Model
 from ninja import Schema
 from app.repositories import BaseRepository
 
 RepositoryT = TypeVar("RepositoryT", bound=BaseRepository)
-SchemaT = TypeVar("SchemaT", bound=Type[Schema])
 ModelT = TypeVar("ModelT", bound=Model)
 
 
-class BaseController(Generic[RepositoryT, SchemaT, ModelT]):
+class BaseController(Generic[RepositoryT, ModelT]):
     REPOSITORY: RepositoryT = None
-    SCHEMA: SchemaT = None
     MODEL: ModelT = None
 
     @classmethod
@@ -22,3 +20,8 @@ class BaseController(Generic[RepositoryT, SchemaT, ModelT]):
     @classmethod
     def get(cls, *args, **kwargs) -> List[ModelT]:
         return cls.REPOSITORY.get(*args, **kwargs)
+
+    @classmethod
+    def delete(cls, *args, **kwargs) -> None:
+        instance: ModelT = cls.REPOSITORY.get(*args, **kwargs)
+        return cls.REPOSITORY.delete(instance)

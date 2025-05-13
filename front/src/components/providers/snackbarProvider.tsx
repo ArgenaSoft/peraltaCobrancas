@@ -26,7 +26,6 @@ const msg_levels: Record<string, string> = {
 
 const Snackbar = (props: SnackbarProps) => {
     const callback = props.callback ?? (() => {});
-
     return (
         <div className={`bg-dark-blue right-2 ${msg_levels[props.level]} rounded-lg p-5 flex flex-row justify-between items-center gap-5`} onClick={() => callback(props.id)}>
             <div className="flex flex-col">
@@ -85,7 +84,7 @@ export const SnackbarProvider = ({ children }: any) => {
             <div className="flex flex-col fixed right-5 top-5 gap-2 z-10">
                 {Object.keys(snacks).map(id => {
                     let snack: SnackType = snacks[parseInt(id)];
-                    return <Snackbar key={id} id={parseInt(id)} title={snack.title} message={snack.message} classes={snack.classes} callback={remove} />
+                    return <Snackbar key={id} id={parseInt(id)} title={snack.title} message={snack.message} level={snack.level} callback={remove} />
                 })}
             </div>
             {children}

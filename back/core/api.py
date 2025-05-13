@@ -7,6 +7,7 @@ from ninja.responses import Response
 from app.api.payer_api import payer_router
 from app.api.user_api import user_router
 from app.api.auth_api import auth_router
+from app.api.creditor_api import creditor_router
 from app.exceptions import HttpFriendlyException
 from config import DEV, ENV
 from core.auth import CustomJWTAuth
@@ -37,3 +38,4 @@ def handle_wild_exceptions(request, exc: HttpFriendlyException):
 api.add_router('/payer', payer_router, auth=CustomJWTAuth())
 api.add_router('/user', user_router)
 api.add_router('/auth', auth_router)
+api.add_router('/creditor', creditor_router)

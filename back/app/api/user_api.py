@@ -8,7 +8,8 @@ from app.api import endpoint
 from app.controllers.login_code_controller import LoginCodeController
 from app.controllers.user_controller import UserController
 from app.models import LoginCode
-from app.schemas import ErrorSchema, UserSchema
+from app.schemas import ErrorSchema
+from app.schemas.user_schemas import UserGetCodeSchema
 
 
 user_router = Router()
@@ -16,7 +17,7 @@ user_router = Router()
 
 @user_router.get('/get_code', response={201: Dict, codes_4xx: ErrorSchema})
 @endpoint
-def get_code(request: WSGIRequest, data: Query[UserSchema.GetCode]):
+def get_code(request: WSGIRequest, data: Query[UserGetCodeSchema]):
     """
     Gera um codigo de login a ser enviado via sms
     """
@@ -27,5 +28,6 @@ def get_code(request: WSGIRequest, data: Query[UserSchema.GetCode]):
 
     user = UserController.get(**filters)
     code: LoginCode = LoginCodeController.create(user)
-
+    
+    print(code.code)
     return {"code": code.code}, 201

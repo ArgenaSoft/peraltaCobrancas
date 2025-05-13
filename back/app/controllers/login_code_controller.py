@@ -10,7 +10,6 @@ from app.exceptions import HttpFriendlyException
 from app.models import LoginCode, User
 from app.repositories.login_code_repository import LoginCodeRepository
 from app.utils import beautify_timedelta
-from config import SMS_CODE_EXPIRATION_SECONDS
 
 lgr = logging.getLogger(__name__)
 

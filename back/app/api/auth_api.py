@@ -1,12 +1,11 @@
 import logging
 
 from django.http import HttpRequest
-from django.contrib.auth import get_user_model
 from ninja import Router
 from ninja import Router
 
 from app.controllers.auth_controller import AuthController
-from app.schemas import LoginSchema, RefreshInputSchema, RefreshPairSchema, TokenOutSchema
+from app.schemas.auth_schemas import LoginSchema, RefreshInputSchema, RefreshPairSchema, TokenOutSchema
 
 payer_router = Router()
 lgr = logging.getLogger(__name__)

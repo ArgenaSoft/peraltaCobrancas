@@ -1,8 +1,9 @@
 import pytest
 
 from app.controllers.auth_controller import AuthController
-from app.models import ApiConsumer, LoginCode, Payer
-from tests.factories import ApiConsumerFactory, LoginCodeFactory, PayerFactory, UserFactory
+from app.models import ApiConsumer, Creditor, LoginCode, Payer
+from tests.factories import ApiConsumerFactory, CreditorFactory, LoginCodeFactory, PayerFactory, UserFactory
+
 
 @pytest.fixture(autouse=True)
 def enable_db_access_for_all_tests(db):
@@ -64,3 +65,11 @@ def login_code():
     yield code
     code.delete()
     assert not LoginCode.objects.filter(pk=code.pk).exists(), "Teardown failed: LoginCode was not removed from the database."
+
+
+@pytest.fixture
+def creditor():
+    creditor = CreditorFactory.create()
+    yield creditor
+    creditor.delete()
+    assert not Creditor.objects.filter(pk=creditor.pk).exists(), "Teardown failed: Creditor was not removed from the database."

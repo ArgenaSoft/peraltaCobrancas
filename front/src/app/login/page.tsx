@@ -18,7 +18,6 @@ export default function Login() {
 
   async function getCode() {
     let response: GetCodeReturn = await callGetCode(cpf, phone);
-    console.log(response.code);
     show("Código enviado!", "Um código foi enviado para o seu telefone", "info");
     setCodeSent(true);
   }
@@ -39,12 +38,10 @@ export default function Login() {
 
   return(
       <div className="flex flex-col gap-4 justify-center items-center h-screen">
-          {cpf}
-          {phone}
-          <div className="max-w-[50%]">
+          <div className="max-w-[70%]">
               <img src="img//logo-blue.png" alt="Logo" />
           </div>
-          <div className="flex flex-col gap-2 w-[75%]">
+          <div className="flex flex-col items-center gap-2">
               {codeSent && 
                 <span className="text-black text-[12px]">Um código foi enviado para o número { phone }</span>
               }

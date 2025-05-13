@@ -10,19 +10,20 @@ from app.exceptions import HttpFriendlyException
 from app.models import Payer, User
 from app.repositories.payer_repository import PayerRepository
 from app.repositories.user_repository import UserRepository
-from app.schemas import ListSchema, PayerSchema, UserSchema
+from app.schemas import ListSchema
+from app.schemas.payer_schemas import PayerInSchema
+from app.schemas.user_schemas import UserInSchema
 
 lgr =  logging.getLogger(__name__)
 
 fake = faker.Faker()
 
-class PayerController(BaseController[PayerRepository, PayerSchema, Payer]):
+class PayerController(BaseController[PayerRepository, Payer]):
     REPOSITORY = PayerRepository
-    SCHEMA = PayerSchema
     MODEL = Payer
 
     @classmethod
-    def create(cls, payer_schema: PayerSchema.In) -> Payer:
+    def create(cls, payer_schema: PayerInSchema) -> Payer:
         """
         Cria um novo pagador.
 
@@ -35,7 +36,7 @@ class PayerController(BaseController[PayerRepository, PayerSchema, Payer]):
         if UserRepository.exists(cpf=payer_schema.cpf):
             raise HttpFriendlyException(400, "Payer with this cpf already exists.")
 
-        uc_schema: UserSchema.In = UserSchema.In(
+        uc_schema: UserInSchema = UserInSchema(
             cpf=payer_schema.cpf,
             is_active=True
         )

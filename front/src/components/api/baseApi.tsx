@@ -32,7 +32,7 @@ function createApi({ withAuth = false }: { withAuth?: boolean }): AxiosInstance 
     },
     (error: AxiosError) => {
       if (error.response?.data?.message) {
-        emitSnack("", error.response.data.message, "error");
+        emitSnack(error.response.data.message, "", "error");
       }
       
       return Promise.reject(error);

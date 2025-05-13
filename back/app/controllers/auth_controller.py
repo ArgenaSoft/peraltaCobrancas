@@ -8,7 +8,7 @@ from app.exceptions import HttpFriendlyException
 from app.models import ApiConsumer, LoginCode, Payer, User
 from app.repositories.login_code_repository import LoginCodeRepository
 from app.repositories.user_repository import UserRepository
-from app.schemas import LoginSchema, RefreshInputSchema
+from app.schemas.auth_schemas import LoginSchema, RefreshInputSchema
 
 lgr = logging.getLogger(__name__)
 

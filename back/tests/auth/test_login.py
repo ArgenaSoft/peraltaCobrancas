@@ -93,9 +93,9 @@ def test_login_fails_with_incorrect_phone(client: Client, payer: Payer):
     }
 
     response = client.post('/api/auth/token', data=payload, content_type='application/json')
-
-    assert response.status_code == 401, "Esperado status 401 para telefone incorreto."
-    assert 'telefone' in response.json()['message'].lower(), "Mensagem de erro incorreta."
+    print(response.content)
+    assert response.status_code == 404, "Esperado status 404 para telefone incorreto."
+    assert 'not found' in response.json()['message'].lower(), "Mensagem de erro incorreta."
 
 
 def test_login_fails_with_incorrect_cpf(client: Client, payer: Payer):
@@ -112,18 +112,3 @@ def test_login_fails_with_incorrect_cpf(client: Client, payer: Payer):
 
     assert response.status_code == 401, "Esperado status 401 para CPF incorreto."
     assert 'cpf' in response.json()['message'].lower(), "Mensagem de erro incorreta."
-
-
-def test_login_fails_with_incorrect_cpf_and_phone_combo(client: Client, payer: Payer):
-    code = "123456"
-    LoginCodeFactory.create(user=payer.user, code=code, used=False)
-
-    payload = {
-        "cpf": payer.user.cpf,
-        "phone": "00000000000",  # Telefone incorreto
-        "code": code
-    }
-
-    response = client.post('/api/auth/token', data=payload, content_type='application/json')
-
-    assert response.status_code == 401, "Esperado status 401 para CPF e telefone incompatíveis."

@@ -2,7 +2,7 @@
 from django.core.management.base import BaseCommand
 
 from config import ENV, PROD
-from tests.factories import ApiConsumerFactory, PayerFactory, UserFactory
+from tests.factories import ApiConsumerFactory, CreditorFactory, PayerFactory, UserFactory
 
 
 class Command(BaseCommand):
@@ -24,4 +24,5 @@ class Command(BaseCommand):
 
         
         PayerFactory.create_batch(10)
+        CreditorFactory.create_batch(10)
         ApiConsumerFactory.create()

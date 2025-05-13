@@ -52,7 +52,6 @@ class Authenticatable(BaseModel):
         abstract = True
     
 
-
 class UserManager(BaseUserManager):
     def create_user(self, cpf, **extra_fields):
         if not cpf:
