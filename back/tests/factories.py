@@ -7,7 +7,7 @@ import factory
 from factory.django import DjangoModelFactory
 from faker import Faker
 
-from app.models import ApiConsumer, Creditor, LoginCode, Payer, User
+from app.models import Agreement, ApiConsumer, Creditor, LoginCode, Payer, User
 
 fake = Faker()
 
@@ -40,6 +40,15 @@ class CreditorFactory(TimestampedModelFactory):
     
     name = factory.Faker('name')
     reissue_margin = fake.pyint(min_value=0, max_value=10)
+
+
+class AgreementFactory(TimestampedModelFactory):
+    class Meta:
+        model = Agreement
+    
+    number = fake.pyint(min_value=1, max_value=1000)
+    payer = factory.SubFactory(PayerFactory)
+    creditor = factory.SubFactory(CreditorFactory)
 
 
 class ApiConsumerFactory(TimestampedModelFactory):

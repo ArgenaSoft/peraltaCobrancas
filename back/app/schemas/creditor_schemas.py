@@ -1,18 +1,19 @@
 from datetime import datetime
 from typing import Optional
-from ninja import Schema
 
-class CreditorInSchema(Schema):
+from app.schemas import BaseSchema
+
+class CreditorInSchema(BaseSchema):
     name: str
     reissue_margin: int
 
 
-class CreditorPatchInSchema(Schema):
+class CreditorPatchInSchema(BaseSchema):
     name: Optional[str] = None
     reissue_margin: Optional[int] = None
 
 
-class CreditorOutSchema(Schema):
+class CreditorOutSchema(BaseSchema):
     name: str
     reissue_margin: int
     created_at: datetime

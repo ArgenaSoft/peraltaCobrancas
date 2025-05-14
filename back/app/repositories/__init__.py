@@ -34,7 +34,6 @@ class BaseRepository(Generic[T]):
         model_fields = {field.name for field in cls.model._meta.get_fields() if not field.auto_created}
 
         for attr, value in data.items():
-            lgr.debug(attr)
             if attr in model_fields:
                 setattr(new_instance, attr, value)
 

@@ -9,15 +9,16 @@ class UserController(BaseController[UserRepository, User]):
     MODEL = User
 
     @classmethod
-    def create(cls, user_schema: UserInSchema) -> User:
+    def create(cls, schema: UserInSchema) -> User:
         """
         Cria um novo pagador.
 
         Parâmetros:
-            - user_schema: Schema do usuário a ser criado.
+            - schema: Schema do usuário a ser criado.
 
         Retorna:
             - User: Usuário criado.
         """
-        user = UserRepository.create(user_schema.model_dump(exclude_none=True))
-        return user
+        data = schema.model_dump(exclude_none=True)
+        
+        return cls.REPOSITORY.create(data)

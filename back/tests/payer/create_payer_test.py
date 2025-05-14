@@ -12,7 +12,6 @@ def test_create_payer(system_client: Client):
     }
 
     response = system_client.post('/api/payer/', data=data, content_type='application/json')
-    print(response.content)
     assert response.status_code == 201
 
     # Teardown

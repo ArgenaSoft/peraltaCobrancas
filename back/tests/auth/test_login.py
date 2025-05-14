@@ -93,7 +93,6 @@ def test_login_fails_with_incorrect_phone(client: Client, payer: Payer):
     }
 
     response = client.post('/api/auth/token', data=payload, content_type='application/json')
-    print(response.content)
     assert response.status_code == 404, "Esperado status 404 para telefone incorreto."
     assert 'not found' in response.json()['message'].lower(), "Mensagem de erro incorreta."
 

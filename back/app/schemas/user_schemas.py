@@ -1,13 +1,14 @@
 from datetime import datetime
-from ninja import Schema
+
+from app.schemas import BaseSchema
 
 
-class UserInSchema(Schema):
+class UserInSchema(BaseSchema):
     cpf: str
     is_active: bool
 
 
-class UserOutSchema(Schema):
+class UserOutSchema(BaseSchema):
     id: int
     cpf: str
     is_active: bool
@@ -15,6 +16,6 @@ class UserOutSchema(Schema):
     updated_at: datetime
 
 
-class UserGetCodeSchema(Schema):
+class UserGetCodeSchema(BaseSchema):
     cpf: str
     phone: str

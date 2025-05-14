@@ -1,23 +1,22 @@
+from app.schemas import BaseSchema
 
-from ninja import Schema
 
-
-class LoginSchema(Schema):
+class LoginSchema(BaseSchema):
     cpf: str
     phone: str
     code: str
 
 
-class TokenOutSchema(Schema):
+class TokenOutSchema(BaseSchema):
     access: str
     refresh: str
     username: str
 
 
-class RefreshInputSchema(Schema):
+class RefreshInputSchema(BaseSchema):
     refresh: str
 
 
-class RefreshPairSchema(Schema):
+class RefreshPairSchema(BaseSchema):
     access: str
     refresh: str
