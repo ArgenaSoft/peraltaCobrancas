@@ -1,8 +1,8 @@
 import pytest
 
 from app.controllers.auth_controller import AuthController
-from app.models import Agreement, ApiConsumer, Creditor, LoginCode, Payer
-from tests.factories import AgreementFactory, ApiConsumerFactory, CreditorFactory, LoginCodeFactory, PayerFactory, UserFactory
+from app.models import Agreement, ApiConsumer, Creditor, Installment, LoginCode, Payer
+from tests.factories import AgreementFactory, ApiConsumerFactory, CreditorFactory, InstallmentFactory, LoginCodeFactory, PayerFactory, UserFactory
 
 
 @pytest.fixture(autouse=True)
@@ -80,3 +80,10 @@ def agreement():
     yield agreement
     agreement.delete()
     assert not Agreement.objects.filter(pk=agreement.pk).exists(), "Teardown failed: Agreement was not removed from the database."
+
+@pytest.fixture
+def installment():
+    installment = InstallmentFactory.create()
+    yield installment
+    installment.delete()
+    assert not Installment.objects.filter(pk=installment.pk).exists(), "Teardown failed: Installment was not removed from the database."

@@ -9,6 +9,7 @@ from app.api.user_api import user_router
 from app.api.auth_api import auth_router
 from app.api.creditor_api import creditor_router
 from app.api.agreement_api import agreement_router
+from app.api.installment_api import installment_router
 from app.exceptions import HttpFriendlyException
 from config import DEV, ENV
 from core.auth import CustomJWTAuth
@@ -41,3 +42,4 @@ api.add_router('/user', user_router)
 api.add_router('/auth', auth_router)
 api.add_router('/creditor', creditor_router)
 api.add_router('/agreement', agreement_router)
+api.add_router('/installment', installment_router)

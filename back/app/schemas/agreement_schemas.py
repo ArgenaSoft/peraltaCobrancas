@@ -1,5 +1,6 @@
 from datetime import datetime
 import logging
+from typing import Optional
 from pydantic import field_validator
 
 from app.schemas import BaseSchema, StrNotEmpty
@@ -17,8 +18,8 @@ class AgreementInSchema(BaseSchema):
 
 class AgreementPatchInSchema(BaseSchema):
     number: StrNotEmpty = None
-    payer: int
-    creditor: int
+    payer: Optional[int] = None
+    creditor: Optional[int] = None
 
     @field_validator('payer', mode='before')
     @classmethod
