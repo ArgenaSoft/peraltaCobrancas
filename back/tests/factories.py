@@ -1,13 +1,15 @@
 from datetime import timedelta
+from io import BytesIO
 from zoneinfo import ZoneInfo
 
 from django.conf import settings
+from django.core.files.base import ContentFile
 from django.utils import timezone
-import factory
 from factory.django import DjangoModelFactory
 from faker import Faker
+import factory
 
-from app.models import Agreement, ApiConsumer, Creditor, Installment, LoginCode, Payer, User
+from app.models import Agreement, ApiConsumer, Boleto, Creditor, Installment, LoginCode, Payer, User
 
 fake = Faker()
 
@@ -57,6 +59,20 @@ class InstallmentFactory(TimestampedModelFactory):
     
     number = fake.pyint(min_value=1, max_value=1000)
     agreement = factory.SubFactory(AgreementFactory)
+
+
+class BoletoFactory(TimestampedModelFactory):
+    class Meta:
+        model = Boleto
+    
+    installment = factory.SubFactory(InstallmentFactory)
+    status = factory.Iterator([status.value for status in Boleto.Status])
+    due_date = factory.Faker('future_date')
+
+    @factory.lazy_attribute
+    def pdf(self):
+        content = BytesIO(b"Fake PDF content")
+        return ContentFile(content.read(), f"boleto_{fake.uuid4()}.pdf")
 
 
 class ApiConsumerFactory(TimestampedModelFactory):
