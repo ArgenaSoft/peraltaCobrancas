@@ -1,6 +1,4 @@
-import json
 import logging
-from typing import Dict
 
 from django.core.handlers.wsgi import WSGIRequest
 from ninja import Query, Router

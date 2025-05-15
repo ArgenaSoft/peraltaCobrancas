@@ -1,3 +1,4 @@
+from enum import Enum
 import uuid
 from django.db import models
 from django.contrib.auth.models import AbstractBaseUser, BaseUserManager
@@ -154,15 +155,16 @@ class Boleto(BaseModel):
             - status: Status do boleto (Pendente, Pago).
             - due_date: Data de vencimento do boleto.
     """
-    POSSIBLE_STATUSES = (
-        ('pending', 'Pendente'),
-        ('paid', 'Pago'),
-    )
+    class Status(str, Enum):
+        PENDING = 'pending'
+        PAID = 'paid'
+
+
     pdf = models.FileField(upload_to='boletos/')
     installment = models.ForeignKey(Installment, on_delete=models.CASCADE, related_name='boletos')
     status = models.CharField(
         max_length=10,
-        choices=POSSIBLE_STATUSES,
+        choices=[(status.value, status.name.capitalize()) for status in Status],
         default='pending',
     )
     due_date = models.DateField()
@@ -186,6 +188,7 @@ class LoginCode(BaseModel):
 
 def generate_api_key():
     return uuid.uuid4().hex
+
 
 class ApiConsumer(Authenticatable):
     is_human = False
