@@ -3,6 +3,7 @@ import logging
 
 from app.exceptions import HttpFriendlyException
 from app.schemas import ErrorSchema
+from config import DEV, ENV
 
 
 lgr = logging.getLogger(__name__)
@@ -15,14 +16,16 @@ def endpoint(func):
 
         try:
             data, code = func(*args, **kwargs)
-            response['code'] = code
         except HttpFriendlyException as e:
-            response['code'] = e.status_code
+            code = e.status_code
             data = ErrorSchema(message=e.message, code=e.status_code, data=e.data)
         except Exception as e:
-            lgr.error(f"Error in endpoint: {e}")
-            raise
+            lgr.exception(e)
+            if ENV == DEV:
+                raise
+            code = 500
+            data = ErrorSchema(message="Internal Server Error", code=code)
             
-        return response['code'], data
+        return code, data
     
     return wrapper

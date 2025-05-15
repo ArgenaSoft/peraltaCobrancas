@@ -12,6 +12,7 @@ https://docs.djangoproject.com/en/5.2/ref/settings/
 
 from datetime import timedelta
 import logging
+import os
 from pathlib import Path
 
 from config import DEV, ENV, SMS_CODE_EXPIRATION_SECONDS
@@ -184,4 +185,6 @@ CORS_ALLOWED_ORIGINS = [
 ]
 
 CORS_ALLOW_ALL_ORIGINS = ENV is DEV
-    
+
+MEDIA_URL = '/media/'
+MEDIA_ROOT = os.path.join(BASE_DIR, 'media')

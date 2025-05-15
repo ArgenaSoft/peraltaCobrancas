@@ -1,5 +1,7 @@
 from enum import Enum
 import uuid
+import unidecode
+
 from django.db import models
 from django.contrib.auth.models import AbstractBaseUser, BaseUserManager
 
@@ -100,6 +102,15 @@ class Creditor(BaseModel):
     name = models.CharField(max_length=255)
     reissue_margin = models.SmallIntegerField()
 
+    @property
+    def slug_name(self):
+        """
+            Retorna o nome do credor com espaços substituídos por underline, em minúsculo e sem acentos ou símbolos especiais.
+
+            Retorna:
+                - str: Nome do credor formatado.
+        """
+        return unidecode.unidecode(self.name).replace(' ', '_').lower()
 
 # Pagador
 class Payer(BaseModel):
@@ -130,6 +141,15 @@ class Agreement(BaseModel):
     payer = models.ForeignKey(Payer, on_delete=models.CASCADE)
     creditor = models.ForeignKey(Creditor, on_delete=models.CASCADE)
 
+    @property
+    def slug_name(self):
+        """
+            Retorna o nome do acordo com espaços substituídos por underline, em minúsculo e sem acentos ou símbolos especiais.
+
+            Retorna:
+                - str: Nome do acordo formatado.
+        """
+        return unidecode.unidecode(self.number).replace(' ', '_').lower()
 
 # Parcela
 class Installment(BaseModel):
@@ -143,6 +163,15 @@ class Installment(BaseModel):
     number = models.CharField(max_length=255)
     agreement = models.ForeignKey(Agreement, on_delete=models.CASCADE, related_name='installments')
 
+    @property
+    def slug_name(self):
+        """
+            Retorna o nome da parcela com espaços substituídos por underline, em minúsculo e sem acentos ou símbolos especiais.
+
+            Retorna:
+                - str: Nome da parcela formatado.
+        """
+        return unidecode.unidecode(self.number).replace(' ', '_').lower()
 
 # Boleto
 class Boleto(BaseModel):

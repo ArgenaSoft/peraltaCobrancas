@@ -1,8 +1,9 @@
 import logging
+from typing import Optional
 
 from django.core.handlers.wsgi import WSGIRequest
-from ninja import Query, Router
-from ninja.responses import codes_4xx
+from ninja import Form, Query, Router, UploadedFile
+from ninja.responses import codes_4xx, codes_5xx
 
 from app.api import endpoint
 from app.controllers.boleto_controller import BoletoController
@@ -16,7 +17,8 @@ lgr = logging.getLogger(__name__)
 
 @boleto_router.post('/', response={201: BoletoOutSchema, codes_4xx: ErrorSchema})
 @endpoint
-def create_boleto(request: WSGIRequest, data: BoletoInSchema):
+def create_boleto(request: WSGIRequest, pdf: UploadedFile, data: Form[BoletoInSchema]):
+    data.pdf = pdf
     new_boleto: Boleto = BoletoController.create(data)
     return new_boleto, 201
 
@@ -28,10 +30,12 @@ def view_boleto(request: WSGIRequest, boleto_id: int):
     return boleto, 200
 
 
-@boleto_router.patch('/{int:boleto_id}', response={200: BoletoOutSchema})
+# Precisa ser POST por causa do envio de arquivo
+@boleto_router.post('/{int:boleto_id}', response={200: BoletoOutSchema, codes_4xx: ErrorSchema, codes_5xx: ErrorSchema})
 @endpoint
-def edit_boleto(request: WSGIRequest, boleto_id: int, schema: BoletoPatchInSchema):
-    boleto: Boleto = BoletoController.update(boleto_id, schema)
+def edit_boleto(request: WSGIRequest, boleto_id: int, pdf: UploadedFile, data: Form[BoletoPatchInSchema]):
+    data.pdf = pdf
+    boleto: Boleto = BoletoController.update(boleto_id, data)
     return boleto, 200
 
 

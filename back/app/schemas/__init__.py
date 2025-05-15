@@ -11,6 +11,10 @@ class BaseSchema(Schema):
     """
     model_config = ConfigDict(extra='ignore', arbitrary_types_allowed = True)
 
+    def model_dump(self, *args, **kwargs):
+        return super().model_dump(*args, **kwargs, exclude_none=True)
+        
+
 class ErrorSchema(BaseSchema):
     code: int
     message: str
@@ -53,6 +57,9 @@ class PaginatedOutSchema(BaseSchema):
             "page": page.number,
             "items": [i.dict() for i in page.object_list ]
         }
+
+class OutSchema(BaseSchema):
+    id: int
 
 OptionalStrNotEmpty = Annotated[
     Optional[str],

@@ -5,7 +5,7 @@ from app.controllers.creditor_controller import CreditorController
 from app.controllers.payer_controller import PayerController
 from app.models import Agreement
 from app.repositories.agreement_repository import AgreementRepository
-from app.schemas.agreement_schemas import AgreementInSchema
+from app.schemas.agreement_schemas import AgreementInSchema, AgreementPatchInSchema
 
 lgr =  logging.getLogger(__name__)
 
@@ -33,7 +33,7 @@ class AgreementController(BaseController[AgreementRepository, Agreement]):
 
 
     @classmethod
-    def update(cls, id, schema: AgreementInSchema) -> Agreement:
+    def update(cls, id, schema: AgreementPatchInSchema) -> Agreement:
         instance = cls.REPOSITORY.get(pk=id)
         data = schema.model_dump()
         data['payer'] = PayerController.get(id=schema.payer)
