@@ -10,6 +10,7 @@ from app.models import Creditor
 from app.schemas import DeleteSchema, ErrorSchema, ListSchema, PaginatedOutSchema
 from app.schemas.creditor_schemas import CreditorInSchema, CreditorOutSchema, CreditorPatchInSchema
 
+
 creditor_router = Router()
 lgr = logging.getLogger(__name__)
 

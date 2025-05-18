@@ -10,6 +10,7 @@ from app.models import Installment
 from app.schemas import DeleteSchema, ErrorSchema, ListSchema, PaginatedOutSchema
 from app.schemas.installment_schemas import InstallmentInSchema, InstallmentOutSchema, InstallmentPatchInSchema
 
+
 installment_router = Router()
 lgr = logging.getLogger(__name__)
 
