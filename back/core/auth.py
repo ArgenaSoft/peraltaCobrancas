@@ -16,8 +16,7 @@ lgr = logging.getLogger(__name__)
 
 class CustomJWTAuth(JWTAuth):
     """
-        Middleware para a API: É aplicada apenas nas requisições que passam 
-        pelo Django Ninja.
+        Middleware para a autenticação por JWT
     """
     def authenticate(self, request, token):
         try:

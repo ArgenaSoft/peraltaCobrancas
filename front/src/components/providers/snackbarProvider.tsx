@@ -71,7 +71,6 @@ export const SnackbarProvider = ({ children }: any) => {
     }
 
     function remove(id: number) {
-        console.log("Removendo snack " + id);
         setSnacks(prev => {
             const newSnacks = { ...prev };
             delete newSnacks[id];

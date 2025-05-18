@@ -13,7 +13,6 @@ interface TextProps {
 
 const TextInput = (props: TextProps) => {
     function handleChange(e: any) {
-        console.log(e.target.value);
         props.callback(e.target.value);
     }
 

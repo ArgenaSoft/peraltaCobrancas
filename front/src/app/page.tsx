@@ -60,7 +60,6 @@ export default function Home() {
       <div className="flex flex-col bg-dark-blue rounded-2xl p-4 gap-4">
         <h2 className="font-bold text-2xl">Acordos ativos</h2>
         {agreements.map((agreement) => {
-          console.log(agreement.installments);
           const orderedInstallments = agreement.installments.toSorted(
             (a, b) => new Date(a.dueDate).getTime() - new Date(b.dueDate).getTime()
           );
