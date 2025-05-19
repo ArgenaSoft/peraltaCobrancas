@@ -27,7 +27,7 @@ class PayerController(BaseController[PayerRepository, Payer]):
             - Payer: Pagador criado.
         """
         if UserRepository.exists(cpf=schema.cpf):
-            raise HttpFriendlyException(400, "Payer with this cpf already exists.")
+            raise HttpFriendlyException(400, "Um usuário com esse cpf já existe!")
 
         uc_schema: UserInSchema = UserInSchema(
             cpf=schema.cpf,
@@ -35,7 +35,7 @@ class PayerController(BaseController[PayerRepository, Payer]):
         )
 
         user: User = UserController.create(uc_schema)
-        data = schema.model_dump(exclude_none=True)
+        data = schema.model_dump()
         data['user'] = user
         
         return cls.REPOSITORY.create(data)

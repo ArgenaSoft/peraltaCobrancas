@@ -3,7 +3,7 @@ from typing import Optional
 
 from pydantic import field_validator
 
-from app.schemas import BaseSchema, StrNotEmpty
+from app.schemas import BaseSchema, OutSchema, StrNotEmpty
 from app.schemas.agreement_schemas import AgreementOutSchema
 
 
@@ -26,7 +26,7 @@ class InstallmentPatchInSchema(BaseSchema):
         return v
 
 
-class InstallmentOutSchema(BaseSchema):
+class InstallmentOutSchema(OutSchema):
     number: str
     agreement: AgreementOutSchema
     

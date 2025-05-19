@@ -1,20 +1,22 @@
 import logging
+import re
 
-from django.http import HttpRequest
-from ninja import Router
-from ninja import Router
+from django.core.handlers.wsgi import WSGIRequest
 
+from app.api import CustomRouter
 from app.controllers.auth_controller import AuthController
 from app.schemas.auth_schemas import LoginSchema, RefreshInputSchema, RefreshPairSchema, TokenOutSchema
 
-payer_router = Router()
 lgr = logging.getLogger(__name__)
 
-auth_router = Router()
+auth_router = CustomRouter()
 
 
-@auth_router.post("/token", response=TokenOutSchema)
-def login(request, data: LoginSchema):
+@auth_router.post("/token", response=TokenOutSchema, auth=None)
+def login(request: WSGIRequest, data: LoginSchema):
+    data.cpf = re.sub(r"\D", "", data.cpf)
+    data.phone = re.sub(r"\D", "", data.phone)
+
     token, payer_name = AuthController.login(data)
     return {
         "access": str(token.access_token), 
@@ -23,6 +25,6 @@ def login(request, data: LoginSchema):
     }
 
 
-@auth_router.post("/refresh", response=RefreshPairSchema)
-def refresh_token_pair(request: HttpRequest, data: RefreshInputSchema):
+@auth_router.post("/refresh", response=RefreshPairSchema, auth=None)
+def refresh_token_pair(request: WSGIRequest, data: RefreshInputSchema):
     return AuthController.refresh_pair(data)

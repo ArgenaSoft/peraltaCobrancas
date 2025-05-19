@@ -39,9 +39,9 @@ class BaseRepository(Generic[T]):
 
         new_instance.save()
         return new_instance
-        
+
     @classmethod
-    def get(cls, friendly: bool = True, **kwargs) -> T:
+    def get(cls, friendly: bool = True, silent: bool = False, **kwargs) -> T:
         """
         Obtém uma instância do modelo com base nos atributos fornecidos.
 
@@ -56,9 +56,12 @@ class BaseRepository(Generic[T]):
         except cls.model.MultipleObjectsReturned:
             return cls.filter_first(**kwargs)
         except cls.model.DoesNotExist:
+            if silent:
+                return None
+
             if not friendly:
                 raise
-            raise HttpFriendlyException(404, f"{cls.model.__name__} Not Found")
+            raise HttpFriendlyException(404, f"{cls.model.READABLE_NAME} não encontrado")
 
     @classmethod
     def update(cls, instance: T, **kwargs) -> T:
@@ -77,7 +80,7 @@ class BaseRepository(Generic[T]):
         
         instance.save()
         return instance
-    
+
     @classmethod
     def delete(cls, instance: T) -> None:
         """
@@ -106,8 +109,8 @@ class BaseRepository(Generic[T]):
         try:
             return cls.model.objects.filter(**kwargs)
         except cls.model.DoesNotExist:
-            raise HttpFriendlyException(404, f"{cls.model} Not Found")
-    
+            raise HttpFriendlyException(404, f"{cls.model.READABLE_NAME} não encontrado")
+
     @classmethod
     def filter_first(cls, **kwargs) -> T:
         """

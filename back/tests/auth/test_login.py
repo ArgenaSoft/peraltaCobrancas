@@ -18,10 +18,10 @@ def test_login_success(client: Client, payer: Payer):
 
     response = client.post('/api/auth/token', data=payload, content_type='application/json')
 
-    assert response.status_code == 200
-    data = response.json()
-    assert "access" in data, "Token de acesso ausente na resposta."
-    assert "refresh" in data, "Token de refresh ausente na resposta."
+    response_data = response.json()
+    assert response.status_code == 200, response_data
+    assert "access" in response_data, "Token de acesso ausente na resposta."
+    assert "refresh" in response_data, "Token de refresh ausente na resposta."
 
 
 def test_login_fails_with_invalid_code(client: Client, payer: Payer):
@@ -34,8 +34,8 @@ def test_login_fails_with_invalid_code(client: Client, payer: Payer):
     }
 
     response = client.post('/api/auth/token', data=payload, content_type='application/json')
-
-    assert response.status_code == 401, "Esperado status 401 para código inválido."
+    response_data = response.json()
+    assert response.status_code == 401, response_data
 
 
 def test_login_fails_with_expired_code(client: Client, payer: Payer):
@@ -94,7 +94,7 @@ def test_login_fails_with_incorrect_phone(client: Client, payer: Payer):
 
     response = client.post('/api/auth/token', data=payload, content_type='application/json')
     assert response.status_code == 404, "Esperado status 404 para telefone incorreto."
-    assert 'not found' in response.json()['message'].lower(), "Mensagem de erro incorreta."
+    assert 'não encontrado' in response.json()['message'].lower(), "Mensagem de erro incorreta."
 
 
 def test_login_fails_with_incorrect_cpf(client: Client, payer: Payer):

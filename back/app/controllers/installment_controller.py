@@ -16,7 +16,7 @@ class InstallmentController(BaseController[InstallmentRepository, Installment]):
     @classmethod
     def create(cls, schema: InstallmentInSchema) -> Installment:
         agreement: Agreement = AgreementRepository.get(id=schema.agreement) 
-        data = schema.model_dump(exclude_none=True)
+        data = schema.model_dump()
         data['agreement'] = agreement
 
         return cls.REPOSITORY.create(data)

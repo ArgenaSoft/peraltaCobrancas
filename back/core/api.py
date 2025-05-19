@@ -3,6 +3,7 @@ import os
 
 from ninja import NinjaAPI
 from ninja.responses import Response
+from ninja.errors import ValidationError
 
 from app.api.payer_api import payer_router
 from app.api.user_api import user_router
@@ -22,7 +23,7 @@ lgr = logging.getLogger(__name__)
 os.environ["NINJA_SKIP_REGISTRY"] = "yes"
 
 
-api = NinjaAPI()
+api = NinjaAPI(auth=CustomJWTAuth())
 
 
 @api.exception_handler(HttpFriendlyException)
@@ -30,18 +31,28 @@ def handle_friendly_exceptions(request, exc: HttpFriendlyException):
     return Response(exc.dict(), status=exc.status_code)
 
 
+@api.exception_handler(ValidationError)
+def handle_validation_exceptions(request, exc: HttpFriendlyException):
+    lgr.warning("Validation error: %s", exc.errors)
+
+    return Response(
+        {"error": "Erro de validação", "details": exc.errors},
+        status=422
+    )
+
+
 @api.exception_handler(Exception)
-def handle_wild_exceptions(request, exc: HttpFriendlyException):
+def handle_wild_exceptions(request, exc: Exception):
     if ENV == DEV:
-        return Response({"error": str(exc)}, status=500)
+        raise exc
     else:
         return Response({"error": "Internal Server Error"}, status=500)
 
 
-api.add_router('/payer', payer_router, auth=CustomJWTAuth())
+api.add_router('/payer', payer_router)
 api.add_router('/user', user_router)
 api.add_router('/auth', auth_router)
-api.add_router('/creditor', creditor_router, auth=CustomJWTAuth())
-api.add_router('/agreement', agreement_router, auth=CustomJWTAuth())
-api.add_router('/installment', installment_router, auth=CustomJWTAuth())
-api.add_router('/boleto', boleto_router, auth=CustomJWTAuth())
+api.add_router('/creditor', creditor_router)
+api.add_router('/agreement', agreement_router)
+api.add_router('/installment', installment_router)
+api.add_router('/boleto', boleto_router)

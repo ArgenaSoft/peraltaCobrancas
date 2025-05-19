@@ -7,9 +7,7 @@ from ninja import UploadedFile
 from app.controllers import BaseController
 from app.controllers.installment_controller import InstallmentController
 from app.models import Agreement, Boleto, Creditor, Installment
-from app.repositories.agreement_repository import AgreementRepository
 from app.repositories.boleto_repository import BoletoRepository
-from app.repositories.creditor_repository import CreditorRepository
 from app.schemas.boleto_schemas import BoletoInSchema, BoletoPatchInSchema
 
 lgr =  logging.getLogger(__name__)
@@ -36,7 +34,7 @@ class BoletoController(BaseController[BoletoRepository, Boleto]):
 
         path = cls._save_boleto_pdf(schema.pdf, creditor.slug_name, agreement.slug_name, installment.slug_name)
 
-        data = schema.model_dump(exclude_none=True)
+        data = schema.model_dump()
         data['pdf'] = path
         data['installment'] = installment
 

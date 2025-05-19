@@ -9,6 +9,7 @@ from django.contrib.auth.models import AbstractBaseUser, BaseUserManager
 class BaseModel(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+    READABLE_NAME = None
 
     def dict(self):
         """
@@ -53,7 +54,7 @@ class Authenticatable(BaseModel):
 
     class Meta:
         abstract = True
-    
+
 
 class UserManager(BaseUserManager):
     def create_user(self, cpf, **extra_fields):
@@ -65,7 +66,6 @@ class UserManager(BaseUserManager):
         return user
 
 
-# Usuário logável
 class User(AbstractBaseUser, Authenticatable):
     """
         Representa um Usuário que pode se logar no sistema
@@ -76,6 +76,7 @@ class User(AbstractBaseUser, Authenticatable):
             - staff_level: Nível de acesso do Usuário (Funcionário ou
             Administrador).
     """
+    READABLE_NAME = 'Usuário'
     USERNAME_FIELD = 'cpf'
     is_human = True
 
@@ -87,7 +88,6 @@ class User(AbstractBaseUser, Authenticatable):
         return self.cpf
 
 
-# Credor
 class Creditor(BaseModel):
     """
         Representa um Credor.
@@ -99,6 +99,7 @@ class Creditor(BaseModel):
             faltando menos que essa quantidade de dias para o vencimento,
             o sistema automaticamente solicita a reemissão do boleto.
     """
+    READABLE_NAME = 'Credor'
     name = models.CharField(max_length=255)
     reissue_margin = models.SmallIntegerField()
 
@@ -112,7 +113,7 @@ class Creditor(BaseModel):
         """
         return unidecode.unidecode(self.name).replace(' ', '_').lower()
 
-# Pagador
+
 class Payer(BaseModel):
     """
         Representa um Pagador.
@@ -122,12 +123,12 @@ class Payer(BaseModel):
             - cpf: CPF do Pagador.
             - phone: Telefone do Pagador.
     """
+    READABLE_NAME = 'Pagador'
     user = models.OneToOneField(User, on_delete=models.CASCADE)
     name = models.CharField(max_length=255)
     phone = models.CharField(max_length=20)
 
 
-# Acordo
 class Agreement(BaseModel):
     """
         Representa um Acordo.
@@ -137,6 +138,7 @@ class Agreement(BaseModel):
             - payer: Pagador atrelado ao acordo.
             - creditor: Credor atrelado ao acordo.
     """
+    READABLE_NAME = 'Acordo'
     number = models.CharField(max_length=255)
     payer = models.ForeignKey(Payer, on_delete=models.CASCADE)
     creditor = models.ForeignKey(Creditor, on_delete=models.CASCADE)
@@ -151,7 +153,7 @@ class Agreement(BaseModel):
         """
         return unidecode.unidecode(self.number).replace(' ', '_').lower()
 
-# Parcela
+
 class Installment(BaseModel):
     """
         Representa uma Parcela.
@@ -160,6 +162,7 @@ class Installment(BaseModel):
             - number: Número da parcela.
             - agreement: Acordo atrelado à parcela.
     """
+    READABLE_NAME = 'Parcela'
     number = models.CharField(max_length=255)
     agreement = models.ForeignKey(Agreement, on_delete=models.CASCADE, related_name='installments')
 
@@ -173,7 +176,7 @@ class Installment(BaseModel):
         """
         return unidecode.unidecode(self.number).replace(' ', '_').lower()
 
-# Boleto
+
 class Boleto(BaseModel):
     """
         Representa um Boleto.
@@ -184,6 +187,7 @@ class Boleto(BaseModel):
             - status: Status do boleto (Pendente, Pago).
             - due_date: Data de vencimento do boleto.
     """
+    READABLE_NAME = 'Boleto'
     class Status(str, Enum):
         PENDING = 'pending'
         PAID = 'paid'
@@ -198,6 +202,17 @@ class Boleto(BaseModel):
     )
     due_date = models.DateField()
 
+    def dict(self):
+        """
+            Retorna um dicionário com os campos do modelo.
+
+            Retorna:
+                - dict: Dicionário com os campos do modelo.
+        """
+        data = super().dict()
+        data['pdf'] = self.pdf.url if hasattr(self.pdf, 'url') else str(self.pdf)
+        return data
+
 
 class LoginCode(BaseModel):
     """
@@ -209,6 +224,7 @@ class LoginCode(BaseModel):
             - expiration_date: Data de expiração do código.
             - used: Se o código já foi usado
     """
+    READABLE_NAME = 'Código'
     code = models.CharField(max_length=255)
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     expiration_date = models.DateTimeField()
@@ -220,6 +236,7 @@ def generate_api_key():
 
 
 class ApiConsumer(Authenticatable):
+    READABLE_NAME = 'Sistema externo'
     is_human = False
     name = models.CharField(max_length=255, unique=True)
     api_key = models.CharField(max_length=32, unique=True, default=generate_api_key)

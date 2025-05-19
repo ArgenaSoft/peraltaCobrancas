@@ -24,14 +24,8 @@ class ErrorSchema(BaseSchema):
 class ListSchema(BaseSchema):
     page: Optional[int] = 1
     page_size: Optional[int] = 10
-    filters: Optional[dict] = None
+    filters: Optional[dict] = {}
     search: Optional[str] = None
-    
-    def filters(self) -> Dict:
-        return {
-            'filters': self.filters,
-            'search': self.search
-        }
 
 
 class DeleteSchema(BaseSchema):
@@ -39,32 +33,45 @@ class DeleteSchema(BaseSchema):
     data: Optional[Dict] = None
 
 
+class PaginatorSchema(BaseSchema):
+    page_size: int
+    total_pages: int
+    total_items: int
+
+
+class PageSchema(BaseSchema):
+    page: int
+    items: list
+
+
 class PaginatedOutSchema(BaseSchema):
-    paginator: Paginator
-    page: Page
+    paginator: PaginatorSchema
+    page: PageSchema
 
-    @field_serializer('paginator')
-    def serialize_paginator(self, paginator: Paginator) -> Dict:
-        return {
-            "page_size": paginator.per_page,
-            "total_pages": paginator.num_pages,
-            "total_items": paginator.count
-        }
+    @classmethod
+    def build(cls, page: Page, paginator: Paginator):
+        return cls(
+            paginator=PaginatorSchema(
+                page_size=paginator.per_page,
+                total_pages=paginator.num_pages,
+                total_items=paginator.count
+            ),
+            page=PageSchema(
+                page=page.number,
+                items=[i.dict() for i in page.object_list ]
+            )
+        )
 
-    @field_serializer('page')
-    def serialize_page(self, page: Page) -> Dict:
-        return {
-            "page": page.number,
-            "items": [i.dict() for i in page.object_list ]
-        }
 
 class OutSchema(BaseSchema):
     id: int
+
 
 OptionalStrNotEmpty = Annotated[
     Optional[str],
     BeforeValidator(lambda v: None if isinstance(v, str) and v.strip() == "" else v)
 ]
+
 
 StrNotEmpty = Annotated[
     str,

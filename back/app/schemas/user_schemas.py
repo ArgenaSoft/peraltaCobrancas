@@ -1,6 +1,6 @@
 from datetime import datetime
 
-from app.schemas import BaseSchema
+from app.schemas import BaseSchema, OutSchema
 
 
 class UserInSchema(BaseSchema):
@@ -8,8 +8,7 @@ class UserInSchema(BaseSchema):
     is_active: bool
 
 
-class UserOutSchema(BaseSchema):
-    id: int
+class UserOutSchema(OutSchema):
     cpf: str
     is_active: bool
     created_at: datetime

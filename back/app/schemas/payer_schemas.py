@@ -1,7 +1,7 @@
 from datetime import datetime
 from typing import Optional
 
-from app.schemas import BaseSchema
+from app.schemas import BaseSchema, OutSchema
 from app.schemas.user_schemas import UserOutSchema
 
 
@@ -17,7 +17,7 @@ class PayerPatchInSchema(BaseSchema):
     phone: Optional[str] = None
 
 
-class PayerOutSchema(BaseSchema):
+class PayerOutSchema(OutSchema):
     user: UserOutSchema
     name: str
     phone: str

@@ -23,7 +23,7 @@ class CreditorController(BaseController[CreditorRepository, Creditor]):
         Retorna:
             - Creditor: Pagador criado.
         """
-        data = schema.model_dump(exclude_none=True)
+        data = schema.model_dump()
         
         return cls.REPOSITORY.create(data)
 

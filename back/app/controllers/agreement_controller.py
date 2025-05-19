@@ -25,7 +25,7 @@ class AgreementController(BaseController[AgreementRepository, Agreement]):
         Retorna:
             - Agreement: Acordo criado.
         """
-        data = schema.model_dump(exclude_none=True)
+        data = schema.model_dump()
         data['payer'] = PayerController.get(id=schema.payer)
         data['creditor'] = CreditorController.get(id=schema.creditor)
         

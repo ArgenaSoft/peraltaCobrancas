@@ -12,7 +12,3 @@ def test_create_creditor(system_client: Client):
 
     response = system_client.post('/api/creditor/', data=data, content_type='application/json')
     assert response.status_code == 201
-
-    # Teardown
-    Creditor.objects.filter(name='teste').delete()
-    assert Creditor.objects.filter(name='teste').exists() == False, "Teardown falhou: o Creditor não foi removido do banco de dados."

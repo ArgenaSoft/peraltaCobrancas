@@ -36,7 +36,12 @@ class BoletoPatchInSchema(BaseSchema):
 
 
 class BoletoOutSchema(OutSchema):
-    pdf: Any
+    pdf: str
     installment: InstallmentOutSchema
     status: Boleto.Status
     due_date: datetime.date
+
+    @field_validator('pdf', mode='before')
+    @classmethod
+    def get_pdf_url(cls, v: Any) -> str:
+        return v.url if hasattr(v, 'url') else str(v)

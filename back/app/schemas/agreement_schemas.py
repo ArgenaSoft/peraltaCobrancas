@@ -3,7 +3,7 @@ import logging
 from typing import Optional
 from pydantic import field_validator
 
-from app.schemas import BaseSchema, StrNotEmpty
+from app.schemas import BaseSchema, OutSchema, StrNotEmpty
 from app.schemas.creditor_schemas import CreditorOutSchema
 from app.schemas.payer_schemas import PayerOutSchema
 
@@ -36,7 +36,7 @@ class AgreementPatchInSchema(BaseSchema):
         return v
 
 
-class AgreementOutSchema(BaseSchema):
+class AgreementOutSchema(OutSchema):
     number: str
     payer: PayerOutSchema
     creditor: CreditorOutSchema

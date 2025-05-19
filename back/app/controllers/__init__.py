@@ -18,7 +18,7 @@ class BaseController(Generic[RepositoryT, ModelT]):
     @classmethod
     def update(cls, id: int, schema: Schema) -> ModelT:
         instance = cls.REPOSITORY.get(pk=id)
-        return cls.REPOSITORY.update(instance, **schema.model_dump(exclude_none=True))
+        return cls.REPOSITORY.update(instance, **schema.model_dump())
 
     @classmethod
     def get(cls, *args, **kwargs) -> List[ModelT]:
@@ -30,19 +30,19 @@ class BaseController(Generic[RepositoryT, ModelT]):
         return cls.REPOSITORY.delete(instance)
 
     @classmethod
-    def filter(cls, filters: ListSchema) -> Tuple[Page, Paginator]:
+    def filter(cls, schema: ListSchema) -> Tuple[Page, Paginator]:
         """
         Lista instâncias com base nos filtros fornecidos.
 
         Parâmetros:
-            - filters: Filtros de paginação e pesquisa.
+            - schema: Filtros de paginação e pesquisa.
 
         Retorna:
             - List[Agreement]: Lista de instancias.
         """
-        instances = cls.REPOSITORY.filter(filters.model_dump())
-        paginator = Paginator(instances, filters.page_size)
-        page_number = filters.page
+        instances = cls.REPOSITORY.filter(**schema.filters)
+        paginator = Paginator(instances, schema.page_size)
+        page_number = schema.page
 
         instances: Page = paginator.get_page(page_number)
         return instances, paginator

@@ -1,8 +1,8 @@
 from datetime import timedelta
-from io import BytesIO
 from zoneinfo import ZoneInfo
 
 from django.conf import settings
+from django.core.files.uploadedfile import SimpleUploadedFile
 from django.core.files.base import ContentFile
 from django.utils import timezone
 from factory.django import DjangoModelFactory
@@ -24,7 +24,7 @@ class UserFactory(TimestampedModelFactory):
         model = User
 
     password = factory.Faker('password')
-    cpf = factory.Faker('numerify', text='###.###.###-##')
+    cpf = factory.Faker('numerify', text='###########')
 
 
 class PayerFactory(TimestampedModelFactory):
@@ -32,7 +32,7 @@ class PayerFactory(TimestampedModelFactory):
         model = Payer
     
     name = factory.Faker('name')
-    phone = factory.Faker('phone_number')
+    phone = factory.Faker('numerify', text='###########')
     user = factory.SubFactory(UserFactory)
 
 
@@ -71,8 +71,10 @@ class BoletoFactory(TimestampedModelFactory):
 
     @factory.lazy_attribute
     def pdf(self):
-        content = BytesIO(b"Fake PDF content")
-        return ContentFile(content.read(), f"boleto_{fake.uuid4()}.pdf")
+        return SimpleUploadedFile(
+            f"boleto_{fake.uuid4()}.pdf", 
+            b"Fake PDF Content", 
+            content_type="application/pdf")
 
 
 class ApiConsumerFactory(TimestampedModelFactory):

@@ -1,8 +1,9 @@
 import pytest
 
 from app.controllers.auth_controller import AuthController
-from app.models import Agreement, ApiConsumer, Creditor, Installment, LoginCode, Payer
-from tests.factories import AgreementFactory, ApiConsumerFactory, CreditorFactory, InstallmentFactory, LoginCodeFactory, PayerFactory, UserFactory
+from app.models import Agreement, ApiConsumer, Boleto, Creditor, Installment, LoginCode, Payer, User
+from tests.factories import AgreementFactory, ApiConsumerFactory, BoletoFactory, CreditorFactory, InstallmentFactory, LoginCodeFactory, PayerFactory, UserFactory
+from tests.utils import login_client_as
 
 
 @pytest.fixture(autouse=True)
@@ -16,10 +17,7 @@ def enable_db_access_for_all_tests(db):
 @pytest.fixture
 def user_client(client):
     user = UserFactory.create()
-    token = AuthController.get_token(user.id, "user")
-    
-    client.defaults['HTTP_AUTHORIZATION'] = f'Bearer {token.access_token}'
-    
+    client = login_client_as(client, user)
     return client
 
 
@@ -36,9 +34,7 @@ def system_client(client):
 @pytest.fixture
 def payer():
     payer = PayerFactory.create()
-    yield payer
-    payer.delete()
-    assert not Payer.objects.filter(pk=payer.pk).exists(), "Teardown failed: Payer was not removed from the database."
+    return payer
 
 
 @pytest.fixture
@@ -50,40 +46,36 @@ def payer_generator():
         created_payers.extend(payers)
         return payers
 
-    yield _create_payers
-
-    # Teardown
-    for payer in created_payers:
-        payer.delete()
-
-    assert not Payer.objects.filter(pk__in=[payer.pk for payer in created_payers]).exists(), "Teardown failed: Payers were not removed from the database."
-
+    return _create_payers
 
 @pytest.fixture
 def login_code():
     code = LoginCodeFactory.create()
-    yield code
-    code.delete()
-    assert not LoginCode.objects.filter(pk=code.pk).exists(), "Teardown failed: LoginCode was not removed from the database."
+    return code
+
+
+@pytest.fixture
+def user():
+    user = UserFactory.create()
+    return user
 
 
 @pytest.fixture
 def creditor():
     creditor = CreditorFactory.create()
-    yield creditor
-    creditor.delete()
-    assert not Creditor.objects.filter(pk=creditor.pk).exists(), "Teardown failed: Creditor was not removed from the database."
+    return creditor
 
 @pytest.fixture
 def agreement():
     agreement = AgreementFactory.create()
-    yield agreement
-    agreement.delete()
-    assert not Agreement.objects.filter(pk=agreement.pk).exists(), "Teardown failed: Agreement was not removed from the database."
+    return agreement
 
 @pytest.fixture
 def installment():
     installment = InstallmentFactory.create()
-    yield installment
-    installment.delete()
-    assert not Installment.objects.filter(pk=installment.pk).exists(), "Teardown failed: Installment was not removed from the database."
+    return installment
+
+@pytest.fixture
+def boleto():
+    boleto = BoletoFactory.create()
+    return boleto
