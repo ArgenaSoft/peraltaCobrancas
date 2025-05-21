@@ -4,17 +4,29 @@ import { AuthContext } from "@/components/providers/authProvider";
 import { SnackbarContext } from "@/components/providers/snackbarProvider";
 import TextInput from "@/components/textInput";
 import { useRouter } from "next/navigation";
-import { useContext, useState } from "react";
+import { use, useContext, useEffect, useState } from "react";
 
 
 export default function Login() {
   const router = useRouter();
   const { show } = useContext(SnackbarContext);
   const { login } = useContext(AuthContext);
-  const [cpf, setCpf] = useState("12345678901");
-  const [phone, setPhone] = useState("12345678901");
+  const [cpf, setCpf] = useState("");
+  const [phone, setPhone] = useState("");
   const [code, setCode] = useState("");
   const [codeSent, setCodeSent] = useState(false);
+  const [disableSend, setDisableSend] = useState(false);
+
+  useEffect(() => {
+    if(phone.length < 14 || cpf.length < 14){
+      setDisableSend(true);
+    }else if(codeSent && code.length < 6){
+      setDisableSend(true);
+    }else{
+      // Habilitar
+      setDisableSend(false);
+    }
+  }, [phone, cpf, code, codeSent]);
 
   async function getCode() {
     let response: GetCodeReturn = await callGetCode(cpf, phone);
@@ -51,7 +63,7 @@ export default function Login() {
               {codeSent && 
                 <TextInput placeholder="Código" value={code} callback={setCode}/>
               }
-              <button className="bg-dark-blue rounded-lg p-3 text-lg" onClick={handleClick}>
+              <button className={`bg-dark-blue rounded-lg p-3 text-lg ${disableSend ? 'opacity-50': ''} cursor-pointer`} onClick={handleClick} disabled={disableSend}>
                 {codeSent ? "Entrar": "Enviar código"}
               </button>
           </div>
