@@ -1,7 +1,5 @@
 import axios, { AxiosError, AxiosInstance, InternalAxiosRequestConfig } from "axios";
 import env from "../../../env";
-import { FriendlyError } from "../errors";
-import { emitSnack } from "../snackEmitter";
 
 function createApi({ withAuth = false }: { withAuth?: boolean }): AxiosInstance {
   const instance = axios.create({
@@ -25,20 +23,6 @@ function createApi({ withAuth = false }: { withAuth?: boolean }): AxiosInstance 
       }
     );
   }
-
-  instance.interceptors.response.use(
-    (response) => {
-      return response;
-    },
-    (error: AxiosError) => {
-      if (error.response?.data?.message) {
-        emitSnack(error.response.data.message, "", "error");
-      }
-      
-      return Promise.reject(error);
-    }
-  );
-
   return instance;
 }
 

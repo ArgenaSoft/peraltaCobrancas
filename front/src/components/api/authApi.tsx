@@ -1,20 +1,20 @@
+import axios from "axios";
 import { unloggedApi } from "./baseApi";
+import { ApiResponse } from "./types";
 
-interface GetCodeReturn {
-  // TODO: NO FUTURO RETORNARÀ APENAS A MENSAGEM DE QUE O CODIGO FOI ENVIADO
-  // E NÃO O CODIGO EM SI
-  code: string;
-}
-
-async function callGetCode(cpf: string, phone: string): Promise<GetCodeReturn> {
-  let response = await unloggedApi.get("/user/get_code", {
-    params: {
-      cpf: cpf,
-      phone: phone
+async function callGetCode(cpf: string, phone: string): Promise<ApiResponse> {
+  try {
+    const response = await unloggedApi.get("/user/get_code", {
+      params: { cpf, phone },
+    });
+    return response.data;
+  } catch (error) {
+    if (axios.isAxiosError(error) && error.response) {
+      // Retorna o corpo da resposta com erro (status 400, etc)
+      return error.response.data as ApiResponse;
     }
-  });
-
-  return response.data;
+    throw error;
+  }
 }
 
 interface LoginReturn {
@@ -23,23 +23,33 @@ interface LoginReturn {
   username: string;
 }
 
-async function callLogin(cpf: string, phone: string, code: string): Promise<LoginReturn> {
-  let response = await unloggedApi.post("/auth/token", {
-    cpf: cpf,
-    phone: phone,
-    code: code
-  });
-
-  return response.data;
+async function callLogin(cpf: string, phone: string, code: string): Promise<ApiResponse<LoginReturn> | ApiResponse> {
+  try {
+    const response = await unloggedApi.post("/auth/token", { cpf, phone, code });
+    return response.data;
+  } catch (error) {
+    if (axios.isAxiosError(error) && error.response) {
+      console.log(error.response)
+      return error.response.data as ApiResponse;
+    }
+    throw error;
+  }
 }
 
 
-async function callRefresh(refresh_token: string) {
-  let response = await unloggedApi.post("/auth/refresh", {
-    refresh: refresh_token
-  });
-  return await response.data;
+async function callRefresh(refresh_token: string): Promise<ApiResponse<LoginReturn>> {
+  try {
+    const response = await unloggedApi.post("/auth/refresh", {
+      refresh: refresh_token,
+    });
+    return response.data;
+  } catch (error) {
+    if (axios.isAxiosError(error) && error.response) {
+      return error.response.data as ApiResponse<LoginReturn>;
+    }
+    throw error;
+  }
 }
 
 export { callGetCode, callLogin, callRefresh };
-export type { GetCodeReturn, LoginReturn };
+export type { LoginReturn };

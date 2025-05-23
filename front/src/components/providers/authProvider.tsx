@@ -2,10 +2,16 @@
 import { createContext, useEffect, useMemo, useState } from "react";
 import { callLogin, callRefresh, LoginReturn } from "../api/authApi";
 import { useRouter } from "next/navigation";
-import { AuthContextType, UserType } from "../types";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faArrowRightFromBracket } from "@fortawesome/free-solid-svg-icons";
+import { ApiResponse } from "../api/types";
+import { UserType } from "../types";
 
+
+interface AuthContextType {
+    user: UserType|null;
+    login: (cpf: string, phone: string, code: string) => Promise<ApiResponse<LoginReturn>>;
+}
 export const AuthContext = createContext<AuthContextType>({} as AuthContextType);
 
 export const AuthProvider = ({ children }: any) => {
@@ -50,14 +56,14 @@ export const AuthProvider = ({ children }: any) => {
         return user !== null || localStorage.getItem("access_token") !== null;
     }
 
-    async function login(cpf: string, phone: string, code: string): Promise<boolean> {
-        let data: LoginReturn = await callLogin(cpf, phone, code);
-        if(data){
-            setUser(data);
-            updateTokenStorage(data.access, data.refresh, data.username);
-            return true
+    async function login(cpf: string, phone: string, code: string): Promise<ApiResponse<LoginReturn>> {
+        let response: ApiResponse<LoginReturn> | ApiResponse = await callLogin(cpf, phone, code);
+        if(response.code == 200 && response.data){
+            setUser(response.data);
+            updateTokenStorage(response.data.access, response.data.refresh, response.data.username);
         }
-        return false;
+        console.log(response);
+        return response;
     }
 
     async function logout() {

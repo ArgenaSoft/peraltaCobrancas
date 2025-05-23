@@ -14,13 +14,11 @@ export default function Home() {
         {
           id: 1,
           dueDate: "2025-05-01",
-          amount: 100,
           status: "pending",
         },
         {
           id: 2,
           dueDate: "2025-06-01",
-          amount: 100,
           status: "pending",
         }
       ]
@@ -34,19 +32,16 @@ export default function Home() {
         {
           id: 1,
           dueDate: "2025-05-01",
-          amount: 100,
           status: "paid",
         },
         {
           id: 3,
           dueDate: "2025-07-01",
-          amount: 100,
           status: "pending",
         },
         {
           id: 2,
           dueDate: "2025-06-01",
-          amount: 100,
           status: "pending",
         },
       ]
