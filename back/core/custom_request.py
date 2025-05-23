@@ -10,7 +10,7 @@ class CustomRequest(HttpRequest):
     """
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.actor: Optional[Authenticatable] = None
+        self.actor: Authenticatable = None
 
 
 class InjectActorOnRequestMiddleware:

@@ -1,8 +1,9 @@
 from datetime import datetime
 import logging
-from typing import Optional
+from typing import List, Optional
 from pydantic import field_validator
 
+from app.models import Installment
 from app.schemas import BaseSchema, OutSchema, StrNotEmpty
 from app.schemas.creditor_schemas import CreditorOutSchema
 from app.schemas.payer_schemas import PayerOutSchema
@@ -42,3 +43,14 @@ class AgreementOutSchema(OutSchema):
     creditor: CreditorOutSchema
     created_at: datetime
     updated_at: datetime
+
+
+class AgreementHomeSchema(BaseSchema):
+    payer_id: Optional[int] = None
+
+
+class AgreementHomeOutSchema(BaseSchema):
+    number: str
+    payer: PayerOutSchema
+    creditor: CreditorOutSchema
+    installments: List[Installment]

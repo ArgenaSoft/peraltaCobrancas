@@ -18,7 +18,7 @@ def test_login_success(client: Client, payer: Payer):
 
     response = client.post('/api/auth/token', data=payload, content_type='application/json')
 
-    response_data = response.json()
+    response_data = response.json()['data']
     assert response.status_code == 200, response_data
     assert "access" in response_data, "Token de acesso ausente na resposta."
     assert "refresh" in response_data, "Token de refresh ausente na resposta."

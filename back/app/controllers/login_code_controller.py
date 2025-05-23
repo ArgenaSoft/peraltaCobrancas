@@ -6,7 +6,7 @@ from django.conf import settings
 from faker import Faker
 from django.utils import timezone
 
-from app.exceptions import HttpFriendlyException
+from app.exceptions import HttpFriendlyException, ShouldWaitToGenerateAnotherCode
 from app.models import LoginCode, User
 from app.repositories.login_code_repository import LoginCodeRepository
 from app.utils import beautify_timedelta
@@ -21,11 +21,7 @@ class LoginCodeController:
         code = cls.get_user_active_code(user)
         if code:
             wait_time = code.expiration_date - timezone.now()
-            raise HttpFriendlyException(
-                400,
-                f"Aguarde {beautify_timedelta(wait_time)} para gerar um novo código",
-                {"wait_time_seconds": wait_time.total_seconds()}
-            )
+            raise ShouldWaitToGenerateAnotherCode(wait_time)
 
         code = 'PC' + fake.lexify('?????')
         expiration = timezone.now() + timedelta(seconds=settings.SMS_EXPIRATION)

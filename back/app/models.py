@@ -7,32 +7,43 @@ from django.contrib.auth.models import AbstractBaseUser, BaseUserManager
 
 
 class BaseModel(models.Model):
+    id = models.AutoField(primary_key=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     READABLE_NAME = None
 
-    def dict(self):
-        """
-            Retorna um dicionário com os campos do modelo.
+    @staticmethod
+    def resolve_foreign_field_value(value, dry: bool = False):
+        if value and not dry:
+            return value.dict(dry=dry)
+        else:
+            return value.pk if value else None
 
-            Retorna:
-                - dict: Dicionário com os campos do modelo.
+    def dict(self, dry: bool = False):
+        """
+        Retorna um dicionário com os campos do modelo.
+
+        dry=True: exclui relações (FK, O2O, M2M)
         """
         data = {}
-        
+
         for field in self._meta.fields:
-            if isinstance(field, models.ForeignKey):
-                related_instance = getattr(self, field.name)
-                if related_instance:
-                    data[field.name] = related_instance.dict()
-            elif isinstance(field, models.ManyToManyField):
-                related_instances = getattr(self, field.name).all()
-                data[field.name] = [instance.dict() for instance in related_instances]
+            if dry and field.is_relation:
+                continue
+
+            try:
+                value = getattr(self, field.name)
+            except AttributeError:
+                continue
+
+            if isinstance(field, models.ManyToManyField):
+                data[field.name] = [obj.pk for obj in value.all()] if not dry else []
+            elif isinstance(field, models.ForeignKey) or isinstance(field, models.OneToOneField):
+                data[field.name] = self.resolve_foreign_field_value(value, dry)
             else:
-                data[field.name] = getattr(self, field.name)
+                data[field.name] = value
 
         return data
-
 
     class Meta:
         abstract = True
@@ -194,7 +205,7 @@ class Boleto(BaseModel):
 
 
     pdf = models.FileField(upload_to='boletos/')
-    installment = models.ForeignKey(Installment, on_delete=models.CASCADE, related_name='boletos')
+    installment = models.OneToOneField(Installment, on_delete=models.CASCADE, related_name='boleto')
     status = models.CharField(
         max_length=10,
         choices=[(status.value, status.name.capitalize()) for status in Status],
@@ -202,14 +213,14 @@ class Boleto(BaseModel):
     )
     due_date = models.DateField()
 
-    def dict(self):
+    def dict(self, *args, **kwargs):
         """
             Retorna um dicionário com os campos do modelo.
 
             Retorna:
                 - dict: Dicionário com os campos do modelo.
         """
-        data = super().dict()
+        data = super().dict(*args, **kwargs)
         data['pdf'] = self.pdf.url if hasattr(self.pdf, 'url') else str(self.pdf)
         return data
 

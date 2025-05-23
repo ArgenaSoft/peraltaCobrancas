@@ -9,6 +9,7 @@ from app.schemas.agreement_schemas import AgreementOutSchema
 
 lgr = logging.getLogger(__name__)
 
+
 class InstallmentInSchema(BaseSchema):
     number: StrNotEmpty = None
     agreement: int
@@ -29,4 +30,3 @@ class InstallmentPatchInSchema(BaseSchema):
 class InstallmentOutSchema(OutSchema):
     number: str
     agreement: AgreementOutSchema
-    

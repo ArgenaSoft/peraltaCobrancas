@@ -18,3 +18,6 @@ class UserOutSchema(OutSchema):
 class UserGetCodeSchema(BaseSchema):
     cpf: str
     phone: str
+
+class UserWaitToGetCodeSchema(BaseSchema):
+    wait_time_seconds: float

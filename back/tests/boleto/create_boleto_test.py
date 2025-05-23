@@ -23,7 +23,7 @@ def test_create_boleto(system_client: Client, installment: Installment):
 
     response_data = response.json()
     assert response.status_code == 201, response.json()
-    assert response_data['pdf'].endswith(f"{installment.agreement.number}_{installment.number}.pdf")
-    assert response_data['status'] == data['status']
-    assert response_data['installment']['id'] == data['installment']
-    assert response_data['due_date'] == data['due_date']
+    assert response_data['data']['pdf'].endswith(f"{installment.agreement.number}_{installment.number}.pdf")
+    assert response_data['data']['status'] == data['status']
+    assert response_data['data']['installment']['id'] == data['installment']
+    assert response_data['data']['due_date'] == data['due_date']

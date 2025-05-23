@@ -16,10 +16,10 @@ def test_human_can_list_own_boletos(client: Client, user: User):
     response_data = response.json()
     assert response.status_code == 200, response_data
 
-    for item in response_data['page']['items']:
+    for item in response_data['data']['page']['items']:
         assert item['installment']['agreement']['payer']['user']['id'] == user.id, item
 
-    assert len(response_data['page']['items']) == 3, response_data
+    assert len(response_data['data']['page']['items']) == 3, response_data
 
 
 def test_human_cant_access_creditor_view(user_client: Client):

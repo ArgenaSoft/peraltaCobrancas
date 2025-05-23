@@ -1,14 +1,18 @@
 import logging
+from typing import Dict, List
 
 from ninja import Query
 from ninja.responses import codes_4xx
 
 from app.api import CustomRouter, endpoint
 from app.controllers.agreement_controller import AgreementController
+from app.controllers.installment_controller import InstallmentController
+from app.controllers.payer_controller import PayerController
 from app.exceptions import HttpFriendlyException
-from app.models import Agreement
-from app.schemas import DeleteSchema, ErrorSchema, ListSchema, PaginatedOutSchema
-from app.schemas.agreement_schemas import AgreementInSchema, AgreementOutSchema, AgreementPatchInSchema
+from app.models import Agreement, Boleto, Installment
+from app.repositories.payer_repository import PayerRepository
+from app.schemas import DeleteSchema, ReturnSchema, ListSchema, PaginatedOutSchema
+from app.schemas.agreement_schemas import AgreementHomeSchema, AgreementInSchema, AgreementOutSchema, AgreementPatchInSchema
 from core.auth import AllowHumansAuth
 from core.custom_request import CustomRequest
 
@@ -16,31 +20,31 @@ agreement_router = CustomRouter()
 lgr = logging.getLogger(__name__)
 
 
-@agreement_router.post('/', response={201: AgreementOutSchema, codes_4xx: ErrorSchema})
+@agreement_router.post('/', response={201: ReturnSchema[AgreementOutSchema]})
 @endpoint
 def create_agreement(request: CustomRequest, data: AgreementInSchema):
     new_agreement: Agreement = AgreementController.create(data)
-    return new_agreement, 201
+    return ReturnSchema(code=201, data=new_agreement)
 
 
-@agreement_router.get('/{int:agreement_id}', response={200: AgreementOutSchema})
+@agreement_router.get('/{int:agreement_id}', response={200: ReturnSchema[AgreementOutSchema]})
 @endpoint
 def view_agreement(request: CustomRequest, agreement_id: int):
     agreement: Agreement = AgreementController.get(id=agreement_id)
     if request.actor.is_human and agreement.payer.user.id != request.actor.id:
         raise HttpFriendlyException(403, "Você não tem permissão para acessar esse acordo")
 
-    return agreement, 200
+    return ReturnSchema(code=200, data=agreement)
 
 
-@agreement_router.patch('/{int:agreement_id}', response={200: AgreementOutSchema})
+@agreement_router.patch('/{int:agreement_id}', response={200: ReturnSchema[AgreementOutSchema]})
 @endpoint
 def edit_agreement(request: CustomRequest, agreement_id: int, schema: AgreementPatchInSchema):
     agreement: Agreement = AgreementController.update(agreement_id, schema)
-    return agreement, 200
+    return ReturnSchema(code=200, data=agreement)
 
 
-@agreement_router.get('/', response={200: PaginatedOutSchema}, auth=AllowHumansAuth())
+@agreement_router.get('/', response={200: ReturnSchema[PaginatedOutSchema[AgreementOutSchema]]}, auth=AllowHumansAuth())
 @endpoint
 def list_agreement(request: CustomRequest, data: Query[ListSchema]):
     if request.actor.is_human:
@@ -49,12 +53,47 @@ def list_agreement(request: CustomRequest, data: Query[ListSchema]):
         }
         data.filters.update(filters)
 
-    agreements_page, paginator = AgreementController.filter(data)
-    return PaginatedOutSchema.build(agreements_page, paginator), 200
+    agreements_page, paginator = AgreementController.filter_paginated(data)
+    return ReturnSchema(code=200, data=PaginatedOutSchema.build(agreements_page, paginator))
 
 
-@agreement_router.delete('/{int:agreement_id}', response={200: DeleteSchema})
+@agreement_router.delete('/{int:agreement_id}', response={200: ReturnSchema})
 @endpoint
 def delete_payer(request: CustomRequest, agreement_id: int):
     AgreementController.delete(id=agreement_id)
-    return {"message": "Acordo deletado!"}, 200
+
+    return ReturnSchema(code=200)
+
+
+@agreement_router.get('/home', response={200: ReturnSchema[List[Dict]]}, auth=AllowHumansAuth())
+@endpoint
+def list_agreements_for_home(request: CustomRequest, data: Query[AgreementHomeSchema]):
+    if request.actor.is_human:
+        user_id = request.actor.id
+        payer = PayerController.get(user__id=user_id)
+    else:
+        if not data.payer_id:
+            raise HttpFriendlyException(400, "Para acessar essa rota como um sistema, é necessário informar o id do Pagador")
+        payer = PayerController.get(id=data.payer_id)
+
+    agreements = AgreementController.filter(payer__id=payer.id)
+    output_data = []
+
+    for agreement in agreements:
+        installments: List[Installment] = agreement.installments.all()
+        installments_data = []
+        
+        for installment in installments:
+            boleto: Boleto = installment.boleto
+            installments_data.append({
+                "number": installment.number,
+                "boleto": boleto.dict(dry=True) if boleto else None,
+            })
+
+        output_data.append({
+            "number": agreement.number,
+            "creditor": agreement.creditor.dict(),
+            "installments": installments_data
+        })
+
+    return ReturnSchema(code=200, data=output_data)

@@ -12,5 +12,5 @@ def test_edit_boleto(system_client: Client, boleto: Boleto):
     response_data = response.json()
 
     assert response.status_code == 200, response_data
-    assert response_data['status'] == data['status']
-    assert response_data['id'] == boleto.id
+    assert response_data['data']['status'] == data['status']
+    assert response_data['data']['id'] == boleto.id

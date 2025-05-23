@@ -8,15 +8,16 @@ from ninja.responses import codes_4xx
 from app.api import CustomRouter, endpoint
 from app.controllers.login_code_controller import LoginCodeController
 from app.controllers.user_controller import UserController
+from app.exceptions import ShouldWaitToGenerateAnotherCode
 from app.models import LoginCode
-from app.schemas import ErrorSchema
-from app.schemas.user_schemas import UserGetCodeSchema
+from app.schemas import ReturnSchema
+from app.schemas.user_schemas import UserGetCodeSchema, UserWaitToGetCodeSchema
 
 
 user_router = CustomRouter()
 
 
-@user_router.get('/get_code', response={201: Dict, codes_4xx: ErrorSchema}, auth=None)
+@user_router.get('/get_code', response={201: ReturnSchema, 400: ReturnSchema[UserWaitToGetCodeSchema]}, auth=None)
 @endpoint
 def get_code(request: WSGIRequest, data: Query[UserGetCodeSchema]):
     """
@@ -28,7 +29,13 @@ def get_code(request: WSGIRequest, data: Query[UserGetCodeSchema]):
     }
     print(filters)
     user = UserController.get(**filters)
-    code: LoginCode = LoginCodeController.create(user)
+    try:
+        code: LoginCode = LoginCodeController.create(user)
+    except ShouldWaitToGenerateAnotherCode as e:
+        return ReturnSchema(
+            code=400, 
+            message=e.message, 
+            data={"wait_time_seconds": e.data["wait_time_seconds"]})
 
     print(code.code)
-    return {"code": code.code}, 201
+    return ReturnSchema(code=201)

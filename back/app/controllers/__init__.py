@@ -1,7 +1,7 @@
-from typing import Generic, List, Tuple, TypeVar
+from typing import Generic, List, Tuple, Type, TypeVar
 
 from django.core.paginator import Paginator, Page
-from django.db.models import Model
+from django.db.models import Model, QuerySet
 from ninja import Schema
 
 from app.repositories import BaseRepository
@@ -12,8 +12,8 @@ ModelT = TypeVar("ModelT", bound=Model)
 
 
 class BaseController(Generic[RepositoryT, ModelT]):
-    REPOSITORY: RepositoryT = None
-    MODEL: ModelT = None
+    REPOSITORY: Type[RepositoryT] = None
+    MODEL: Type[ModelT] = None
 
     @classmethod
     def update(cls, id: int, schema: Schema) -> ModelT:
@@ -21,7 +21,7 @@ class BaseController(Generic[RepositoryT, ModelT]):
         return cls.REPOSITORY.update(instance, **schema.model_dump())
 
     @classmethod
-    def get(cls, *args, **kwargs) -> List[ModelT]:
+    def get(cls, *args, **kwargs) -> ModelT:
         return cls.REPOSITORY.get(*args, **kwargs)
 
     @classmethod
@@ -30,7 +30,7 @@ class BaseController(Generic[RepositoryT, ModelT]):
         return cls.REPOSITORY.delete(instance)
 
     @classmethod
-    def filter(cls, schema: ListSchema) -> Tuple[Page, Paginator]:
+    def filter_paginated(cls, schema: ListSchema) -> Tuple[Page, Paginator]:
         """
         Lista instâncias com base nos filtros fornecidos.
 
@@ -38,7 +38,7 @@ class BaseController(Generic[RepositoryT, ModelT]):
             - schema: Filtros de paginação e pesquisa.
 
         Retorna:
-            - List[Agreement]: Lista de instancias.
+            - List[ModelT]: Lista de instancias.
         """
         instances = cls.REPOSITORY.filter(**schema.filters)
         paginator = Paginator(instances, schema.page_size)
@@ -46,3 +46,13 @@ class BaseController(Generic[RepositoryT, ModelT]):
 
         instances: Page = paginator.get_page(page_number)
         return instances, paginator
+
+    @classmethod
+    def filter(cls, *args, **kwargs) -> QuerySet[ModelT]:
+        """
+        Lista instâncias com base nos filtros fornecidos.
+
+        Retorna:
+            - List[ModelT]: Lista de instancias.
+        """
+        return cls.REPOSITORY.filter(*args, **kwargs)

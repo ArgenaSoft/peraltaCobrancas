@@ -1,8 +1,10 @@
-from typing import Annotated, Dict, Optional
+from typing import Annotated, Dict, Generic, List, Optional, TypeVar
 
 from ninja import Schema
 from django.core.paginator import Paginator, Page
 from pydantic import BeforeValidator, ConfigDict, field_serializer
+
+from app.exceptions import HttpFriendlyException
 
 
 class BaseSchema(Schema):
@@ -13,18 +15,12 @@ class BaseSchema(Schema):
 
     def model_dump(self, *args, **kwargs):
         return super().model_dump(*args, **kwargs, exclude_none=True)
-        
-
-class ErrorSchema(BaseSchema):
-    code: int
-    message: str
-    data: Optional[Dict] = None
 
 
 class ListSchema(BaseSchema):
     page: Optional[int] = 1
     page_size: Optional[int] = 10
-    filters: Optional[dict] = {}
+    filters: dict = {}
     search: Optional[str] = None
 
 
@@ -38,15 +34,27 @@ class PaginatorSchema(BaseSchema):
     total_pages: int
     total_items: int
 
+T = TypeVar('T')
+class ReturnSchema(BaseSchema, Generic[T]):
+    """
+        Retorno padrão para todas as rotas.
+    """
+    code: int
+    message: Optional[str] = None
+    data: Optional[T] = None
+    
+    @classmethod
+    def from_http_friendly_exception(cls, e: HttpFriendlyException):
+        return cls(message=e.message, code=e.code, data=e.data)
 
-class PageSchema(BaseSchema):
+
+class PageSchema(BaseSchema, Generic[T]):
     page: int
-    items: list
+    items: List[T]
 
-
-class PaginatedOutSchema(BaseSchema):
+class PaginatedOutSchema(BaseSchema, Generic[T]):
     paginator: PaginatorSchema
-    page: PageSchema
+    page: PageSchema[T]
 
     @classmethod
     def build(cls, page: Page, paginator: Paginator):
@@ -58,7 +66,7 @@ class PaginatedOutSchema(BaseSchema):
             ),
             page=PageSchema(
                 page=page.number,
-                items=[i.dict() for i in page.object_list ]
+                items=page.object_list
             )
         )
 

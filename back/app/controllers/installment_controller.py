@@ -23,7 +23,7 @@ class InstallmentController(BaseController[InstallmentRepository, Installment]):
 
 
     @classmethod
-    def update(cls, id, schema: InstallmentPatchInSchema) -> Agreement:
+    def update(cls, id, schema: InstallmentPatchInSchema) -> Installment:
         instance = cls.REPOSITORY.get(pk=id)
         data = schema.model_dump()
         data['agreement'] = AgreementController.get(id=schema.agreement)

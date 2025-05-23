@@ -8,7 +8,7 @@ def test_generate_code_success(client: Client, payer: Payer):
         "cpf": payer.user.cpf,
         "phone": payer.phone
     }
-    print(data)
+
     response = client.get('/api/user/get_code', data)
 
     response_data = response.json()

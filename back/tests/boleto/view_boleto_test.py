@@ -8,4 +8,4 @@ def test_view_boleto(system_client: Client, boleto: Boleto):
 
     assert response.status_code == 200
     response_data = response.json()
-    assert response_data['id'] == boleto.id
+    assert response_data['data']['id'] == boleto.id

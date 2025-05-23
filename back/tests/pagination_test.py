@@ -7,7 +7,7 @@ def test_pagination_page_size(system_client: Client, payer_generator):
     response = system_client.get(f'/api/payer/?page={page}&page_size={page_size}')
 
     assert response.status_code == 200
-    data = response.json()
+    data = response.json()['data']
 
     assert 'paginator' in data, "Resposta não contém 'paginator'."
     assert 'page' in data, "Resposta não contém 'page'."

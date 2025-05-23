@@ -13,6 +13,7 @@ from app.api.agreement_api import agreement_router
 from app.api.installment_api import installment_router
 from app.api.boleto_api import boleto_router
 from app.exceptions import HttpFriendlyException
+from app.schemas import ReturnSchema
 from config import DEV, ENV
 from core.auth import CustomJWTAuth
 
@@ -28,15 +29,22 @@ api = NinjaAPI(auth=CustomJWTAuth())
 
 @api.exception_handler(HttpFriendlyException)
 def handle_friendly_exceptions(request, exc: HttpFriendlyException):
-    return Response(exc.dict(), status=exc.status_code)
+    return Response(
+        ReturnSchema.from_http_friendly_exception(exc).model_dump(),
+        status=exc.code
+    )
 
 
 @api.exception_handler(ValidationError)
-def handle_validation_exceptions(request, exc: HttpFriendlyException):
+def handle_validation_exceptions(request, exc: ValidationError):
     lgr.warning("Validation error: %s", exc.errors)
 
     return Response(
-        {"error": "Erro de validação", "details": exc.errors},
+        ReturnSchema(
+            code=422,
+            message="Validation error",
+            data=exc.errors
+        ).model_dump(),
         status=422
     )
 
@@ -46,7 +54,10 @@ def handle_wild_exceptions(request, exc: Exception):
     if ENV == DEV:
         raise exc
     else:
-        return Response({"error": "Internal Server Error"}, status=500)
+        return Response(
+            ReturnSchema(code=500, message="Internal Server Error"), 
+            status=500
+        )
 
 
 api.add_router('/payer', payer_router)

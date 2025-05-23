@@ -1,12 +1,11 @@
 import logging
 
 from ninja import Query
-from ninja.responses import codes_4xx
 
 from app.api import CustomRouter, endpoint
 from app.controllers.creditor_controller import CreditorController
 from app.models import Creditor
-from app.schemas import DeleteSchema, ErrorSchema, ListSchema, PaginatedOutSchema
+from app.schemas import ReturnSchema, ListSchema, PaginatedOutSchema
 from app.schemas.creditor_schemas import CreditorInSchema, CreditorOutSchema, CreditorPatchInSchema
 from core.custom_request import CustomRequest
 
@@ -15,37 +14,40 @@ creditor_router = CustomRouter()
 lgr = logging.getLogger(__name__)
 
 
-@creditor_router.post('/', response={201: CreditorOutSchema, codes_4xx: ErrorSchema})
+@creditor_router.post('/', response={201: ReturnSchema[CreditorOutSchema]})
 @endpoint
 def create_creditor(request: CustomRequest, data: CreditorInSchema):
     new_creditor: Creditor = CreditorController.create(data)
-    return new_creditor, 201
+    return ReturnSchema(code=201, data=new_creditor)
 
 
-@creditor_router.get('/{int:creditor_id}', response={200: CreditorOutSchema})
+@creditor_router.get('/{int:creditor_id}', response={200: ReturnSchema[CreditorOutSchema]})
 @endpoint
 def view_creditor(request: CustomRequest, creditor_id: int):
     creditor: Creditor = CreditorController.get(id=creditor_id)
-    return creditor, 200
+    return ReturnSchema(code=200, data=creditor)
 
 
-@creditor_router.patch('/{int:creditor_id}', response={200: CreditorOutSchema})
+@creditor_router.patch('/{int:creditor_id}', response={200: ReturnSchema[CreditorOutSchema]})
 @endpoint
 def edit_creditor(request: CustomRequest, creditor_id: int, data: CreditorPatchInSchema):
     creditor: Creditor = CreditorController.update(creditor_id, data)
-    return creditor, 200
+    return ReturnSchema(code=200, data=creditor)
 
 
-@creditor_router.get('/', response={200: PaginatedOutSchema})
+@creditor_router.get('/', response={200: ReturnSchema[PaginatedOutSchema[CreditorOutSchema]]})
 @endpoint
 def list_creditor(request: CustomRequest, data: Query[ListSchema]):
-    creditors_page, paginator = CreditorController.filter(data)
-    return PaginatedOutSchema.build(creditors_page, paginator), 200
+    creditors_page, paginator = CreditorController.filter_paginated(data)
+    return ReturnSchema(
+        code=200, 
+        data=PaginatedOutSchema.build(creditors_page, paginator)
+    )
 
 
 
-@creditor_router.delete('/{int:creditor_id}', response={200: DeleteSchema})
+@creditor_router.delete('/{int:creditor_id}', response={200: ReturnSchema})
 @endpoint
 def delete_payer(request: CustomRequest, creditor_id: int):
     CreditorController.delete(id=creditor_id)
-    return {"message": "Credor deletado!"}, 200
+    return ReturnSchema(code=200)
