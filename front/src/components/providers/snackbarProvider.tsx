@@ -20,15 +20,16 @@ interface SnackbarProps extends SnackType {
 const msg_levels: Record<string, string> = {
     "success": "bg-green-500",
     "info": "bg-dark-blue",
-    "error": "bg-red-500",
+    "error": "bg-burnt-red",
     "warning": "bg-yellow-500",
 }
 
 const Snackbar = (props: SnackbarProps) => {
     const callback = props.callback ?? (() => {});
+    console.log(msg_levels[props.level]);
     return (
-        <div className={`bg-dark-blue ${msg_levels[props.level]} rounded-lg p-5 flex flex-row justify-between items-center gap-5`} onClick={() => callback(props.id)}>
-            <div className="flex flex-col">
+        <div className={`${msg_levels[props.level]} rounded-lg p-3 flex flex-row justify-between items-center gap-5`} onClick={() => callback(props.id)}>
+            <div className="flex flex-row items-center gap-3">
                 {props.title && <span className="font-bold text-[20px]">{props.title}</span>}
                 {props.message && <span className="mt-1 text-[15px]">{props.message}</span>}
             </div>
@@ -80,7 +81,7 @@ export const SnackbarProvider = ({ children }: any) => {
 
     return (
         <SnackbarContext.Provider value={useMemo(() => ({ show }), [show])}>
-            <div className="flex flex-col fixed m-4 right-0 gap-2 z-10">
+            <div id="snacks" className="fixed flex flex-col py-4 w-full items-center gap-2 z-10">
                 {Object.keys(snacks).map(id => {
                     let snack: SnackType = snacks[parseInt(id)];
                     return <Snackbar key={id} id={parseInt(id)} title={snack.title} message={snack.message} level={snack.level} callback={remove} />

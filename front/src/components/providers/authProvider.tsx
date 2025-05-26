@@ -62,7 +62,6 @@ export const AuthProvider = ({ children }: any) => {
             setUser(response.data);
             updateTokenStorage(response.data.access, response.data.refresh, response.data.username);
         }
-        console.log(response);
         return response;
     }
 

@@ -10,7 +10,6 @@ from app.schemas import ListSchema
 RepositoryT = TypeVar("RepositoryT", bound=BaseRepository)
 ModelT = TypeVar("ModelT", bound=Model)
 
-
 class BaseController(Generic[RepositoryT, ModelT]):
     REPOSITORY: Type[RepositoryT] = None
     MODEL: Type[ModelT] = None
@@ -44,8 +43,8 @@ class BaseController(Generic[RepositoryT, ModelT]):
         paginator = Paginator(instances, schema.page_size)
         page_number = schema.page
 
-        instances: Page = paginator.get_page(page_number)
-        return instances, paginator
+        paginated: Page = paginator.get_page(page_number)
+        return paginated, paginator
 
     @classmethod
     def filter(cls, *args, **kwargs) -> QuerySet[ModelT]:

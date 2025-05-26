@@ -1,5 +1,6 @@
 import axios, { AxiosError, AxiosInstance, InternalAxiosRequestConfig } from "axios";
 import env from "../../../env";
+import { emitSnack } from "../snackEmitter";
 
 function createApi({ withAuth = false }: { withAuth?: boolean }): AxiosInstance {
   const instance = axios.create({
@@ -23,6 +24,16 @@ function createApi({ withAuth = false }: { withAuth?: boolean }): AxiosInstance 
       }
     );
   }
+  // Verifica por erros de conexão
+  instance.interceptors.response.use(
+    (response) => response,
+    (error: AxiosError) => {
+      if (axios.isAxiosError(error) && error.code === 'ERR_NETWORK') {
+        emitSnack("Erro de conexão", "Verifique sua internet.", "error");
+        return Promise.reject(new Error("Erro de conexão. Verifique sua internet."));
+      }
+    });
+
   return instance;
 }
 

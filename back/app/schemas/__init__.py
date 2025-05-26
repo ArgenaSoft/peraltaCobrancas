@@ -18,8 +18,8 @@ class BaseSchema(Schema):
 
 
 class ListSchema(BaseSchema):
-    page: Optional[int] = 1
-    page_size: Optional[int] = 10
+    page: int = 1
+    page_size: int = 10
     filters: dict = {}
     search: Optional[str] = None
 

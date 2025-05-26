@@ -22,6 +22,8 @@ class HttpFriendlyException(Exception):
 
 
 class ShouldWaitToGenerateAnotherCode(HttpFriendlyException):
+    data: Dict
+
     def __init__(self, wait_time: timedelta):
         super().__init__(
             400,

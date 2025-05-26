@@ -149,10 +149,19 @@ class Agreement(BaseModel):
             - payer: Pagador atrelado ao acordo.
             - creditor: Credor atrelado ao acordo.
     """
+    class Status(str, Enum):
+        OPEN = 'open'
+        CLOSED = 'closed'
+
     READABLE_NAME = 'Acordo'
     number = models.CharField(max_length=255)
     payer = models.ForeignKey(Payer, on_delete=models.CASCADE)
     creditor = models.ForeignKey(Creditor, on_delete=models.CASCADE)
+    status = models.CharField(
+        max_length=10,
+        choices=[(status.value, status.name.capitalize()) for status in Status],
+        default=Status.OPEN.value,
+    )
 
     @property
     def slug_name(self):
@@ -209,7 +218,7 @@ class Boleto(BaseModel):
     status = models.CharField(
         max_length=10,
         choices=[(status.value, status.name.capitalize()) for status in Status],
-        default='pending',
+        default=Status.PENDING.value,
     )
     due_date = models.DateField()
 

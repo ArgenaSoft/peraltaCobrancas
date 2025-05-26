@@ -1,7 +1,6 @@
 import logging
 
 from app.controllers import BaseController
-from app.controllers.agreement_controller import AgreementController
 from app.models import Agreement, Installment
 from app.repositories.agreement_repository import AgreementRepository
 from app.repositories.installment_repository import InstallmentRepository
@@ -26,6 +25,6 @@ class InstallmentController(BaseController[InstallmentRepository, Installment]):
     def update(cls, id, schema: InstallmentPatchInSchema) -> Installment:
         instance = cls.REPOSITORY.get(pk=id)
         data = schema.model_dump()
-        data['agreement'] = AgreementController.get(id=schema.agreement)
+        data['agreement'] = AgreementRepository.get(id=schema.agreement)
 
         return cls.REPOSITORY.update(instance, **data)

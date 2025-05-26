@@ -5,6 +5,7 @@ from django.core.files.storage import default_storage
 from ninja import UploadedFile
 
 from app.controllers import BaseController
+from app.controllers.agreement_controller import AgreementController
 from app.controllers.installment_controller import InstallmentController
 from app.models import Agreement, Boleto, Creditor, Installment
 from app.repositories.boleto_repository import BoletoRepository
@@ -58,8 +59,8 @@ class BoletoController(BaseController[BoletoRepository, Boleto]):
             path = cls._save_boleto_pdf(schema.pdf, creditor.slug_name, agreement.slug_name, installment.slug_name)
             data['pdf'] = path
 
-        print(data)
-        return cls.REPOSITORY.update(instance, **data)
+        updated: Boleto = cls.REPOSITORY.update(instance, **data)
+        AgreementController.check_agreement_status(updated.installment.agreement)
 
     @classmethod
     def _save_boleto_pdf(cls, pdf: UploadedFile, creditor_name: str, agreement_name: str, installment_name: str) -> str:

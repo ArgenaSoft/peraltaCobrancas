@@ -76,13 +76,13 @@ def list_agreements_for_home(request: CustomRequest, data: Query[AgreementHomeSc
             raise HttpFriendlyException(400, "Para acessar essa rota como um sistema, é necessário informar o id do Pagador")
         payer = PayerController.get(id=data.payer_id)
 
-    agreements = AgreementController.filter(payer__id=payer.id)
+    agreements = AgreementController.filter(payer__id=payer.id, status=Agreement.Status.OPEN.value)
     output_data = []
 
     for agreement in agreements:
         installments: List[Installment] = agreement.installments.all()
         installments_data = []
-        
+
         for installment in installments:
             boleto: Boleto = installment.boleto
             installments_data.append({

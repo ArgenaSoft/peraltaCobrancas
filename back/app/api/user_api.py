@@ -12,6 +12,7 @@ from app.exceptions import ShouldWaitToGenerateAnotherCode
 from app.models import LoginCode
 from app.schemas import ReturnSchema
 from app.schemas.user_schemas import UserGetCodeSchema, UserWaitToGetCodeSchema
+from config import DEV, ENV
 
 
 user_router = CustomRouter()
@@ -37,5 +38,9 @@ def get_code(request: WSGIRequest, data: Query[UserGetCodeSchema]):
             message=e.message, 
             data={"wait_time_seconds": e.data["wait_time_seconds"]})
 
-    print(code.code)
-    return ReturnSchema(code=201)
+    return_data = {}
+    if ENV == DEV:
+        print(f"Generated code: {code.code}")
+        return_data = {"code": code.code}
+
+    return ReturnSchema(code=201, data=return_data)

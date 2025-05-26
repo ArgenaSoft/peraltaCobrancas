@@ -1,7 +1,10 @@
 #  coding: utf-8
 from random import randint
+from typing import List
 from django.core.management.base import BaseCommand
+from django.utils import timezone
 
+from app.models import Installment
 from config import ENV, PROD
 from tests.factories import AgreementFactory, ApiConsumerFactory, BoletoFactory, InstallmentFactory, PayerFactory, UserFactory
 
@@ -25,7 +28,7 @@ class Command(BaseCommand):
         )
 
         test_agreements = AgreementFactory.create_batch(3, payer=test_payer)
-        installments = []
+        installments: List[Installment] = []
         for agree in test_agreements:
             installment_num = randint(1, 10)
             installments.extend(
@@ -35,7 +38,11 @@ class Command(BaseCommand):
             )
 
         for inst in installments:
-            BoletoFactory.create(installment=inst)
+            due_date_factor = randint(-5, 5)
+            BoletoFactory.create(
+                installment=inst,
+                due_date=timezone.now() + timezone.timedelta(days=due_date_factor)
+            )
 
         # Como as parcelas estão vinculadas a acordos, que por sua vez estao com 
         # credores e pagadores, eu não preciso chamar as outras factories aqui.
