@@ -1,16 +1,24 @@
 'use client';
 import { callGetAgreements } from "@/components/api/agreementApi";
 import { AuthContext } from "@/components/providers/authProvider";
-import { Agreement } from "@/components/types";
+import { Agreement, Installment } from "@/components/types";
 import { useContext, useEffect, useState } from "react";
 import { format } from 'date-fns';
+import { useRouter } from "next/navigation";
 
 function AgreementComponent(agreement: Readonly<Agreement>) {
+  const router = useRouter();
+  
+  function handleAgreementClick(){
+    router.push(`/agreement/${agreement.number}`);
+  }
 
   const orderedInstallments = agreement.installments.toSorted(
     (a, b) => new Date(a.boleto.due_date).getTime() - new Date(b.boleto.due_date).getTime()
   );
-  let lastPendingInstallment = orderedInstallments.find((installment) => installment.boleto.status === "pending");
+
+  // Sempre terá essa parcela pendente pois o backend só envia acordos abertos
+  let lastPendingInstallment = orderedInstallments.find((installment) => installment.boleto.status === "pending") as Installment;
   let lastPendingInstallmentDate = new Date(lastPendingInstallment.boleto.due_date)
 
   let paidInstallmentsAmount = orderedInstallments.filter((installment) => installment.boleto.status === "paid").length;
@@ -20,12 +28,12 @@ function AgreementComponent(agreement: Readonly<Agreement>) {
       <h3 className="text-xl">{agreement.creditor.name}</h3>
       <span className="text-md ml-4">Próxima parcela: {format(lastPendingInstallmentDate, 'dd/MM/yyyy')}</span>
       <span className="text-sm ml-4 opacity-50">{paidInstallmentsAmount} de {agreement.installments.length} parcelas</span>
-      <span className="text-lg self-end">Ver acordo -&gt;</span>
+      <span className="text-lg self-end" onClick={handleAgreementClick}>Ver acordo -&gt;</span>
     </div>
   );
 }
 
-export default function Home() {
+export default function HomePage() {
   const { user } = useContext(AuthContext);
   const [agreements, setAgreements] = useState<Agreement[]>([] as any);
 

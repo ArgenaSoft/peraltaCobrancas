@@ -6,10 +6,10 @@ import TextButton from "@/components/textButton";
 import TextInput from "@/components/textInput";
 import { ApiResponse } from "@/components/types";
 import { useRouter } from "next/navigation";
-import { use, useContext, useEffect, useState } from "react";
+import { useContext, useEffect, useState } from "react";
 
 
-export default function Login() {
+export default function LoginPage() {
   const router = useRouter();
   const { show } = useContext(SnackbarContext);
   const { login } = useContext(AuthContext);
