@@ -1,7 +1,7 @@
 import axios from "axios";
 import { loggedApi } from "./baseApi";
-import { ApiResponse } from "./types";
-import { Agreement } from "@/components/types";
+
+import { Agreement, ApiResponse } from "@/components/types";
 
 
 async function callGetAgreements(): Promise<ApiResponse<Agreement[]>> {

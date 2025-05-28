@@ -3,7 +3,6 @@ from zoneinfo import ZoneInfo
 
 from django.conf import settings
 from django.core.files.uploadedfile import SimpleUploadedFile
-from django.core.files.base import ContentFile
 from django.utils import timezone
 from factory.django import DjangoModelFactory
 from faker import Faker
@@ -48,7 +47,7 @@ class AgreementFactory(TimestampedModelFactory):
     class Meta:
         model = Agreement
     
-    number = fake.pyint(min_value=1, max_value=1000)
+    number = factory.LazyFunction(lambda: fake.pyint(min_value=1, max_value=1000))
     payer = factory.SubFactory(PayerFactory)
     creditor = factory.SubFactory(CreditorFactory)
 
@@ -57,7 +56,7 @@ class InstallmentFactory(TimestampedModelFactory):
     class Meta:
         model = Installment
     
-    number = fake.pyint(min_value=1, max_value=1000)
+    number = factory.LazyFunction(lambda: fake.pyint(min_value=1, max_value=1000))
     agreement = factory.SubFactory(AgreementFactory)
 
 

@@ -6,13 +6,13 @@ import { useContext, useEffect, useState } from "react";
 import { format } from 'date-fns';
 
 function AgreementComponent(agreement: Readonly<Agreement>) {
-  console.log(agreement);
+
   const orderedInstallments = agreement.installments.toSorted(
     (a, b) => new Date(a.boleto.due_date).getTime() - new Date(b.boleto.due_date).getTime()
   );
   let lastPendingInstallment = orderedInstallments.find((installment) => installment.boleto.status === "pending");
   let lastPendingInstallmentDate = new Date(lastPendingInstallment.boleto.due_date)
-          
+
   let paidInstallmentsAmount = orderedInstallments.filter((installment) => installment.boleto.status === "paid").length;
   let isLate = lastPendingInstallmentDate < new Date();
   return(
@@ -47,17 +47,20 @@ export default function Home() {
   return(
     <div>
       <h1 className="text-black text-4xl mb-10">Olá, {user?.username}</h1>
-      <div className="flex flex-col bg-dark-blue rounded-2xl p-4 gap-4">
-        <h2 className="font-bold text-3xl">Acordos ativos</h2>
-        {agreements.map((agreement) => {
-          return (
-            <div key={agreement.id}>
-              <AgreementComponent {...agreement} />
-            </div>
-          );
-        }
-        )}
-      </div>
+      {agreements.length > 0 && (
+        <div className="flex flex-col bg-dark-blue rounded-2xl p-4 gap-4">
+          <h2 className="font-bold text-3xl">Acordos ativos</h2>
+          {agreements.map((agreement) => {
+
+            return (
+              <div key={agreement.number}>
+                <AgreementComponent {...agreement} />
+              </div>
+            );
+          }
+          )}
+        </div>
+      )}
     </div>
   );
 }

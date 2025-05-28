@@ -1,3 +1,9 @@
+export type ApiResponse<T = Record<string, unknown>> = {
+  code: number;
+  message: string | null;
+  data: T | null;
+};
+
 interface UserType {
     access: string;
     refresh: string;
@@ -14,12 +20,12 @@ interface Boleto {
 }
 
 interface Installment {
-    id: number;
+    number: number;
     boleto: Boleto;
 }
 
 interface Agreement {
-    id: number;
+    number: number;
     creditor: Creditor;
     installments: Installment[];
 }

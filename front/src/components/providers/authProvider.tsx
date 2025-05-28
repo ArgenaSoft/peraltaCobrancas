@@ -4,13 +4,14 @@ import { callLogin, callRefresh, LoginReturn } from "../api/authApi";
 import { useRouter } from "next/navigation";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faArrowRightFromBracket } from "@fortawesome/free-solid-svg-icons";
-import { ApiResponse } from "../api/types";
-import { UserType } from "../types";
+import { ApiResponse, UserType } from "../types";
+import { registerRefreshHandler } from "../authTokenManager";
 
 
 interface AuthContextType {
     user: UserType|null;
     login: (cpf: string, phone: string, code: string) => Promise<ApiResponse<LoginReturn>>;
+    refresh: () => Promise<string|null>;
 }
 export const AuthContext = createContext<AuthContextType>({} as AuthContextType);
 
@@ -20,6 +21,7 @@ export const AuthProvider = ({ children }: any) => {
     const router = useRouter();
     
     useEffect(() => {
+        registerRefreshHandler(refresh)
         setIsClient(true);
         const accessToken = localStorage.getItem("access_token");
         const refreshToken = localStorage.getItem("refresh_token");
@@ -73,25 +75,27 @@ export const AuthProvider = ({ children }: any) => {
         router.push('/login');
     }
 
-    async function refresh(){
+    async function refresh(): Promise<string|null> {
         if(!user){
             console.log("Não tem usuário para poder fazer refresh do token");
-            return;
+            return null;
         }
 
         let data = await callRefresh(user.refresh);
         if(data){
             setUser({
                 ...user,
-                access: data.access,
-                refresh: data.refresh
+                access: data.data.access,
+                refresh: data.data.refresh
             });
-            updateTokenStorage(data.access, data.refresh);
+            updateTokenStorage(data.data.access, data.data.refresh);
+            return data.data.access;
         }
+        return null;
     }
 
     return (
-        <AuthContext.Provider value={useMemo(() => ({ login, user }), [login, user])}>
+        <AuthContext.Provider value={useMemo(() => ({ login, refresh, user }), [login, user])}>
             {isClient && isLogged() && 
                 <div className="flex justify-end fixed top-0 left-0 w-full h-[60px] bg-dark-blue p-3">
                     <FontAwesomeIcon icon={faArrowRightFromBracket} size={"2x"} onClick={logout}/>

@@ -1,10 +1,10 @@
 'use client';
 import { callGetCode, LoginReturn } from "@/components/api/authApi";
-import { ApiResponse } from "@/components/api/types";
 import { AuthContext } from "@/components/providers/authProvider";
 import { SnackbarContext } from "@/components/providers/snackbarProvider";
 import TextButton from "@/components/textButton";
 import TextInput from "@/components/textInput";
+import { ApiResponse } from "@/components/types";
 import { useRouter } from "next/navigation";
 import { use, useContext, useEffect, useState } from "react";
 
@@ -32,11 +32,11 @@ export default function Login() {
 
   async function getCode() {
     let response: ApiResponse = await callGetCode(cpf, phone);
-    if (response.code == 201) {
+    if(response.code == 201) {
       show("Código enviado!", "Um código foi enviado para o seu telefone", "info");
       setCodeSent(true);
-    } else{
-      show("Erro", response.message ?? '', "erro");
+    } else {
+      show("Erro", response.message ?? '', "error");
     }
   }
 

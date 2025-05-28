@@ -26,7 +26,7 @@ const msg_levels: Record<string, string> = {
 
 const Snackbar = (props: SnackbarProps) => {
     const callback = props.callback ?? (() => {});
-    console.log(msg_levels[props.level]);
+
     return (
         <div className={`${msg_levels[props.level]} rounded-lg p-3 flex flex-row justify-between items-center gap-5`} onClick={() => callback(props.id)}>
             <div className="flex flex-row items-center gap-3">

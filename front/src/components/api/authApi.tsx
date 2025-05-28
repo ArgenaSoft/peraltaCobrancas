@@ -1,6 +1,6 @@
 import axios from "axios";
 import { unloggedApi } from "./baseApi";
-import { ApiResponse } from "./types";
+import { ApiResponse } from "../types";
 
 async function callGetCode(cpf: string, phone: string): Promise<ApiResponse> {
   try {
