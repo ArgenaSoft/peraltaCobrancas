@@ -4,12 +4,12 @@ import { callLogin, callRefresh, LoginReturn } from "../api/authApi";
 import { useRouter } from "next/navigation";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faArrowRightFromBracket } from "@fortawesome/free-solid-svg-icons";
-import { ApiResponse, UserType } from "../types";
+import { ApiResponse, UserTokens } from "../types";
 import { registerRefreshHandler } from "../authTokenManager";
 
 
 interface AuthContextType {
-    user: UserType|null;
+    user: UserTokens|null;
     login: (cpf: string, phone: string, code: string) => Promise<ApiResponse<LoginReturn>>;
     refresh: () => Promise<string|null>;
 }
@@ -17,7 +17,7 @@ export const AuthContext = createContext<AuthContextType>({} as AuthContextType)
 
 export const AuthProvider = ({ children }: any) => {
     const [isClient, setIsClient] = useState(false); // <- garante que está no client
-    const [user, setUser] = useState<UserType|null>(null);
+    const [user, setUser] = useState<UserTokens|null>(null);
     const router = useRouter();
     
     useEffect(() => {

@@ -1,12 +1,12 @@
 'use client';
-import { callGetAgreements } from "@/components/api/agreementApi";
+import { callGetHomeAgreements } from "@/components/api/agreementApi";
 import { AuthContext } from "@/components/providers/authProvider";
-import { Agreement, Installment } from "@/components/types";
+import { HomeAgreement, Installment } from "@/components/types";
 import { useContext, useEffect, useState } from "react";
 import { format } from 'date-fns';
 import { useRouter } from "next/navigation";
 
-function AgreementComponent(agreement: Readonly<Agreement>) {
+function AgreementComponent(agreement: Readonly<HomeAgreement>) {
   const router = useRouter();
   
   function handleAgreementClick(){
@@ -35,12 +35,12 @@ function AgreementComponent(agreement: Readonly<Agreement>) {
 
 export default function HomePage() {
   const { user } = useContext(AuthContext);
-  const [agreements, setAgreements] = useState<Agreement[]>([] as any);
+  const [agreements, setAgreements] = useState<HomeAgreement[]>([] as any);
 
 
   useEffect(() => {
     async function getAgreements() {
-      let response = await callGetAgreements();
+      let response = await callGetHomeAgreements();
       console.log(response);
       if (response.code === 200) {
         setAgreements(response.data);
