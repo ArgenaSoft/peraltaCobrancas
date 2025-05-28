@@ -45,12 +45,12 @@ class AgreementOutSchema(OutSchema):
     updated_at: datetime
 
 
-class AgreementHomeSchema(BaseSchema):
+class AgreementHomeInSchema(BaseSchema):
     payer_id: Optional[int] = None
 
 
 class AgreementHomeOutSchema(BaseSchema):
-    number: str
     payer: PayerOutSchema
+    number: str
     creditor: CreditorOutSchema
     installments: List[Installment]

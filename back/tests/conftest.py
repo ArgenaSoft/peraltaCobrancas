@@ -1,7 +1,8 @@
+from django.test import Client
 import pytest
 
 from app.controllers.auth_controller import AuthController
-from app.models import Agreement, ApiConsumer, Boleto, Creditor, Installment, LoginCode, Payer, User
+from app.models import ApiConsumer
 from tests.factories import AgreementFactory, ApiConsumerFactory, BoletoFactory, CreditorFactory, InstallmentFactory, LoginCodeFactory, PayerFactory, UserFactory
 from tests.utils import login_client_as
 
@@ -13,22 +14,36 @@ def enable_db_access_for_all_tests(db):
     """
     pass
 
-
 @pytest.fixture
-def user_client(client):
-    user = UserFactory.create()
-    client = login_client_as(client, user)
+def json_client(client: Client) -> Client:
+    """
+    Configura o cliente Django para aceitar e enviar JSON.
+    
+    Args:
+        client: O cliente Django a ser configurado.
+    
+    Returns:
+        Client: O cliente configurado para JSON.
+    """
+    client.defaults['CONTENT_TYPE'] = 'application/json'
     return client
 
 
 @pytest.fixture
-def system_client(client):
+def user_client(json_client):
+    user = UserFactory.create()
+    json_client = login_client_as(json_client, user)
+    return json_client
+
+
+@pytest.fixture
+def system_client(json_client):
     system: ApiConsumer = ApiConsumerFactory.create()
     token = AuthController.get_token(system.api_key, "system")
     
-    client.defaults['HTTP_AUTHORIZATION'] = f'Bearer {token.access_token}'
+    json_client.defaults['HTTP_AUTHORIZATION'] = f'Bearer {token.access_token}'
     
-    return client
+    return json_client
 
 
 @pytest.fixture
@@ -48,6 +63,7 @@ def payer_generator():
 
     return _create_payers
 
+
 @pytest.fixture
 def login_code():
     code = LoginCodeFactory.create()
@@ -65,15 +81,18 @@ def creditor():
     creditor = CreditorFactory.create()
     return creditor
 
+
 @pytest.fixture
 def agreement():
     agreement = AgreementFactory.create()
     return agreement
 
+
 @pytest.fixture
 def installment():
     installment = InstallmentFactory.create()
     return installment
+
 
 @pytest.fixture
 def boleto():

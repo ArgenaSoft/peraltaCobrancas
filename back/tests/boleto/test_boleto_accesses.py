@@ -22,7 +22,7 @@ def test_human_can_list_own_boletos(client: Client, user: User):
     assert len(response_data['data']['page']['items']) == 3, response_data
 
 
-def test_human_cant_access_creditor_view(user_client: Client):
+def test_human_cant_access_boleto_view(user_client: Client):
     response = user_client.get("/api/boleto/1")
     response_data = response.json()
     assert response.status_code == 403, response_data

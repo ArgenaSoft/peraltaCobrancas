@@ -61,6 +61,8 @@ class BoletoController(BaseController[BoletoRepository, Boleto]):
 
         updated: Boleto = cls.REPOSITORY.update(instance, **data)
         AgreementController.check_agreement_status(updated.installment.agreement)
+        
+        return updated
 
     @classmethod
     def _save_boleto_pdf(cls, pdf: UploadedFile, creditor_name: str, agreement_name: str, installment_name: str) -> str:

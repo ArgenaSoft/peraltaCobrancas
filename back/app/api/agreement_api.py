@@ -12,7 +12,7 @@ from app.exceptions import HttpFriendlyException
 from app.models import Agreement, Boleto, Installment
 from app.repositories.payer_repository import PayerRepository
 from app.schemas import DeleteSchema, ReturnSchema, ListSchema, PaginatedOutSchema
-from app.schemas.agreement_schemas import AgreementHomeSchema, AgreementInSchema, AgreementOutSchema, AgreementPatchInSchema
+from app.schemas.agreement_schemas import AgreementHomeInSchema, AgreementHomeOutSchema, AgreementInSchema, AgreementOutSchema, AgreementPatchInSchema
 from core.auth import AllowHumansAuth
 from core.custom_request import CustomRequest
 
@@ -67,7 +67,7 @@ def delete_payer(request: CustomRequest, agreement_id: int):
 
 @agreement_router.get('/home', response={200: ReturnSchema[List[Dict]]}, auth=AllowHumansAuth())
 @endpoint
-def list_agreements_for_home(request: CustomRequest, data: Query[AgreementHomeSchema]):
+def list_agreements_for_home(request: CustomRequest, data: Query[AgreementHomeInSchema]):
     if request.actor.is_human:
         user_id = request.actor.id
         payer = PayerController.get(user__id=user_id)
@@ -97,3 +97,13 @@ def list_agreements_for_home(request: CustomRequest, data: Query[AgreementHomeSc
         })
 
     return ReturnSchema(code=200, data=output_data)
+
+
+@agreement_router.get('/number/{str:agreement_number}', response={200: ReturnSchema[AgreementOutSchema]}, auth=AllowHumansAuth())
+@endpoint
+def get_agreement_by_number(request: CustomRequest, agreement_number: str):
+    agreement: Agreement = AgreementController.get(number=agreement_number)
+    if request.actor.is_human and agreement.payer.user.id != request.actor.id:
+        raise HttpFriendlyException(403, "Você não tem permissão para acessar esse acordo")
+
+    return ReturnSchema(code=200, data=agreement)

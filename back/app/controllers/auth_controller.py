@@ -1,8 +1,8 @@
 import logging
-from typing import Dict, Tuple
+from typing import Dict, Tuple, Union
 from django.utils import timezone
 from app.repositories.payer_repository import PayerRepository
-from ninja_jwt.tokens import RefreshToken
+from ninja_jwt.tokens import RefreshToken, Token
 
 from app.exceptions import HttpFriendlyException
 from app.models import ApiConsumer, LoginCode, Payer, User
@@ -58,20 +58,21 @@ class AuthController:
             if token_type not in ['user', 'system']:
                 raise HttpFriendlyException(401, "Tipo de token inválido")
             
-            new_refresh = cls.get_token(entity_id, token_type)
+            try:
+                new_refresh = cls.get_token(entity_id, token_type)
+            except (User.DoesNotExist, ApiConsumer.DoesNotExist) as e:
+                raise HttpFriendlyException(403, f"{token_type.capitalize()} não encontrado")
 
             # Retornar os novos tokens
             return {
                 "access": str(new_refresh.access_token),
                 "refresh": str(new_refresh),
             }
-        except (User.DoesNotExist, ApiConsumer.DoesNotExist) as e:
-            raise HttpFriendlyException(403, f"{token_type.capitalize()} não encontrado")
         except Exception as e:
             raise HttpFriendlyException(401, f"Token inválido ou expirado: {str(e)}")
     
     @staticmethod
-    def get_token(entity_id: int, type: str) -> RefreshToken:
+    def get_token(entity_id: int, type: str) -> Union[RefreshToken, Token]:
         if type == "user":
             user = UserRepository.get(id=entity_id)
             token = RefreshToken.for_user(user)

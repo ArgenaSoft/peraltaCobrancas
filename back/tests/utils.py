@@ -1,3 +1,4 @@
+from typing import Optional
 from django.test import Client
 
 from app.controllers.auth_controller import AuthController
@@ -13,7 +14,7 @@ def login_client_as(client: Client, user: User):
     return client
 
 
-def generate_boleto(user: User, installment: Installment = None) -> Boleto:
+def generate_boleto(user: User, installment: Optional[Installment] = None) -> Boleto:
     """
     Gera um boleto para o usuário fornecido.
     
@@ -35,7 +36,8 @@ def generate_boleto(user: User, installment: Installment = None) -> Boleto:
     boleto: Boleto = BoletoFactory.create(installment=installment)
     return boleto
 
-def generate_multiple_boletos(count: int, user: User = None) -> list[Boleto]:
+
+def generate_multiple_boletos(count: int, user: Optional[User] = None) -> list[Boleto]:
     """
     Gera múltiplos boletos para o usuário fornecido.
     Caso um usuário não seja fornecido, um novo usuário será criado.
@@ -51,21 +53,13 @@ def generate_multiple_boletos(count: int, user: User = None) -> list[Boleto]:
         user = UserFactory.create()
 
     boletos = []
-    installment = None
     for _ in range(count):
-        boleto = generate_boleto(user, installment=installment)
-
-        if not installment:
-            # Reaproveito o installment do primeiro boleto gerado para os próximos
-            installment = boleto.installment
-
-        boletos.append(boleto)
+        boletos.append(generate_boleto(user))
 
     return boletos
 
 
-
-def generate_installment(user: User, agreement: Agreement = None) -> Installment:
+def generate_installment(user: User, agreement: Optional[Agreement] = None) -> Installment:
     """
     Gera uma parcela para o usuário fornecido.
     
@@ -85,7 +79,8 @@ def generate_installment(user: User, agreement: Agreement = None) -> Installment
     installment: Installment = InstallmentFactory.create(agreement=agreement)
     return installment
 
-def generate_multiple_installments(count: int, user: User = None) -> list[Installment]:
+
+def generate_multiple_installments(count: int, user: Optional[User] = None) -> list[Installment]:
     """
     Gera múltiplos installments para o usuário fornecido.
     Caso um usuário não seja fornecido, um novo usuário será criado.
@@ -113,3 +108,42 @@ def generate_multiple_installments(count: int, user: User = None) -> list[Instal
 
     return installments
 
+
+def generate_agreement(user: User) -> Agreement:
+    """
+    Gera um acordo para o usuário fornecido.
+    
+    Args:
+        user: O usuário para o qual o acordo será gerado.
+    Returns:
+        Agreement: O acordo gerado.
+    """
+    payer: Payer = PayerRepository.get(user=user, silent=True)
+    if not payer:
+        payer = PayerFactory.create(user=user)
+
+    creditor: Creditor = CreditorFactory.create()
+    agreement: Agreement = AgreementFactory.create(creditor=creditor, payer=payer)
+    return agreement
+
+
+def generate_multiple_agreements(count: int, user: Optional[User] = None) -> list[Agreement]:
+    """
+    Gera múltiplos acordos para o usuário fornecido.
+    Caso um usuário não seja fornecido, um novo usuário será criado.
+
+    Args:
+        count: O número de acordos a serem gerados.
+        user: O usuário para o qual os acordos serão gerados.
+
+    Returns:
+        list[Agreement]: Uma lista de acordos gerados.
+    """
+    if not user:
+        user: User = UserFactory.create()
+
+    agreements = []
+    for _ in range(count):
+        agreements.append(generate_agreement(user))
+
+    return agreements
