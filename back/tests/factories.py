@@ -58,6 +58,8 @@ class InstallmentFactory(TimestampedModelFactory):
     
     number = factory.LazyFunction(lambda: fake.pyint(min_value=1, max_value=1000))
     agreement = factory.SubFactory(AgreementFactory)
+    due_date = factory.Faker('future_date')
+
 
 
 class BoletoFactory(TimestampedModelFactory):
@@ -66,8 +68,6 @@ class BoletoFactory(TimestampedModelFactory):
     
     installment = factory.SubFactory(InstallmentFactory)
     status = factory.Iterator([status.value for status in Boleto.Status])
-    due_date = factory.Faker('future_date')
-
     @factory.lazy_attribute
     def pdf(self):
         return SimpleUploadedFile(

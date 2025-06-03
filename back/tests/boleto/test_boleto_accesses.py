@@ -2,7 +2,7 @@ from typing import List
 
 from django.test import Client
 
-from app.models import Boleto, User
+from app.models import Boleto, Installment, User
 from tests.utils import generate_multiple_boletos, login_client_as
 
 
@@ -17,7 +17,7 @@ def test_human_can_list_own_boletos(client: Client, user: User):
     assert response.status_code == 200, response_data
 
     for item in response_data['data']['page']['items']:
-        assert item['installment']['agreement']['payer']['user']['id'] == user.id, item
+        assert User.objects.get(payer__agreements__installments__boleto__id=item['id']).id == user.id, item
 
     assert len(response_data['data']['page']['items']) == 3, response_data
 

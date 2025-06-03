@@ -3,8 +3,8 @@ import { callGetHomeAgreements } from "@/components/api/agreementApi";
 import { AuthContext } from "@/components/providers/authProvider";
 import { HomeAgreement, Installment } from "@/components/types";
 import { useContext, useEffect, useState } from "react";
-import { format } from 'date-fns';
 import { useRouter } from "next/navigation";
+import { readable_date } from "@/components/utils";
 
 function AgreementComponent(agreement: Readonly<HomeAgreement>) {
   const router = useRouter();
@@ -14,21 +14,22 @@ function AgreementComponent(agreement: Readonly<HomeAgreement>) {
   }
 
   const orderedInstallments = agreement.installments.toSorted(
-    (a, b) => new Date(a.boleto.due_date).getTime() - new Date(b.boleto.due_date).getTime()
+    (a, b) => {return new Date(a.due_date).getTime() - new Date(b.due_date).getTime()}
   );
+
 
   // Sempre terá essa parcela pendente pois o backend só envia acordos abertos
   let lastPendingInstallment = orderedInstallments.find((installment) => installment.boleto.status === "pending") as Installment;
-  let lastPendingInstallmentDate = new Date(lastPendingInstallment.boleto.due_date)
-
+  console.log(lastPendingInstallment.due_date);
+  let lastPendingInstallmentDate = new Date(lastPendingInstallment.due_date)
   let paidInstallmentsAmount = orderedInstallments.filter((installment) => installment.boleto.status === "paid").length;
   let isLate = lastPendingInstallmentDate < new Date();
   return(
     <div className={`flex flex-col rounded-2xl border-1 border-white p-2 ${isLate ? "bg-burnt-red" : ''}`}>
       <h3 className="text-xl">{agreement.creditor.name}</h3>
-      <span className="text-md ml-4">Próxima parcela: {format(lastPendingInstallmentDate, 'dd/MM/yyyy')}</span>
+      <span className="text-md ml-4">Próxima parcela: {readable_date(lastPendingInstallmentDate)}</span>
       <span className="text-sm ml-4 opacity-50">{paidInstallmentsAmount} de {agreement.installments.length} parcelas</span>
-      <span className="text-lg self-end" onClick={handleAgreementClick}>Ver acordo -&gt;</span>
+      <span className="text-lg self-end cursor-pointer" onClick={handleAgreementClick}>Ver acordo -&gt;</span>
     </div>
   );
 }

@@ -4,12 +4,17 @@ import { loggedApi } from "./baseApi";
 import { Installment, PaginatedApiResponse } from "@/components/types";
 
 
-async function callGetInstallments(agreement_id: number): Promise<PaginatedApiResponse<Installment>> {
+async function callGetInstallments(agreement_id: number, load_boleto: boolean = false): Promise<PaginatedApiResponse<Installment>> {
   try {
-    let filters = {
+    let data = {
       "agreement__id": agreement_id
     }
-    const response = await loggedApi.get("/installment/", {params: filters});
+
+    if (load_boleto) {
+      data["include_rels"] = ['boleto']
+    }
+
+    const response = await loggedApi.get("/installment/", {params: data});
     return response.data;
   } catch (error) {
     if (axios.isAxiosError(error) && error.response) {

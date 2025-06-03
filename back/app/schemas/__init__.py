@@ -1,27 +1,49 @@
-from typing import Annotated, Dict, Generic, List, Optional, TypeVar
+from typing import Annotated, Any, Dict, Generic, List, Optional, TypeVar
 
-from ninja import Schema
+from ninja import FilterSchema, Schema
+from ninja.schema import DjangoGetter
+
 from django.core.paginator import Paginator, Page
-from pydantic import BeforeValidator, ConfigDict, field_serializer
+from pydantic import BeforeValidator, ConfigDict, field_serializer, model_validator
 
 from app.exceptions import HttpFriendlyException
 
 
-class BaseSchema(Schema):
+class ExcludesNone(Schema):
+    def model_dump(self, *args, **kwargs):
+        return super().model_dump(*args, **kwargs, exclude_none=True)
+
+
+class BaseSchema(ExcludesNone):
     """
         Classe base para todos os schemas.
     """
     model_config = ConfigDict(extra='ignore', arbitrary_types_allowed = True)
 
-    def model_dump(self, *args, **kwargs):
-        return super().model_dump(*args, **kwargs, exclude_none=True)
 
-
-class ListSchema(BaseSchema):
+class ListSchema(ExcludesNone):
+    model_config = ConfigDict(extra='allow', arbitrary_types_allowed = True)
     page: int = 1
     page_size: int = 10
-    filters: dict = {}
-    search: Optional[str] = None
+    # Relacionamentos a serem incluídos na busca
+    include_rels: Optional[List[str]] = None
+    filters: Dict[str, Any] = {}
+
+    def build_filters_from_query(self, query: Dict) -> None:
+        """
+            Constrói os filtros a partir de um dicionário de query. 
+            Feito para importar os filtros da requisição GET.
+
+            Os filtros devem começar com 'f_'
+        """
+
+        self.filters = {}
+        for key, value in query.items():
+            if key.startswith('f_'):
+                # Remove o prefixo 'f_' e adiciona ao dicionário de filtros
+                self.filters[key[2:]] = value
+
+
 
 
 class DeleteSchema(BaseSchema):
@@ -33,6 +55,7 @@ class PaginatorSchema(BaseSchema):
     page_size: int
     total_pages: int
     total_items: int
+
 
 T = TypeVar('T')
 class ReturnSchema(BaseSchema, Generic[T]):
@@ -51,6 +74,7 @@ class ReturnSchema(BaseSchema, Generic[T]):
 class PageSchema(BaseSchema, Generic[T]):
     page: int
     items: List[T]
+
 
 class PaginatedOutSchema(BaseSchema, Generic[T]):
     paginator: PaginatorSchema

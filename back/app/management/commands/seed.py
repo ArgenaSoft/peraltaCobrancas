@@ -31,17 +31,22 @@ class Command(BaseCommand):
         installments: List[Installment] = []
         for agree in test_agreements:
             installment_num = randint(1, 10)
+            due_date_factor = randint(-5, 5)
             installments.extend(
                 InstallmentFactory.create_batch(
                     installment_num, 
-                    agreement=agree)
+                    agreement=agree,
+                    due_date=timezone.now() + timezone.timedelta(days=due_date_factor)
+                    )
             )
 
         for inst in installments:
-            due_date_factor = randint(-5, 5)
+            # Crio o boleto apenas se a data de vencimento da parcela for dentro 2 dias
+            if inst.due_date > timezone.now() + timezone.timedelta(days=2):
+                continue
+
             BoletoFactory.create(
                 installment=inst,
-                due_date=timezone.now() + timezone.timedelta(days=due_date_factor)
             )
 
         # Como as parcelas estão vinculadas a acordos, que por sua vez estao com 

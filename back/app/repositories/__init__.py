@@ -1,7 +1,7 @@
 import logging
 from django.db.models.query import QuerySet
 
-from typing import Dict, Generic, Type, TypeVar
+from typing import Dict, Generic, List, Optional, Type, TypeVar
 from app.exceptions import HttpFriendlyException
 from app.models import BaseModel
 
@@ -96,18 +96,31 @@ class BaseRepository(Generic[T]):
         return None
 
     @classmethod
-    def filter(cls, *args, **kwargs) -> QuerySet[T]:
+    def filter(cls, include_rels: Optional[List[str]] = None, *args, **kwargs) -> QuerySet[T]:
         """
-        Filtra instâncias do modelo com base nos atributos fornecidos.
+        Filtra instâncias do modelo com base nos atributos fornecidos,
+        incluindo relacionamentos especificados.
 
         Parâmetros:
+            - include_rels: Lista de nomes de relacionamentos a serem carregados.
             - kwargs: Atributos do modelo a serem filtrados.
 
         Retorna:
-            - Lista de instâncias do modelo correspondentes.
+            - QuerySet com as instâncias correspondentes.
         """
         try:
-            return cls.model.objects.filter(**kwargs)
+            qs = cls.model.objects.filter(**kwargs)
+
+            if include_rels:
+                try:
+                    try:
+                        qs = qs.select_related(*include_rels)
+                    except Exception:
+                        qs = qs.prefetch_related(*include_rels)
+                except Exception as e:
+                    lgr.debug(f"Relacionamento(s) {include_rels} não encontrado(s) no modelo {cls.model.READABLE_NAME}")
+
+            return qs
         except cls.model.DoesNotExist:
             raise HttpFriendlyException(404, f"{cls.model.READABLE_NAME} não encontrado")
 

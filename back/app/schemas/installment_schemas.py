@@ -1,3 +1,4 @@
+import datetime
 import logging
 from typing import Optional
 
@@ -12,6 +13,7 @@ lgr = logging.getLogger(__name__)
 
 class InstallmentInSchema(BaseSchema):
     number: StrNotEmpty = None
+    due_date: datetime.date
     agreement: int
 
 
@@ -30,3 +32,5 @@ class InstallmentPatchInSchema(BaseSchema):
 class InstallmentOutSchema(OutSchema):
     number: str
     agreement: AgreementOutSchema
+    due_date: datetime.date
+    boleto: Optional['BoletoOutSchema'] = None

@@ -21,7 +21,7 @@ export default function RootLayout({children,}: Readonly<{children: React.ReactN
       <body
         className={`${interSans.variable} antialiased`}
       >
-        <div className="bg-white font-inter">
+        <div className="bg-white font-inter overflow-y-scroll">
           <SnackbarProvider>
             <AuthProvider>
               {children}

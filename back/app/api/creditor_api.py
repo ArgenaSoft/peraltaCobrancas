@@ -38,12 +38,12 @@ def edit_creditor(request: CustomRequest, creditor_id: int, data: CreditorPatchI
 @creditor_router.get('/', response={200: ReturnSchema[PaginatedOutSchema[CreditorOutSchema]]})
 @endpoint
 def list_creditor(request: CustomRequest, data: Query[ListSchema]):
+    data.build_filters_from_query(request.GET.dict())
     creditors_page, paginator = CreditorController.filter_paginated(data)
     return ReturnSchema(
         code=200, 
         data=PaginatedOutSchema.build(creditors_page, paginator)
     )
-
 
 
 @creditor_router.delete('/{int:creditor_id}', response={200: ReturnSchema})

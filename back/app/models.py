@@ -155,8 +155,8 @@ class Agreement(BaseModel):
 
     READABLE_NAME = 'Acordo'
     number = models.CharField(max_length=255)
-    payer = models.ForeignKey(Payer, on_delete=models.CASCADE)
-    creditor = models.ForeignKey(Creditor, on_delete=models.CASCADE)
+    payer = models.ForeignKey(Payer, on_delete=models.CASCADE, related_name='agreements')
+    creditor = models.ForeignKey(Creditor, on_delete=models.CASCADE, related_name='agreements')
     status = models.CharField(
         max_length=10,
         choices=[(status.value, status.name.capitalize()) for status in Status],
@@ -181,10 +181,12 @@ class Installment(BaseModel):
         Atributos:
             - number: Número da parcela.
             - agreement: Acordo atrelado à parcela.
+            - due_date: Data de vencimento da parcela.
     """
     READABLE_NAME = 'Parcela'
     number = models.CharField(max_length=255)
     agreement = models.ForeignKey(Agreement, on_delete=models.CASCADE, related_name='installments')
+    due_date = models.DateField()
 
     @property
     def slug_name(self):
@@ -205,7 +207,6 @@ class Boleto(BaseModel):
             - pdf: Caminho do PDF do boleto no sistema.
             - installment: Parcela atrelada ao boleto.
             - status: Status do boleto (Pendente, Pago).
-            - due_date: Data de vencimento do boleto.
     """
     READABLE_NAME = 'Boleto'
     class Status(str, Enum):
@@ -220,7 +221,6 @@ class Boleto(BaseModel):
         choices=[(status.value, status.name.capitalize()) for status in Status],
         default=Status.PENDING.value,
     )
-    due_date = models.DateField()
 
     def dict(self, *args, **kwargs):
         """

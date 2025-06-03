@@ -24,14 +24,12 @@ def create_boleto(
     request: CustomRequest,
     pdf: UploadedFile = File(...),
     installment: int = Form(...),
-    status: Boleto.Status = Form(...),
-    due_date: datetime.date = Form(...)
+    status: Boleto.Status = Form(...)
 ):
     data = BoletoInSchema(
         pdf=pdf,
         installment=installment,
-        status=status,
-        due_date=due_date,)
+        status=status,)
 
     new_boleto: Boleto = BoletoController.create(data)
     return ReturnSchema(code=201, data=new_boleto)
@@ -54,14 +52,12 @@ def edit_boleto(
     boleto_id: int,
     pdf: Optional[UploadedFile] = File(None),
     installment: Optional[int] = Form(None),
-    status: Optional[Boleto.Status] = Form(None),
-    due_date: Optional[datetime.date] = Form(None)
+    status: Optional[Boleto.Status] = Form(None)
 ):
     data = BoletoPatchInSchema(
         pdf=pdf,
         installment=installment,
-        status=status,
-        due_date=due_date,)
+        status=status)
     boleto: Boleto = BoletoController.update(boleto_id, data)
     return ReturnSchema(code=200, data=boleto)
 
@@ -69,11 +65,10 @@ def edit_boleto(
 @boleto_router.get('/', response={200: ReturnSchema[PaginatedOutSchema[BoletoOutSchema]]}, auth=AllowHumansAuth())
 @endpoint
 def list_boleto(request: CustomRequest, data: Query[ListSchema]):
+    data.build_filters_from_query(request.GET.dict())
+
     if request.actor.is_human:
-        filters = {
-            'installment__agreement__payer__user_id': request.actor.id,
-        }
-        data.filters.update(filters)
+        data.filters['installment__agreement__payer__user_id'] = request.actor.id
 
     boletos_page, paginator = BoletoController.filter_paginated(data)
 

@@ -43,6 +43,8 @@ def edit_payer(request: CustomRequest, payer_id: int, data: PayerPatchInSchema):
 @payer_router.get('/', response={200: ReturnSchema[PaginatedOutSchema[PayerOutSchema]]})
 @endpoint
 def list_payer(request: CustomRequest, data: Query[ListSchema]):
+    data.build_filters_from_query(request.GET.dict())
+
     payers_page, paginator = PayerController.filter_paginated(data)
     return ReturnSchema(
         code=200,

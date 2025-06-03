@@ -1,6 +1,8 @@
+from datetime import timedelta
 from django.test import Client
+from django.utils import timezone
 
-from app.models import Installment, Agreement
+from app.models import Agreement
 
 
 
@@ -8,6 +10,7 @@ def test_create_installment(system_client: Client, agreement: Agreement):
     data = {
         'number': '1',
         'agreement': agreement.id,
+        'due_date': (timezone.now() + timedelta(days=30)).date().isoformat(),
     }
 
     response = system_client.post('/api/installment/', data=data, content_type='application/json')
@@ -18,6 +21,7 @@ def test_cant_create_installment_with_empty_number(system_client: Client, agreem
     data = {
         'number': '',
         'agreement': agreement.id,
+        'due_date': (timezone.now() + timedelta(days=30)).date().isoformat(),
     }
 
     response = system_client.post('/api/installment/', data=data, content_type='application/json')

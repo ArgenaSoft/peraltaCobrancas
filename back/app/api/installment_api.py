@@ -46,11 +46,10 @@ def edit_installment(request: CustomRequest, installment_id: int, data: Installm
 @installment_router.get('/', response={200: ReturnSchema[PaginatedOutSchema[InstallmentOutSchema]]}, auth=AllowHumansAuth())
 @endpoint
 def list_installment(request: CustomRequest, data: Query[ListSchema]):
+    data.build_filters_from_query(request.GET.dict())
+
     if request.actor.is_human:
-        filters: Dict = {
-            'agreement__payer__user_id': request.actor.id,
-        }
-        data.filters.update(filters)
+        data.filters['agreement__payer__user_id'] = request.actor.id
 
     installments_page, paginator = InstallmentController.filter_paginated(data)
     return ReturnSchema(

@@ -7,7 +7,6 @@ from pydantic import field_validator
 
 from app.models import Boleto
 from app.schemas import BaseSchema, OutSchema
-from app.schemas.installment_schemas import InstallmentOutSchema
 
 
 lgr = logging.getLogger(__name__)
@@ -18,14 +17,12 @@ class BoletoInSchema(BaseSchema):
     pdf: Optional[UploadedFile] = None
     installment: int
     status: Boleto.Status
-    due_date: datetime.date
 
 
 class BoletoPatchInSchema(BaseSchema):
     pdf: Optional[UploadedFile] = None
     installment: Optional[int] = None
     status: Optional[Boleto.Status] = None
-    due_date: Optional[datetime.date] = None
 
     @field_validator('installment', mode='before')
     @classmethod
@@ -37,9 +34,7 @@ class BoletoPatchInSchema(BaseSchema):
 
 class BoletoOutSchema(OutSchema):
     pdf: str
-    installment: InstallmentOutSchema
     status: Boleto.Status
-    due_date: datetime.date
 
     @field_validator('pdf', mode='before')
     @classmethod

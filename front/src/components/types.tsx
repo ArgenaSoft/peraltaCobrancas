@@ -35,13 +35,13 @@ interface Creditor {
 }
 
 interface Boleto {
-    due_date: string;
     status: "pending" | "paid";
 }
 
 interface Installment {
     number: number;
     boleto: Boleto;
+    due_date: string;
 }
 
 interface HomeAgreement {

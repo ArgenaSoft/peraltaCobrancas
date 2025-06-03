@@ -47,11 +47,10 @@ def edit_agreement(request: CustomRequest, agreement_id: int, schema: AgreementP
 @agreement_router.get('/', response={200: ReturnSchema[PaginatedOutSchema[AgreementOutSchema]]}, auth=AllowHumansAuth())
 @endpoint
 def list_agreement(request: CustomRequest, data: Query[ListSchema]):
+    data.build_filters_from_query(request.GET.dict())
+
     if request.actor.is_human:
-        filters = {
-            'payer__user_id': request.actor.id,
-        }
-        data.filters.update(filters)
+        data.filters['payer__user_id'] = request.actor.id
 
     agreements_page, paginator = AgreementController.filter_paginated(data)
     return ReturnSchema(code=200, data=PaginatedOutSchema.build(agreements_page, paginator))
@@ -84,9 +83,15 @@ def list_agreements_for_home(request: CustomRequest, data: Query[AgreementHomeIn
         installments_data = []
 
         for installment in installments:
+            # Preciso verificar se a parcela tem boleto associado
+            if not hasattr(installment, 'boleto'):
+                continue
+            
+
             boleto: Boleto = installment.boleto
             installments_data.append({
                 "number": installment.number,
+                "due_date": installment.due_date,
                 "boleto": boleto.dict(dry=True) if boleto else None,
             })
 

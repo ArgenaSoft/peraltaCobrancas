@@ -39,7 +39,7 @@ class BaseController(Generic[RepositoryT, ModelT]):
         Retorna:
             - List[ModelT]: Lista de instancias.
         """
-        instances = cls.REPOSITORY.filter(**schema.filters)
+        instances = cls.REPOSITORY.filter(**schema.filters, include_rels=schema.include_rels)
         paginator = Paginator(instances, schema.page_size)
         page_number = schema.page
 

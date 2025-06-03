@@ -15,7 +15,6 @@ def test_create_boleto(system_client: Client, installment: Installment):
     data = {
         'pdf': fake_pdf,
         'status': Boleto.Status.PENDING.value,
-        'due_date': (timezone.now() + timedelta(days=30)).date().isoformat(),
         'installment': installment.id,
     }
 
@@ -25,5 +24,3 @@ def test_create_boleto(system_client: Client, installment: Installment):
     assert response.status_code == 201, response.json()
     assert response_data['data']['pdf'].endswith(f"{installment.agreement.number}_{installment.number}.pdf")
     assert response_data['data']['status'] == data['status']
-    assert response_data['data']['installment']['id'] == data['installment']
-    assert response_data['data']['due_date'] == data['due_date']
