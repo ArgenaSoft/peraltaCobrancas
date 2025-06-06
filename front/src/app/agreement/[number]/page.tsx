@@ -51,6 +51,7 @@ export default function AgreementPage() {
             installments.sort((a, b) => {
                 return new Date(a.due_date).getTime() - new Date(b.due_date).getTime();
             });
+            console.log(installments)
 
             setAgreement({
                 ...agreement,
@@ -90,7 +91,6 @@ export default function AgreementPage() {
         )
     }
 
-    console.log(agreement.installments);
     return (
         <div className="flex flex-col text-black justify-center items-start">
             <h1 className="text-4xl mb-3">Acordo com <strong>{agreement.creditor.name}</strong></h1>

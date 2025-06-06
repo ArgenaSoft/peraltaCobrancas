@@ -29,7 +29,6 @@ async function callLogin(cpf: string, phone: string, code: string): Promise<ApiR
     return response.data;
   } catch (error) {
     if (axios.isAxiosError(error) && error.response) {
-      console.log(error.response)
       return error.response.data as ApiResponse;
     }
     throw error;

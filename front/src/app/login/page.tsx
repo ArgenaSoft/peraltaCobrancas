@@ -47,7 +47,6 @@ export default function LoginPage() {
     }
 
     let response: ApiResponse<LoginReturn> = await login(cpf, phone, code);
-    console.log(response)
     if (response.code == 200) {
       show("Sucesso", "Login realizado com sucesso", "info");
       router.push("/");

@@ -77,7 +77,6 @@ export const AuthProvider = ({ children }: any) => {
 
     async function refresh(): Promise<string|null> {
         if(!user){
-            console.log("Não tem usuário para poder fazer refresh do token");
             return null;
         }
 

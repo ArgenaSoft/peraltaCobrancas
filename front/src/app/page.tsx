@@ -20,7 +20,6 @@ function AgreementComponent(agreement: Readonly<HomeAgreement>) {
 
   // Sempre terá essa parcela pendente pois o backend só envia acordos abertos
   let lastPendingInstallment = orderedInstallments.find((installment) => installment.boleto.status === "pending") as Installment;
-  console.log(lastPendingInstallment.due_date);
   let lastPendingInstallmentDate = new Date(lastPendingInstallment.due_date)
   let paidInstallmentsAmount = orderedInstallments.filter((installment) => installment.boleto.status === "paid").length;
   let isLate = lastPendingInstallmentDate < new Date();
@@ -42,7 +41,6 @@ export default function HomePage() {
   useEffect(() => {
     async function getAgreements() {
       let response = await callGetHomeAgreements();
-      console.log(response);
       if (response.code === 200) {
         setAgreements(response.data);
       } else {
