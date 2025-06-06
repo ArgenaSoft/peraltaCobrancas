@@ -36,6 +36,7 @@ interface Creditor {
 
 interface Boleto {
     status: "pending" | "paid";
+    pdf: string;
 }
 
 interface Installment {

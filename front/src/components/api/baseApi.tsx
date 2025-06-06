@@ -1,11 +1,10 @@
 import axios, { AxiosError, AxiosInstance, InternalAxiosRequestConfig } from "axios";
-import env from "../../../env";
 import { emitSnack } from "../snackEmitter";
 import { tryRefreshToken } from "../authTokenManager";
 
 function createApi({ withAuth = false }: { withAuth?: boolean }): AxiosInstance {
   const instance = axios.create({
-    baseURL: env.API_URL,
+    baseURL: process.env.NEXT_PUBLIC_API_URL + "/api",
     headers: {
       "Content-Type": "application/json",
     },

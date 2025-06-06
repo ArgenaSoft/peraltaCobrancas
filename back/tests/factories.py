@@ -8,6 +8,7 @@ from factory.django import DjangoModelFactory
 from faker import Faker
 import factory
 
+from app.controllers.boleto_controller import BoletoController
 from app.models import Agreement, ApiConsumer, Boleto, Creditor, Installment, LoginCode, Payer, User
 
 fake = Faker()
@@ -47,7 +48,7 @@ class AgreementFactory(TimestampedModelFactory):
     class Meta:
         model = Agreement
     
-    number = factory.LazyFunction(lambda: fake.pyint(min_value=1, max_value=1000))
+    number = factory.LazyFunction(lambda: str(fake.pyint(min_value=1, max_value=999)))
     payer = factory.SubFactory(PayerFactory)
     creditor = factory.SubFactory(CreditorFactory)
 
@@ -56,7 +57,7 @@ class InstallmentFactory(TimestampedModelFactory):
     class Meta:
         model = Installment
     
-    number = factory.LazyFunction(lambda: fake.pyint(min_value=1, max_value=1000))
+    number = factory.LazyFunction(lambda: str(fake.pyint(min_value=1, max_value=999)))
     agreement = factory.SubFactory(AgreementFactory)
     due_date = factory.Faker('future_date')
 
@@ -68,12 +69,16 @@ class BoletoFactory(TimestampedModelFactory):
     
     installment = factory.SubFactory(InstallmentFactory)
     status = factory.Iterator([status.value for status in Boleto.Status])
+    
     @factory.lazy_attribute
     def pdf(self):
-        return SimpleUploadedFile(
-            f"boleto_{fake.uuid4()}.pdf", 
+        pdf = SimpleUploadedFile(
+            f"sera_substituido.pdf", 
             b"Fake PDF Content", 
             content_type="application/pdf")
+        agreement: Agreement = self.installment.agreement
+
+        return BoletoController._save_boleto_pdf(pdf, agreement.creditor.slug_name, agreement.slug_name, self.installment.slug_name)
 
 
 class ApiConsumerFactory(TimestampedModelFactory):

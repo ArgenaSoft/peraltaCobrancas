@@ -1,10 +1,11 @@
 #  coding: utf-8
+from datetime import timedelta
 from random import randint
 from typing import List
 from django.core.management.base import BaseCommand
 from django.utils import timezone
 
-from app.models import Installment
+from app.models import Boleto, Installment
 from config import ENV, PROD
 from tests.factories import AgreementFactory, ApiConsumerFactory, BoletoFactory, InstallmentFactory, PayerFactory, UserFactory
 
@@ -28,28 +29,77 @@ class Command(BaseCommand):
         )
 
         test_agreements = AgreementFactory.create_batch(3, payer=test_payer)
-        installments: List[Installment] = []
-        for agree in test_agreements:
-            installment_num = randint(1, 10)
-            due_date_factor = randint(-5, 5)
-            installments.extend(
-                InstallmentFactory.create_batch(
-                    installment_num, 
-                    agreement=agree,
-                    due_date=timezone.now() + timezone.timedelta(days=due_date_factor)
-                    )
+        # Primeiro acordo — 10 parcelas
+        # O primeiro dos 3 acordos deverá possuir 10 parcelas. 
+        # 5 já foram pagas, a 6 está atrasada, 
+        # a 7 ainda está dentro do prazo e as 
+        # últimas não possuem boleto ainda
+        agreement1 = test_agreements[0]
+        base_date = timezone.now().date() + timedelta(days=5)
+        for i in range(1, 11):
+            due_date = base_date - timedelta(days=(6 - i) * 30)
+            installment = InstallmentFactory.create(
+                number=str(i),
+                agreement=agreement1,
+                due_date=due_date,
             )
 
-        for inst in installments:
-            # Crio o boleto apenas se a data de vencimento da parcela for dentro 2 dias
-            if inst.due_date > timezone.now() + timezone.timedelta(days=2):
-                continue
+            if i <= 5:
+                BoletoFactory.create(installment=installment, status=Boleto.Status.PAID.value)
+            elif i in [6, 7]:
+                if i == 6:
+                    installment.due_date = timezone.now().date() - timedelta(days=5)
+                BoletoFactory.create(installment=installment, status=Boleto.Status.PENDING.value)
+            else:
+                # Sem boleto
+                pass
 
-            BoletoFactory.create(
-                installment=inst,
+        # Segundo acordo — 5 parcelas
+        # O segundo acordo possui 5 parcelas. 
+        # Apenas a última está pendente, e não está atrasada
+        agreement2 = test_agreements[1]
+        for i in range(1, 6):
+            due_date = timezone.now().date() - timedelta(days=(25 - i * 4))
+            installment = InstallmentFactory.create(
+                number=str(i),
+                agreement=agreement2,
+                due_date=due_date,
             )
 
-        # Como as parcelas estão vinculadas a acordos, que por sua vez estao com 
-        # credores e pagadores, eu não preciso chamar as outras factories aqui.
-        InstallmentFactory.create_batch(10)
-        ApiConsumerFactory.create()
+            if i < 5:
+                BoletoFactory.create(installment=installment, status=Boleto.Status.PAID.value)
+            else:
+                future_date = timezone.now().date() + timedelta(days=7)
+                installment.due_date = future_date
+                installment.save()
+                BoletoFactory.create(installment=installment, status=Boleto.Status.PENDING.value)
+
+        # Terceiro acordo — 7 parcelas
+        # O último acordo possui 7 parcelas. A primeira está atrasada. 
+        # Da segunda até a quinta parcela está tudo pago. 
+        # A sexta está pendente mas dentro do prazo, e a sétima 
+        # ainda não possui o boleto
+        agreement3 = test_agreements[2]
+        for i in range(1, 8):
+            installment = InstallmentFactory.create(
+                number=str(i),
+                agreement=agreement3,
+                due_date=timezone.now().date() - timedelta(days=(20 - i * 3))
+            )
+
+            if i == 1:
+                # Atrasada
+                installment.due_date = timezone.now().date() - timedelta(days=10)
+                installment.save()
+                BoletoFactory.create(installment=installment, status=Boleto.Status.PENDING.value)
+            elif 2 <= i <= 5:
+                BoletoFactory.create(installment=installment, status=Boleto.Status.PAID.value)
+            elif i == 6:
+                installment.due_date = timezone.now().date() + timedelta(days=5)
+                installment.save()
+                BoletoFactory.create(installment=installment, status=Boleto.Status.PENDING.value)
+            else:
+                # Sem boleto
+                pass
+
+        self.stdout.write(self.style.SUCCESS('Banco populado com sucesso'))

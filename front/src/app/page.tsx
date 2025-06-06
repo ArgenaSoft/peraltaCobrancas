@@ -37,7 +37,6 @@ export default function HomePage() {
   const { user } = useContext(AuthContext);
   const [agreements, setAgreements] = useState<HomeAgreement[]>([] as any);
 
-
   useEffect(() => {
     async function getAgreements() {
       let response = await callGetHomeAgreements();

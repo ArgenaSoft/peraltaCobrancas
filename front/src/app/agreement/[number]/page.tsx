@@ -16,6 +16,7 @@ export default function AgreementPage() {
     const [openedInstallments, setOpenedInstallments] = useState<number[]>([]);
 
     useEffect(() => {
+
         // Busca o acordo
         async function callFetchAgreement() {
             if (!number) return;
@@ -66,7 +67,12 @@ export default function AgreementPage() {
     useEffect(() => {
         // Quando as parcelas forem carregadas, vou ver quais já devem estar abertas
         if(agreement){
-            let opened = agreement.installments.filter(installment => installment.boleto.status === "pending").map(installment => installment.number);
+            let opened = agreement.installments.filter(
+                (installment) => {
+                    if(installment.boleto === null) return false;
+                    return installment.boleto.status === "pending"
+                }
+            ).map(installment => installment.number);
             setOpenedInstallments(opened);
         }
 
@@ -80,6 +86,10 @@ export default function AgreementPage() {
         }
     }
 
+    function getPdfUrl(uri: string): string {
+        if (!uri) return "";
+        return process.env.NEXT_PUBLIC_API_URL + uri;
+    }
 
     if (!agreement || !agreement.id || !agreement.installments) {
         return (
@@ -101,16 +111,19 @@ export default function AgreementPage() {
                     index = agreement.installments.length - index; // Inverte o índice
 
                     let isOpened = openedInstallments.includes(installment.number);
-                    let isPending = installment.boleto.status === "pending";
-                    let isLate = new Date(installment.due_date) < new Date() && isPending;
-
+                    
                     let backgroundColor = 'bg-gray-300';
                     let textColor = 'text-gray-500';
                     let linkColor = 'text-anchor-blue';
-                    if (isPending) {
-                        backgroundColor = isLate ? 'bg-burnt-red' : 'bg-dark-blue';
-                        textColor = 'text-white';
-                        linkColor = 'text-anchor-blue-light';
+
+                    if(installment.boleto){
+                        let isPending = installment.boleto.status === "pending";
+                        let isLate = new Date(installment.due_date) < new Date() && isPending;
+                        if (isPending) {
+                            backgroundColor = isLate ? 'bg-burnt-red' : 'bg-dark-blue';
+                            textColor = 'text-white';
+                            linkColor = 'text-anchor-blue-light';
+                        }
                     }
 
                     return (
@@ -122,7 +135,7 @@ export default function AgreementPage() {
                                 <h3 className="text-xl">Nº: {index}</h3>
                                 <p>Vencimento: {readable_date(installment.due_date)}</p>
                                 { installment.boleto && 
-                                    <a className={`${linkColor} underline`} href="">Ver boleto</a>
+                                    <a className={`${linkColor} underline`} href={getPdfUrl(installment.boleto.pdf)}>Ver boleto</a>
                                 }
                             </div>
 
