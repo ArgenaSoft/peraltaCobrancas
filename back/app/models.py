@@ -135,7 +135,7 @@ class Payer(BaseModel):
             - phone: Telefone do Pagador.
     """
     READABLE_NAME = 'Pagador'
-    user = models.OneToOneField(User, on_delete=models.CASCADE)
+    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='payer')
     name = models.CharField(max_length=255)
     phone = models.CharField(max_length=20)
 
@@ -263,3 +263,19 @@ class ApiConsumer(Authenticatable):
 
     def __str__(self):
         return self.name
+
+
+class PastNumber(BaseModel):
+    """
+        Representa um número passado.
+
+        Atributos:
+            - number: Número passado.
+            - user: Usuário atrelado ao número.
+    """
+    READABLE_NAME = 'Número passado'
+    number = models.CharField(max_length=255, unique=True)
+    payer = models.ForeignKey(Payer, on_delete=models.CASCADE, related_name='past_numbers')
+
+    def __str__(self):
+        return self.number

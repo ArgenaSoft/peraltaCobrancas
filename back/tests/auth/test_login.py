@@ -111,3 +111,20 @@ def test_login_fails_with_incorrect_cpf(client: Client, payer: Payer):
 
     assert response.status_code == 401, "Esperado status 401 para CPF incorreto."
     assert 'cpf' in response.json()['message'].lower(), "Mensagem de erro incorreta."
+
+
+def test_payer_phone_update_on_login(client: Client, payer: Payer):
+    code = "123456"
+    LoginCodeFactory.create(user=payer.user, code=code, used=False)
+
+    payload = {
+        "cpf": payer.user.cpf,
+        "phone": "99999999999",
+        "code": code
+    }
+
+    response = client.post('/api/auth/token', data=payload, content_type='application/json')
+
+    assert response.status_code == 200, response.json()
+    payer.refresh_from_db()
+    assert payer.phone == "99999999999", "Telefone do pagador não foi atualizado corretamente após login."
