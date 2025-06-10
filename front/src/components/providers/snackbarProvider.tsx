@@ -81,7 +81,7 @@ export const SnackbarProvider = ({ children }: any) => {
 
     return (
         <SnackbarContext.Provider value={useMemo(() => ({ show }), [show])}>
-            <div id="snacks" className="fixed flex flex-col py-4 w-full items-center gap-2 z-10">
+            <div id="snacks" className="fixed flex flex-col my-4 w-full items-center gap-2 z-10">
                 {Object.keys(snacks).map(id => {
                     let snack: SnackType = snacks[parseInt(id)];
                     return <Snackbar key={id} id={parseInt(id)} title={snack.title} message={snack.message} level={snack.level} callback={remove} />

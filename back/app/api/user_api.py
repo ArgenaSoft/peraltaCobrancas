@@ -26,9 +26,8 @@ def get_code(request: WSGIRequest, data: Query[UserGetCodeSchema]):
     """
     filters = {
         "cpf": re.sub(r"\D", "", data.cpf),
-        "payer__phone": re.sub(r"\D", "", data.phone),
     }
-    print(filters)
+
     user = UserController.get(**filters)
     try:
         code: LoginCode = LoginCodeController.create(user)

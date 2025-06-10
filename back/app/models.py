@@ -49,6 +49,19 @@ class BaseModel(models.Model):
         abstract = True
 
 
+class SoftDeleteModel(BaseModel):
+    """
+        Representa um modelo que pode ser excluído logicamente.
+
+        Atributos:
+            - is_deleted: Indica se o modelo foi excluído logicamente.
+    """
+    is_deleted = models.BooleanField(default=False)
+
+    class Meta:
+        abstract = True
+
+
 class Authenticatable(BaseModel):
     """
         Representa um modelo que pode ser autenticado.
@@ -99,7 +112,7 @@ class User(AbstractBaseUser, Authenticatable):
         return self.cpf
 
 
-class Creditor(BaseModel):
+class Creditor(SoftDeleteModel):
     """
         Representa um Credor.
 

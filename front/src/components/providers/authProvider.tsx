@@ -100,14 +100,28 @@ export const AuthProvider = ({ children }: any) => {
     return (
         <AuthContext.Provider value={useMemo(() => ({ login, refresh, user }), [login, user])}>
             {isClient && isLogged() &&
-                <div className="flex justify-between fixed top-0 left-0 w-full h-[60px] bg-dark-blue p-3">
-                    <div className="cursor-pointer" onClick={() => router.push('/')}>
-                        <FontAwesomeIcon icon={faHouse} size={"2x"} />
-                    </div>
-                    <div className="cursor-pointer" onClick={logout}>
-                        <FontAwesomeIcon className="cursor-pointer self-end" icon={faArrowRightFromBracket} size={"2x"} onClick={logout} />
-                    </div>
+                <div className="flex justify-between fixed top-0 left-0 w-full min-h-fit bg-dark-blue p-4">
+                    <button
+                        onClick={() => router.push('/')}
+                        className="text-white cursor-pointer"
+                    >
+                        <FontAwesomeIcon
+                            size={"2x"}
+                            icon={faHouse}
+                        />
+                    </button>
+
+                    <button
+                        onClick={logout}
+                        className="text-white cursor-pointer"
+                    >
+                        <FontAwesomeIcon
+                            size={"2x"}
+                            icon={faArrowRightFromBracket}
+                        />
+                    </button>
                 </div>
+
             }
             <div className={`h-screen ${isClient && isLogged() ? "pt-[120px] px-[40px]" : ""}`}>
                 {children}

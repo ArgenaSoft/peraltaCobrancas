@@ -32,6 +32,7 @@ interface UserTokens {
 
 interface Creditor {
     name: string;
+    reissue_margin: number;
 }
 
 interface Boleto {

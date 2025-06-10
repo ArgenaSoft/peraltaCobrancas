@@ -3,7 +3,7 @@ from django.db.models.query import QuerySet
 
 from typing import Dict, Generic, List, Optional, Type, TypeVar
 from app.exceptions import HttpFriendlyException
-from app.models import BaseModel
+from app.models import BaseModel, SoftDeleteModel
 
 
 lgr = logging.getLogger(__name__)
@@ -84,7 +84,9 @@ class BaseRepository(Generic[T]):
     @classmethod
     def delete(cls, instance: T) -> None:
         """
-        Deleta uma instância do modelo.
+        Deleta uma instância do modelo. Se essa instância for um modelo que
+        herda de SoftDeleteModel, apenas marca como deletada.
+        Se for um modelo que herda de BaseModel, deleta fisicamente.
 
         Parâmetros:
             - instance: Instância do modelo a ser deletada.
@@ -92,8 +94,11 @@ class BaseRepository(Generic[T]):
         Retorna:
             - None
         """
-        instance.delete()
-        return None
+        if isinstance(instance, SoftDeleteModel):
+            instance.is_deleted = True
+            instance.save()
+        else:
+            instance.delete()
 
     @classmethod
     def filter(cls, include_rels: Optional[List[str]] = None, *args, **kwargs) -> QuerySet[T]:

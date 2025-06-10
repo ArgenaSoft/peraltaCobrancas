@@ -4,8 +4,11 @@ import { callGetInstallments } from "@/components/api/installmentApi";
 import { SnackbarContext } from "@/components/providers/snackbarProvider";
 import { Agreement, ApiResponse, Installment, PaginatedApiResponse } from "@/components/types";
 import { readable_date } from "@/components/utils";
+import { faChevronDown, faChevronUp } from "@fortawesome/free-solid-svg-icons";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { useParams, useRouter } from "next/navigation";
 import { useContext, useEffect, useState } from "react";
+import { faWhatsapp } from '@fortawesome/free-brands-svg-icons'
 
 
 export default function AgreementPage() {
@@ -91,6 +94,22 @@ export default function AgreementPage() {
         return process.env.NEXT_PUBLIC_API_URL + uri;
     }
 
+    function getMoreInfoWppUrl(agreement: Agreement, installment: Installment): string {
+        if (!agreement || !installment || !installment.boleto) return "";
+        let creditor = agreement.creditor.name;
+        let message = `Olá, gostaria de saber mais sobre o boleto do acordo com ${creditor} parcela ${installment.number}.`;
+
+        return `https://wa.me/${process.env.NEXT_PUBLIC_WPP_NUMBER}?text=${encodeURIComponent(message)}`;
+    }
+
+    function getReissueWppUrl(agreement: Agreement, installment: Installment): string {
+        if (!agreement || !installment || !installment.boleto) return "";
+        let creditor = agreement.creditor.name;
+        let message = `Olá, gostaria de reemitir o boleto do acordo com ${creditor} parcela ${installment.number}.`;
+
+        return `https://wa.me/${process.env.NEXT_PUBLIC_WPP_NUMBER}?text=${encodeURIComponent(message)}`;
+    }
+
     if (!agreement || !agreement.id || !agreement.installments) {
         return (
             <div className="flex flex-col gap-4 text-black justify-center items-center h-screen">
@@ -101,6 +120,7 @@ export default function AgreementPage() {
         )
     }
 
+    let now = new Date();
     return (
         <div className="flex flex-col text-black justify-center items-start">
             <h1 className="text-4xl mb-3">Acordo com <strong>{agreement.creditor.name}</strong></h1>
@@ -111,14 +131,22 @@ export default function AgreementPage() {
                     index = agreement.installments.length - index; // Inverte o índice
 
                     let isOpened = openedInstallments.includes(installment.number);
-                    
                     let backgroundColor = 'bg-gray-300';
                     let textColor = 'text-gray-500';
                     let linkColor = 'text-anchor-blue';
+                    let isLate = false;
+                    let isPending = false;
+                    let crossedReissueMargin = false;
+                    let dueDate = new Date(installment.due_date);
 
                     if(installment.boleto){
-                        let isPending = installment.boleto.status === "pending";
-                        let isLate = new Date(installment.due_date) < new Date() && isPending;
+                        isPending = installment.boleto.status === "pending";
+                        isLate = dueDate < now && isPending;
+                        // agreement.creditor.reissue_margin  é um inteiro indicando o número de dias antes do vencimento quando o boleto já deve ser reemitido
+                        if(isLate && (dueDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24) <= agreement.creditor.reissue_margin){
+                            crossedReissueMargin = true;
+                        }
+
                         if (isPending) {
                             backgroundColor = isLate ? 'bg-burnt-red' : 'bg-dark-blue';
                             textColor = 'text-white';
@@ -126,22 +154,32 @@ export default function AgreementPage() {
                         }
                     }
 
+                    let wppLink = crossedReissueMargin ? getReissueWppUrl(agreement, installment) : getMoreInfoWppUrl(agreement, installment);
+                    let wppLabel = crossedReissueMargin ? "Reemitir via Whatsapp" : "Pedir via Whatsapp";
+
+
                     return (
                         <div 
                         key={installment.number} 
                         onClick={() => switchOpenInstallment(installment.number)}
                         className={`flex flex-col ${backgroundColor} ${textColor} rounded-lg w-full p-2 px-4`}>
-                            <div className="flex justify-between">
+                            <div className="flex flex-wrap justify-between">
                                 <h3 className="text-xl">Nº: {index}</h3>
                                 <p>Vencimento: {readable_date(installment.due_date)}</p>
-                                { installment.boleto && 
-                                    <a className={`${linkColor} underline`} href={getPdfUrl(installment.boleto.pdf)}>Ver boleto</a>
-                                }
+                                <FontAwesomeIcon icon={isOpened ? faChevronUp : faChevronDown} className="cursor-pointer" />
                             </div>
 
                             {isOpened && (
                                 <div className="mt-4">
-                                    <p>ASD</p>
+                                    { installment.boleto && 
+                                    <div className={`flex justify-between items-center ${linkColor}`}>
+                                        <a className="underline" href={getPdfUrl(installment.boleto.pdf)}>Ver boleto</a>
+                                        <a className="flex justify-between items-center gap-2" href={wppLink}>
+                                            <FontAwesomeIcon icon={faWhatsapp} className="text-green-500 text-3xl"/>
+                                            <span>{wppLabel}</span>
+                                        </a>
+                                    </div>
+                                }
                                 </div>
                             )}
                         </div>
