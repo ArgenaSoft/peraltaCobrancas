@@ -61,24 +61,26 @@ export default function HomePage() {
     <div>
       <h1 className="text-black text-4xl mb-10">Olá, {user?.username}</h1>
       <div className="bg-dark-blue rounded-2xl">
-        {agreements.length > 0 ? (
-          <div className="flex flex-col p-4 gap-4 text-white">
-            <h2 className="font-bold">Acordos ativos</h2>
-            {agreements.map((agreement) => {
-              return (
-                <div key={agreement.number}>
-                  <AgreementComponent {...agreement} />
-                </div>
-              );
-            }
-            )}
-          </div>
-        )
-      :
-      <div>
-        <h2 className="font-bold text-3xl">Você não possui acordos ativos</h2>
-      </div>
-      }
+        <div className="text-white">
+          {agreements.length > 0 ? (
+            <div className="flex flex-col p-4 gap-4">
+              <h2 className="font-bold text-2xl">Acordos ativos</h2>
+              {agreements.map((agreement) => {
+                return (
+                  <div key={agreement.number}>
+                    <AgreementComponent {...agreement} />
+                  </div>
+                );
+              }
+              )}
+            </div>
+          )
+            :
+            <div>
+              <h2 className="font-bold text-3xl">Você não possui acordos ativos</h2>
+            </div>
+          }
+        </div>
       </div>
     </div>
   );
