@@ -3,7 +3,7 @@ import { callGetAgreement } from "@/components/api/agreementApi";
 import { callGetInstallments } from "@/components/api/installmentApi";
 import { SnackbarContext } from "@/components/providers/snackbarProvider";
 import { Agreement, ApiResponse, Installment, PaginatedApiResponse } from "@/components/types";
-import { readable_date } from "@/components/utils";
+import { readable_date, parseLocalDate } from "@/components/utils";
 import { faChevronDown, faChevronUp } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { useParams, useRouter } from "next/navigation";
@@ -53,9 +53,8 @@ export default function AgreementPage() {
             let installments = installments_response.data.page.items;
             // Ordena as parcelas por vencimento
             installments.sort((a, b) => {
-                return new Date(a.due_date).getTime() - new Date(b.due_date).getTime();
+                return parseLocalDate(a.due_date).getTime() - parseLocalDate(b.due_date).getTime();
             });
-            console.log(installments)
 
             setAgreement({
                 ...agreement,
@@ -102,10 +101,10 @@ export default function AgreementPage() {
         return `https://wa.me/${process.env.NEXT_PUBLIC_WPP_NUMBER}?text=${encodeURIComponent(message)}`;
     }
 
-    function getReissueWppUrl(agreement: Agreement, installment: Installment): string {
+    function getReissueWppUrl(agreement: Agreement, installment: Installment, install_index: number): string {
         if (!agreement || !installment || !installment.boleto) return "";
         let creditor = agreement.creditor.name;
-        let message = `Olá, gostaria de reemitir o boleto do acordo com ${creditor} parcela ${installment.number}.`;
+        let message = `Olá, gostaria de reemitir o boleto do acordo com ${creditor} parcela ${install_index}.`;
 
         return `https://wa.me/${process.env.NEXT_PUBLIC_WPP_NUMBER}?text=${encodeURIComponent(message)}`;
     }
@@ -137,7 +136,7 @@ export default function AgreementPage() {
                     let isLate = false;
                     let isPending = false;
                     let crossedReissueMargin = false;
-                    let dueDate = new Date(installment.due_date);
+                    let dueDate = parseLocalDate(installment.due_date);
 
                     if(installment.boleto){
                         isPending = installment.boleto.status === "pending";
@@ -154,7 +153,7 @@ export default function AgreementPage() {
                         }
                     }
 
-                    let wppLink = crossedReissueMargin ? getReissueWppUrl(agreement, installment) : getMoreInfoWppUrl(agreement, installment);
+                    let wppLink = crossedReissueMargin ? getReissueWppUrl(agreement, installment, index) : getMoreInfoWppUrl(agreement, installment);
                     let wppLabel = crossedReissueMargin ? "Reemitir via Whatsapp" : "Pedir via Whatsapp";
 
 

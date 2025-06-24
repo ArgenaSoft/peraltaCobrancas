@@ -17,4 +17,4 @@ function parseLocalDate(dateStr: string): Date {
     return new Date(year, month - 1, day);
 }
 
-export { readable_date };
+export { readable_date, parseLocalDate };
