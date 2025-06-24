@@ -155,7 +155,12 @@ export default function AgreementPage() {
 
                     let wppLink = crossedReissueMargin ? getReissueWppUrl(agreement, installment, index) : getMoreInfoWppUrl(agreement, installment);
                     let wppLabel = crossedReissueMargin ? "Reemitir via Whatsapp" : "Pedir via Whatsapp";
-
+                    let statusBoleto = 'PAGO';
+                    if(isLate){
+                        statusBoleto = 'VENCIDO';
+                    }else if(isPending){
+                        statusBoleto = 'PENDENTE';
+                    }
 
                     return (
                         <div 
@@ -163,8 +168,17 @@ export default function AgreementPage() {
                         onClick={() => switchOpenInstallment(installment.number)}
                         className={`flex flex-col ${backgroundColor} ${textColor} rounded-lg w-full p-2 px-4`}>
                             <div className="flex flex-wrap justify-between">
-                                <h3 className="text-xl">Nº: {index}</h3>
-                                <p>Vencimento: {readable_date(installment.due_date)}</p>
+                                <div className="flex flex-col">
+                                    <h3 className="text-xl">Nº: {index}</h3>
+                                    { installment.boleto ?
+                                        <div>
+                                            <p>Vencimento: {readable_date(installment.due_date)}</p>
+                                            <p>{statusBoleto}</p>
+                                        </div>
+                                        :
+                                        <p>Boleto não disponível.</p>
+                                    }
+                                </div>
                                 <FontAwesomeIcon icon={isOpened ? faChevronUp : faChevronDown} className="cursor-pointer" />
                             </div>
 

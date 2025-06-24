@@ -62,8 +62,8 @@ export default function HomePage() {
       <h1 className="text-black text-4xl mb-10">Olá, {user?.username}</h1>
       <div className="bg-dark-blue rounded-2xl">
         {agreements.length > 0 ? (
-          <div className="flex flex-col p-4 gap-4">
-            <h2 className="font-bold text-3xl">Acordos ativos</h2>
+          <div className="flex flex-col p-4 gap-4 text-white">
+            <h2 className="font-bold">Acordos ativos</h2>
             {agreements.map((agreement) => {
               return (
                 <div key={agreement.number}>
