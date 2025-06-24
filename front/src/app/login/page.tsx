@@ -33,7 +33,7 @@ export default function LoginPage() {
   async function getCode() {
     let response: ApiResponse = await callGetCode(cpf, phone);
     if(response.code == 201) {
-      setCode(response.data.code);
+      setCode(typeof response.data.code === "string" ? response.data.code : "");
       show("Código enviado!", "Um código foi enviado para o seu telefone", "info");
       setCodeSent(true);
     } else {
