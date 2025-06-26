@@ -1,0 +1,31 @@
+@startuml
+actor "Sistema Externo" as System
+participant "API de Credores" as Creditors
+participant "API de Pagadores" as Payers
+participant "API de Acordos" as Agreements
+participant "API de Parcelas" as Installments
+participant "API de Boletos" as Boletos
+
+System -> Creditors : Criar Credor
+Creditors --> System : Credor criado
+
+System -> Payers : Criar Pagador
+Payers --> System : Pagador criado
+
+loop Para cada Acordo
+    System -> Agreements : Criar Acordo
+    Agreements --> System : Acordo criado
+
+    alt Se houver parcelas
+        loop Para cada Parcela
+            System -> Installments : Criar Parcela
+            Installments --> System : Parcela criada
+
+            alt Se houver boleto
+                System -> Boletos : Criar Boleto
+                Boletos --> System : Boleto criado
+            end
+        end
+    end
+end
+@enduml

@@ -12,7 +12,7 @@ from app.schemas.payer_schemas import PayerInSchema, PayerOutSchema, PayerPatchI
 from core.auth import AllowHumansAuth
 from core.custom_request import CustomRequest
 
-payer_router = CustomRouter()
+payer_router = CustomRouter(tags=["Pagadores"])
 lgr = logging.getLogger(__name__)
 
 

@@ -14,7 +14,7 @@ from core.auth import AllowHumansAuth
 from core.custom_request import CustomRequest
 
 
-installment_router = CustomRouter()
+installment_router = CustomRouter(tags=["Parcelas"])
 lgr = logging.getLogger(__name__)
 
 

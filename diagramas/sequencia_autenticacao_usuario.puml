@@ -1,0 +1,28 @@
+@startuml
+
+actor "Usuario" as User
+participant "API de Usuários" as UserAPI
+participant "API de Autenticação" as AuthAPI
+participant "API de SMS externa" as SMS
+participant "Outras APIs" as APIs
+
+User -> UserAPI : Solicitar código de acesso
+UserAPI -> SMS : Enviar código de acesso
+SMS --> UserAPI : Enviar SMS com o código de acesso
+
+User -> AuthAPI : Solicitar autenticação com código e dados de acesso
+AuthAPI -> AuthAPI : Validar dados de acesso
+
+alt Usuário inseriu código correto
+    AuthAPI --> User: Token de acesso e de refresh
+else Usuário inseriu código incorreto
+    AuthAPI --> User: Erro: Código inválido
+    User -> AuthAPI : Insere código correto
+    AuthAPI --> User: Token de acesso e de refresh
+end
+
+User -> APIs : Requisita dados
+APIs --> User : Retorna dados
+
+@enduml
+

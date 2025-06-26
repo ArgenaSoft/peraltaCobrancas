@@ -14,7 +14,7 @@ from app.schemas.boleto_schemas import BoletoInSchema, BoletoOutSchema, BoletoPa
 from core.auth import AllowHumansAuth
 from core.custom_request import CustomRequest
 
-boleto_router = CustomRouter()
+boleto_router = CustomRouter(tags=["Boletos"])
 lgr = logging.getLogger(__name__)
 
 

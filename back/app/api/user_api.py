@@ -16,7 +16,7 @@ from app.sms_api import send_sms
 from config import DEV, ENV
 
 
-user_router = CustomRouter()
+user_router = CustomRouter(tags=["Usuários"])
 
 
 @user_router.get('/get_code', response={201: ReturnSchema, 400: ReturnSchema[UserWaitToGetCodeSchema]}, auth=None)

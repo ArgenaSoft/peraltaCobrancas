@@ -16,7 +16,7 @@ from app.schemas.agreement_schemas import AgreementHomeInSchema, AgreementHomeOu
 from core.auth import AllowHumansAuth
 from core.custom_request import CustomRequest
 
-agreement_router = CustomRouter()
+agreement_router = CustomRouter(tags=["Acordos"])
 lgr = logging.getLogger(__name__)
 
 

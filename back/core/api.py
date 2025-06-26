@@ -24,7 +24,10 @@ lgr = logging.getLogger(__name__)
 os.environ["NINJA_SKIP_REGISTRY"] = "yes"
 
 
-api = NinjaAPI(auth=CustomJWTAuth())
+api = NinjaAPI(
+    title="API Peralta Cobranças",
+    auth=CustomJWTAuth()
+)
 
 
 @api.exception_handler(HttpFriendlyException)

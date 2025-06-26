@@ -1,0 +1,22 @@
+@startuml
+
+actor "Responśavel TI" as TI
+participant "Sistema Peralta Cobranças" as Peralta
+participant "Sistema Externo" as External
+participant "API de Autenticação" as Auth
+
+TI -> Peralta : Criar token de sistema
+Peralta --> TI : Retorna tokens de acesso e refresh
+
+TI -> External : Inserir tokens de acesso e refresh
+External --> TI
+
+External -> Auth : Quaisquer chamadas de API (incluindo o token de acesso)
+Auth --> External : Resposta da API
+
+alt Token de acesso expirado
+    External -> Auth : Solicitar novo token de acesso com o token de refresh
+    Auth --> External : Retorna novo token de acesso e novo token de refresh
+end
+
+@enduml

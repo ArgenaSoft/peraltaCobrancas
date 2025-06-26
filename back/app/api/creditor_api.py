@@ -10,7 +10,7 @@ from app.schemas.creditor_schemas import CreditorInSchema, CreditorOutSchema, Cr
 from core.custom_request import CustomRequest
 
 
-creditor_router = CustomRouter()
+creditor_router = CustomRouter(tags=["Credores"])
 lgr = logging.getLogger(__name__)
 
 

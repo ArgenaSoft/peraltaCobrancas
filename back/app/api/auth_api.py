@@ -10,7 +10,7 @@ from app.schemas.auth_schemas import LoginSchema, RefreshInputSchema, RefreshPai
 
 lgr = logging.getLogger(__name__)
 
-auth_router = CustomRouter()
+auth_router = CustomRouter(tags=["Autenticação"])
 
 
 @auth_router.post("/token", response={200: ReturnSchema[TokenOutSchema]}, auth=None)
