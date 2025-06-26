@@ -1,11 +1,8 @@
 #  coding: utf-8
-import os
-from django.core.management import call_command
 from django.core.management.base import BaseCommand
-from django.db import connection
 
-from app.api.auth_api import get_token
-from config import ENV, PROD
+from app.controllers.auth_controller import AuthController
+from app.repositories.api_consumer_repository import ApiConsumerRepository
 
 
 class Command(BaseCommand):
@@ -15,7 +12,14 @@ class Command(BaseCommand):
         parser.add_argument("sys_id", type=str)
 
     def handle(self, *app_labels, **options):
-        system_id = options['sys_id']
-        token = get_token(system_id, 'system')
+        system_name = options['sys_id']
+        system = ApiConsumerRepository.get(name=system_name, silent=True)
+
+        if not system:
+            self.stdout.write(self.style.WARNING(f'O sistema "{system_name}" não foi encontrado, criando...'))
+            system = ApiConsumerRepository.create({"name": system_name})
+
+        token = AuthController.get_token(system.name, 'system')
+        
         self.stdout.write(self.style.SUCCESS(f'Access Token: {str(token.access_token)}'))
         self.stdout.write(self.style.SUCCESS(f'Refresh Token: {str(token)}'))

@@ -12,6 +12,7 @@ from app.api.creditor_api import creditor_router
 from app.api.agreement_api import agreement_router
 from app.api.installment_api import installment_router
 from app.api.boleto_api import boleto_router
+from app.api.login_history_api import login_history_router
 from app.exceptions import HttpFriendlyException
 from app.schemas import ReturnSchema
 from config import DEV, ENV
@@ -70,3 +71,4 @@ api.add_router('/creditor', creditor_router)
 api.add_router('/agreement', agreement_router)
 api.add_router('/installment', installment_router)
 api.add_router('/boleto', boleto_router)
+api.add_router('/login_history', login_history_router)

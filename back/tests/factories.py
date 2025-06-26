@@ -9,7 +9,7 @@ from faker import Faker
 import factory
 
 from app.controllers.boleto_controller import BoletoController
-from app.models import Agreement, ApiConsumer, Boleto, Creditor, Installment, LoginCode, Payer, User
+from app.models import Agreement, ApiConsumer, Boleto, Creditor, Installment, LoginCode, LoginHistory, Payer, User
 
 fake = Faker()
 
@@ -62,7 +62,6 @@ class InstallmentFactory(TimestampedModelFactory):
     due_date = factory.Faker('future_date')
 
 
-
 class BoletoFactory(TimestampedModelFactory):
     class Meta:
         model = Boleto
@@ -96,3 +95,12 @@ class LoginCodeFactory(TimestampedModelFactory):
     user = factory.SubFactory(UserFactory)
     expiration_date = factory.LazyFunction(lambda: timezone.now() + timedelta(minutes=settings.SMS_EXPIRATION))
     used = False
+
+
+class LoginHistoryFactory(TimestampedModelFactory):
+    class Meta:
+        model = LoginHistory
+    
+    user = factory.SubFactory(UserFactory)
+    timestamp = factory.LazyFunction(timezone.now)
+    phone_used = factory.Faker('numerify', text='###########')

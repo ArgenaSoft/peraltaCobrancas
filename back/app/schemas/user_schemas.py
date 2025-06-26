@@ -19,5 +19,11 @@ class UserGetCodeSchema(BaseSchema):
     cpf: str
     phone: str
 
+
 class UserWaitToGetCodeSchema(BaseSchema):
     wait_time_seconds: float
+
+
+class UserShortOutSchema(OutSchema):
+    id: int
+    cpf: str

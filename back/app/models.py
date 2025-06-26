@@ -272,7 +272,6 @@ class ApiConsumer(Authenticatable):
     READABLE_NAME = 'Sistema externo'
     is_human = False
     name = models.CharField(max_length=255, unique=True)
-    api_key = models.CharField(max_length=32, unique=True, default=generate_api_key)
 
     def __str__(self):
         return self.name
@@ -292,3 +291,24 @@ class PastNumber(BaseModel):
 
     def __str__(self):
         return self.number
+
+
+class LoginHistory(BaseModel):
+    """
+        Representa o histórico de login de um usuário.
+
+        Atributos:
+            - user: Usuário que realizou o login.
+            - timestamp: Data e hora do login.
+            - phone_used: Telefone usado para o login.
+    """
+    READABLE_NAME = 'Histórico de Login'
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='login_history')
+    timestamp = models.DateTimeField(auto_now_add=True)
+    phone_used = models.CharField(max_length=20, blank=True)
+
+    def __str__(self):
+        if self.user.payer:
+            return f"{self.user.payer.name} - {self.timestamp}"
+        else:
+            return f"{self.user} - {self.timestamp}"

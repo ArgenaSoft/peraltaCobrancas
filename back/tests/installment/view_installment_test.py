@@ -7,7 +7,7 @@ from tests.factories import AgreementFactory, InstallmentFactory
 def test_view_installment(system_client: Client, installment: Installment):
     response = system_client.get(f'/api/installment/{installment.id}', content_type='application/json')
 
-    assert response.status_code == 200
+    assert response.status_code == 200, response.content
     assert Installment.objects.filter(number=installment.number).exists()
 
 def test_list_installment_with_boleto(system_client: Client, boleto: Boleto):
@@ -16,9 +16,8 @@ def test_list_installment_with_boleto(system_client: Client, boleto: Boleto):
         data={'include_rels': ['boleto']},
         content_type='application/json')
 
-    assert response.status_code == 200
+    assert response.status_code == 200, response.content
     response_data = response.json()['data']
-    pprint(response_data)
     assert 'boleto' in response_data['page']['items'][0], response_data['page']['items'][0]
 
 
@@ -41,7 +40,7 @@ def test_list_installment_filtered_by_agreement(system_client: Client):
         content_type="application/json"
     )
 
-    assert response.status_code == 200
+    assert response.status_code == 200, response.content
     response_data = response.json()
     
     assert response_data['data']['paginator']['total_items'] == 5

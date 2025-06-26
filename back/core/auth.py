@@ -57,9 +57,9 @@ class CustomJWTAuth(JWTAuth):
         except User.DoesNotExist:
             raise HttpFriendlyException(403, "Usuário não encontrado")
 
-    def get_api_consumer(self, entity_id: str, request, validated_token: AccessToken):
+    def get_api_consumer(self, name: str, request, validated_token: AccessToken):
         try:
-            system = ApiConsumerRepository.get(api_key=entity_id)
+            system = ApiConsumerRepository.get(name=name)
             request.auth = validated_token
             request.actor = system
             return system

@@ -3,7 +3,6 @@ from typing import Dict, Tuple, Union
 from django.utils import timezone
 from app.controllers.payer_controller import PayerController
 from app.repositories.past_number_repository import PastNumberRepository
-from app.repositories.payer_repository import PayerRepository
 from ninja_jwt.tokens import RefreshToken, Token
 
 from app.exceptions import HttpFriendlyException
@@ -12,6 +11,7 @@ from app.repositories.login_code_repository import LoginCodeRepository
 from app.repositories.user_repository import UserRepository
 from app.schemas.auth_schemas import LoginSchema, RefreshInputSchema
 from app.schemas.payer_schemas import PayerPatchInSchema
+from app.repositories.login_history_repository import LoginHistoryRepository
 
 lgr = logging.getLogger(__name__)
 
@@ -50,6 +50,13 @@ class AuthController:
 
         token = cls.get_token(user.id, "user")
         LoginCodeRepository.update(login_code, used=True)
+        
+        LoginHistoryRepository.create({
+            "user": user,
+            "timestamp": timezone.now(),
+            "phone_used": schema.phone
+        })
+        
         return token, payer.name
 
     @classmethod
@@ -79,7 +86,7 @@ class AuthController:
             raise HttpFriendlyException(401, f"Token inválido ou expirado: {str(e)}")
     
     @staticmethod
-    def get_token(entity_id: int, type: str) -> Union[RefreshToken, Token]:
+    def get_token(entity_id: Union[int, str], type: str) -> Union[RefreshToken, Token]:
         if type == "user":
             user = UserRepository.get(id=entity_id)
             token = RefreshToken.for_user(user)
@@ -87,5 +94,5 @@ class AuthController:
             token = RefreshToken()
 
         token.payload["type"] = type
-        token.payload["entity_id"] = entity_id
+        token.payload["entity_id"] = str(entity_id)
         return token

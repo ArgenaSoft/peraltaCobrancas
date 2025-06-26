@@ -6,7 +6,7 @@ from tests.factories import PayerFactory
 def test_view_payer(system_client: Client, payer: Payer):
     response = system_client.get(f'/api/payer/{payer.id}', content_type='application/json')
 
-    assert response.status_code == 200
+    assert response.status_code == 200, response.content
     assert Payer.objects.filter(name=payer.name).exists()
 
 def test_list_payer_filtered_by_user(system_client: Client):
@@ -24,7 +24,7 @@ def test_list_payer_filtered_by_user(system_client: Client):
         content_type="application/json"
     )
 
-    assert response.status_code == 200
+    assert response.status_code == 200, response.content
     response_data = response.json()
 
     assert response_data['data']['paginator']['total_items'] >= 2

@@ -3,6 +3,8 @@ from django.test import Client
 from django.utils import timezone
 
 from app.models import Payer
+from app.repositories.past_number_repository import PastNumberRepository
+from app.repositories.login_history_repository import LoginHistoryRepository
 from tests.factories import LoginCodeFactory
 
 
@@ -82,21 +84,6 @@ def test_login_fails_with_used_code(client: Client, payer: Payer):
     assert 'usado' in response.json()['message'].lower(), "Mensagem de erro incorreta."
 
 
-def test_login_fails_with_incorrect_phone(client: Client, payer: Payer):
-    code = "123456"
-    LoginCodeFactory.create(user=payer.user, code=code, used=False)
-
-    payload = {
-        "cpf": payer.user.cpf,
-        "phone": "00000000000",  # Telefone incorreto
-        "code": code
-    }
-
-    response = client.post('/api/auth/token', data=payload, content_type='application/json')
-    assert response.status_code == 404, "Esperado status 404 para telefone incorreto."
-    assert 'não encontrado' in response.json()['message'].lower(), "Mensagem de erro incorreta."
-
-
 def test_login_fails_with_incorrect_cpf(client: Client, payer: Payer):
     code = "123456"
     LoginCodeFactory.create(user=payer.user, code=code, used=False)
@@ -128,3 +115,36 @@ def test_payer_phone_update_on_login(client: Client, payer: Payer):
     assert response.status_code == 200, response.json()
     payer.refresh_from_db()
     assert payer.phone == "99999999999", "Telefone do pagador não foi atualizado corretamente após login."
+
+
+def test_login_creates_past_number(client: Client, payer: Payer):
+    code = "123456"
+    LoginCodeFactory.create(user=payer.user, code=code, used=False)
+
+    payload = {
+        "cpf": payer.user.cpf,
+        "phone": "88888888888",  # Telefone que não é o atual do pagador
+        "code": code
+    }
+
+    response = client.post('/api/auth/token', data=payload, content_type='application/json')
+
+    assert response.status_code == 200, response.json()
+    # Verifica se o número passado foi criado
+    assert PastNumberRepository.exists(number="88888888888"), "Número passado não foi criado corretamente."
+
+
+def test_login_is_registered_on_database(client: Client, payer: Payer):
+    code = "123456"
+    LoginCodeFactory.create(user=payer.user, code=code, used=False)
+
+    payload = {
+        "cpf": payer.user.cpf,
+        "phone": payer.phone,
+        "code": code
+    }
+
+    response = client.post('/api/auth/token', data=payload, content_type='application/json')
+    assert response.status_code == 200, response.json()
+    # Verifica se o login foi registrado no histórico
+    assert LoginHistoryRepository.exists(user=payer.user, phone_used=payer.phone), "Login não foi registrado no histórico."

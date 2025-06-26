@@ -5,7 +5,7 @@ from typing import List
 from django.core.management.base import BaseCommand
 from django.utils import timezone
 
-from app.models import Boleto, Installment
+from app.models import Boleto, Installment, Payer
 from config import ENV, PROD
 from tests.factories import AgreementFactory, ApiConsumerFactory, BoletoFactory, InstallmentFactory, PayerFactory, UserFactory
 
@@ -13,22 +13,8 @@ from tests.factories import AgreementFactory, ApiConsumerFactory, BoletoFactory,
 class Command(BaseCommand):
     help = 'Popula o banco com dados de exemplo'
 
-    def handle(self, *app_labels, **options):
-        if ENV == PROD:
-            self.stdout.write(self.style.ERROR('Esse comando não pode ser executado em produção'))
-            return
-
-        test_user = UserFactory.create(
-            cpf="12345678901"
-        )
-
-        test_payer_with_agreements = PayerFactory.create(
-            phone="12345678901",
-            name="Teste User",
-            user=test_user
-        )
-
-        test_agreements = AgreementFactory.create_batch(3, payer=test_payer_with_agreements)
+    def create_for_payer(self, payer: Payer):
+        test_agreements = AgreementFactory.create_batch(3, payer=payer)
         # Primeiro acordo — 10 parcelas
         # O primeiro dos 3 acordos deverá possuir 10 parcelas. 
         # 5 já foram pagas, a 6 está atrasada, 
@@ -102,14 +88,30 @@ class Command(BaseCommand):
                 # Sem boleto
                 pass
 
-        test_user_2 = UserFactory.create(
-            cpf="12345678902"
+    def create_payer(self, cpf: str, name: str):
+        user = UserFactory.create(
+            cpf=cpf
         )
 
-        test_payer_without_agreements = PayerFactory.create(
-            phone="12345678902",
-            name="Teste User 2",
-            user=test_user_2
+        payer = PayerFactory.create(
+            phone=cpf,
+            name=name,
+            user=user
         )
+
+        return payer
+
+    def handle(self, *app_labels, **options):
+        if ENV == PROD:
+            self.stdout.write(self.style.ERROR('Esse comando não pode ser executado em produção'))
+            return
+
+        test_payer_one = self.create_payer("12345678901", "Teste User")
+        self.create_for_payer(test_payer_one)
+
+        test_payer_without_agreements = self.create_payer("12345678902", "Teste User 2")
+        
+        test_developer_payer = self.create_payer("12345678903", "Teste Developer User")
+        self.create_for_payer(test_developer_payer)
 
         self.stdout.write(self.style.SUCCESS('Banco populado com sucesso'))

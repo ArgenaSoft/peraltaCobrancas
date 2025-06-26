@@ -6,7 +6,7 @@ from tests.factories import CreditorFactory
 def test_view_creditor(system_client: Client, creditor: Creditor):
     response = system_client.get(f'/api/creditor/{creditor.id}', content_type='application/json')
 
-    assert response.status_code == 200
+    assert response.status_code == 200, response.content
     assert Creditor.objects.filter(name=creditor.name).exists()
 
 
@@ -26,7 +26,7 @@ def test_list_creditor_filtered_by_name(system_client: Client):
         content_type="application/json"
     )
 
-    assert response.status_code == 200
+    assert response.status_code == 200, response.content
     response_data = response.json()
 
     assert response_data['data']['paginator']['total_items'] >= 2

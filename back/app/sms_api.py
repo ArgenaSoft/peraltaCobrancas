@@ -1,4 +1,5 @@
 import logging
+from django.conf import settings
 import requests
 
 from config import SMS_API_ENDPOINT, SMS_API_KEY
@@ -14,6 +15,10 @@ def clean_phone(phone: str) -> str:
     return ''.join(filter(str.isdigit, phone))
 
 def send_sms(phone: str, message: str) -> None:
+    if not settings.SEND_SMS:
+        lgr.info("Envio de SMS desativado. Configuração SEND_SMS está como False.")
+        return
+
     url = SMS_API_ENDPOINT
     phone = clean_phone(phone)
     headers = {
@@ -26,8 +31,6 @@ def send_sms(phone: str, message: str) -> None:
     }
 
     try:
-        lgr.debug(phone)
-        lgr.debug(message)
         response = requests.post(url, headers=headers, json=payload, timeout=10)
         response.raise_for_status()
     except requests.RequestException as e:

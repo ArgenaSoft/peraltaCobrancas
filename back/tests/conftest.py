@@ -3,7 +3,7 @@ import pytest
 
 from app.controllers.auth_controller import AuthController
 from app.models import ApiConsumer
-from tests.factories import AgreementFactory, ApiConsumerFactory, BoletoFactory, CreditorFactory, InstallmentFactory, LoginCodeFactory, PayerFactory, UserFactory
+from tests.factories import AgreementFactory, ApiConsumerFactory, BoletoFactory, CreditorFactory, InstallmentFactory, LoginCodeFactory, LoginHistoryFactory, PayerFactory, UserFactory
 from tests.utils import login_client_as
 
 
@@ -13,6 +13,12 @@ def enable_db_access_for_all_tests(db):
     Enable database access for all tests by default.
     """
     pass
+
+
+@pytest.fixture(autouse=True)
+def disable_sms(settings):
+    settings.SEND_SMS = False
+
 
 @pytest.fixture
 def json_client(client: Client) -> Client:
@@ -39,10 +45,10 @@ def user_client(json_client):
 @pytest.fixture
 def system_client(json_client):
     system: ApiConsumer = ApiConsumerFactory.create()
-    token = AuthController.get_token(system.api_key, "system")
-    
+    token = AuthController.get_token(system.name, "system")
+
     json_client.defaults['HTTP_AUTHORIZATION'] = f'Bearer {token.access_token}'
-    
+
     return json_client
 
 
@@ -98,3 +104,8 @@ def installment():
 def boleto():
     boleto = BoletoFactory.create()
     return boleto
+
+@pytest.fixture
+def login_history():
+    login_history = LoginHistoryFactory.create()
+    return login_history

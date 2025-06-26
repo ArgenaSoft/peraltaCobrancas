@@ -24,7 +24,7 @@ def endpoint(func):
             if ENV == DEV:
                 raise
 
-            response = ReturnSchema(message="Internal Server Error", code=500)
+            response = ReturnSchema(message="Erro interno.", code=500)
 
         return response.code, response.model_dump()
     
