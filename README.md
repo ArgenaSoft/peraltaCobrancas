@@ -32,6 +32,20 @@ Também é necessário um gerenciador de pacotes de Javascript. O gerenciador us
 Para testar se deu tudo certo, execute `npm run dev`. De maneira similar ao back, esse comando levanta um servidor de testes (apenas testes!).
 
 
+## Configuração
+Tanto o Back-End quanto o Front-End lêem variáveis de configuração do ambiente onde estão hospedados.
+
+### Back-End
+1. ENV: Pode ser 'prod' ou 'dev'. Define o ambiente atual
+2. SMS_CODE_EXPIRATION_SECONDS: Tempo de expiração de um código de Login. Em segundos
+3. SMS_API_ENDPOINT: Link da API de SMS sendo utilizada
+4. SMS_API_KEY: Chave de autenticação da API de SMS
+
+### Front-End
+1. NEXT_PUBLIC_API_URL: Link de onde a API está hospedada
+2. NEXT_PUBLIC_WPP_NUMBER: Número de Whatsapp para onde os usuários serão redirecionados quando clicarem nos botões de contato por Whatsapp
+
+
 ## Autenticação
 Este projeto utiliza JWT para autenticação. Usuários e sistemas que queiram consumir a API devem possuir um token JWT. Mas atenção: Por segurança, os tokens JWT gerados para usuários possuem menos permissões que tokens gerados para sistemas!!!!
 

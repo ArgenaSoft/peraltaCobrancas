@@ -181,11 +181,8 @@ NINJA_JWT = {
     'REFRESH_TOKEN_LIFETIME': REFRESH_TOKEN_LIFETIME,
 }
 
-CORS_ALLOWED_ORIGINS = [
-    "http://localhost:3000",
-]
-
-CORS_ALLOW_ALL_ORIGINS = ENV is DEV
+# Como vários sistemas podem consumir a API, é necessário permitir CORS para todos os domínios
+CORS_ALLOW_ALL_ORIGINS = True
 
 MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
