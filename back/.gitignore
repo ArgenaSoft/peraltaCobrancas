@@ -7,5 +7,5 @@ node_modules
 static/CACHE
 static/src/output.css
 .vscode
-config.py
+local_config.py
 media/
