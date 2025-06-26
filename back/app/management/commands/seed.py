@@ -22,13 +22,13 @@ class Command(BaseCommand):
             cpf="12345678901"
         )
 
-        test_payer = PayerFactory.create(
+        test_payer_with_agreements = PayerFactory.create(
             phone="12345678901",
             name="Teste User",
             user=test_user
         )
 
-        test_agreements = AgreementFactory.create_batch(3, payer=test_payer)
+        test_agreements = AgreementFactory.create_batch(3, payer=test_payer_with_agreements)
         # Primeiro acordo — 10 parcelas
         # O primeiro dos 3 acordos deverá possuir 10 parcelas. 
         # 5 já foram pagas, a 6 está atrasada, 
@@ -101,5 +101,15 @@ class Command(BaseCommand):
             else:
                 # Sem boleto
                 pass
+
+        test_user_2 = UserFactory.create(
+            cpf="12345678902"
+        )
+
+        test_payer_without_agreements = PayerFactory.create(
+            phone="12345678902",
+            name="Teste User 2",
+            user=test_user_2
+        )
 
         self.stdout.write(self.style.SUCCESS('Banco populado com sucesso'))

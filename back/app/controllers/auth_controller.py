@@ -40,9 +40,7 @@ class AuthController:
         if login_code.expiration_date < timezone.now():
             raise HttpFriendlyException(401, "Código expirou") 
 
-        LoginCodeRepository.update(login_code, used=True)
-
-        if payer.phone != schema.phone:
+        if payer.phone != schema.phone and not PastNumberRepository.exists(number=schema.phone):
             PastNumberRepository.create({
                 "number":schema.phone,
                 "payer":payer
@@ -51,6 +49,7 @@ class AuthController:
             PayerController.update(payer.id, PayerPatchInSchema(phone=schema.phone))
 
         token = cls.get_token(user.id, "user")
+        LoginCodeRepository.update(login_code, used=True)
         return token, payer.name
 
     @classmethod
