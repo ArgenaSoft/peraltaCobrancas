@@ -1,4 +1,5 @@
-@startuml
+@startuml Criação de Credores, Pagadores, Acordos, Parcelas e Boletos
+
 actor "Sistema Externo" as System
 participant "API de Credores" as Creditors
 participant "API de Pagadores" as Payers

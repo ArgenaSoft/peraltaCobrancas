@@ -1,4 +1,4 @@
-@startuml
+@startuml Autenticação Usuário
 
 actor "Usuario" as User
 participant "API de Usuários" as UserAPI

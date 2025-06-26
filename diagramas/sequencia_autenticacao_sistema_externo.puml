@@ -1,4 +1,4 @@
-@startuml
+@startuml Autenticação Sistema Externo
 
 actor "Responśavel TI" as TI
 participant "Sistema Peralta Cobranças" as Peralta
