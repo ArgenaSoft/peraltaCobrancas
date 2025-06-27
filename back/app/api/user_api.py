@@ -1,9 +1,8 @@
+import logging
 import re
-from typing import Dict
 
 from django.core.handlers.wsgi import WSGIRequest
 from ninja import Query
-from ninja.responses import codes_4xx
 
 from app.api import CustomRouter, endpoint
 from app.controllers.login_code_controller import LoginCodeController
@@ -16,15 +15,17 @@ from app.sms_api import send_sms
 from config import DEV, ENV
 
 
+lgr = logging.getLogger(__name__)
 user_router = CustomRouter(tags=["Usuários"])
 
 
 @user_router.get('/get_code', response={201: ReturnSchema, 400: ReturnSchema[UserWaitToGetCodeSchema]}, auth=None)
-@endpoint
+@endpoint(None)
 def get_code(request: WSGIRequest, data: Query[UserGetCodeSchema]):
     """
     Gera um codigo de login a ser enviado via sms
     """
+    lgr.info(f"Usuário {data.cpf} solicitou um código de acesso")
     filters = {
         "cpf": re.sub(r"\D", "", data.cpf),
     }
@@ -32,7 +33,9 @@ def get_code(request: WSGIRequest, data: Query[UserGetCodeSchema]):
     user: User = UserController.get(**filters)
     try:
         code: LoginCode = LoginCodeController.create(user)
+        lgr.info(f"Código gerado para o usuário {user.identification}: {code.code}")
     except ShouldWaitToGenerateAnotherCode as e:
+        lgr.warning(f"Usuário {user.identification} tentou gerar um código antes do tempo de espera: {e.message}")
         return ReturnSchema(
             code=400, 
             message=e.message, 

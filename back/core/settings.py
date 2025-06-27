@@ -101,22 +101,31 @@ LOGGING = {
     },
     'handlers': {
             'console': {
-                'level': 'DEBUG',
+                'level': logging.DEBUG,
                 'class': 'logging.StreamHandler',
                 'formatter': 'verbose'
             },
             'file': {
-                'level': 'DEBUG',
+                'level': logging.DEBUG,
                 'class': 'logging.FileHandler',
                 'filename': '/'.join(
                     [f"{BASE_DIR.as_posix()}", "back.log"]
                 ),
                 'formatter': 'verbose'
             },
+            'audit': {
+                'level': logging.INFO,
+                'class': 'logging.FileHandler',
+                'filename': '/'.join(
+                    [f"{BASE_DIR.as_posix()}", "audit.log"]
+                ),
+                'formatter': 'verbose'
+            },
     },
     'loggers': {
+        # Começa com app para pegar apenas os logs gerados dentro de back/app
         'app': {
-            'handlers': ['console', 'file'],
+            'handlers': ['console', 'file', 'audit'],
             'level': logging.DEBUG,
         },
     },

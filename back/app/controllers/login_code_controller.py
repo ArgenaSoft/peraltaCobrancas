@@ -6,10 +6,9 @@ from django.conf import settings
 from faker import Faker
 from django.utils import timezone
 
-from app.exceptions import HttpFriendlyException, ShouldWaitToGenerateAnotherCode
+from app.exceptions import ShouldWaitToGenerateAnotherCode
 from app.models import LoginCode, User
 from app.repositories.login_code_repository import LoginCodeRepository
-from app.utils import beautify_timedelta
 
 lgr = logging.getLogger(__name__)
 

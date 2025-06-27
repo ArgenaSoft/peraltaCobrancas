@@ -14,7 +14,7 @@ lgr = logging.getLogger(__name__)
 
 
 @login_history_router.get('/', response={200: ReturnSchema[PaginatedOutSchema[LoginHistoryOutSchema]]})
-@endpoint
+@endpoint("Listar histórico de login")
 def list_login_history(request: CustomRequest, data: Query[ListSchema]):
     data.build_filters_from_query(request.GET.dict())
     login_histories_page, paginator = LoginHistoryController.filter_paginated(data)

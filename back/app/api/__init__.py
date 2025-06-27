@@ -8,27 +8,37 @@ from ninja.responses import codes_3xx, codes_4xx, codes_5xx
 from app.exceptions import HttpFriendlyException
 from app.schemas import ReturnSchema
 from config import DEV, ENV
+from core.custom_request import CustomRequest
 
 lgr = logging.getLogger(__name__)
 
 
-def endpoint(func):
-    @wraps(func)
-    def wrapper(*args, **kwargs) -> tuple:
-        try:
-            response: ReturnSchema = func(*args, **kwargs)
-        except HttpFriendlyException as e:
-            response = ReturnSchema.from_http_friendly_exception(e)
-        except Exception as e:
-            lgr.exception(e)
-            if ENV == DEV:
-                raise
+def endpoint(log_action: str | None = None):
+    def decorator(func):
+        @wraps(func)
+        def wrapper(*args, **kwargs):
+            request: CustomRequest = kwargs.get("request") or args[0]
 
-            response = ReturnSchema(message="Erro interno.", code=500)
+            if log_action:
+                try:
+                    lgr.info(f"Ator {request.actor.identification} (ID: {request.actor.id}) -> {log_action}")
+                except Exception:
+                    pass  # Failsafe no log, caso `request.actor` não esteja disponível
 
-        return response.code, response.model_dump()
-    
-    return wrapper
+            try:
+                response: ReturnSchema = func(*args, **kwargs)
+            except HttpFriendlyException as e:
+                response = ReturnSchema.from_http_friendly_exception(e)
+            except Exception as e:
+                lgr.exception(e)
+                if ENV == DEV:
+                    raise
+                response = ReturnSchema(message="Erro interno.", code=500)
+
+            return response.code, response.model_dump()
+
+        return wrapper
+    return decorator
 
 
 class CustomRouter(Router):
@@ -64,7 +74,7 @@ class CustomRouter(Router):
         )
 
         return super().post(*args, **kwargs)
-    
+
     def delete(self, *args, **kwargs):
         kwargs['response'] = self.create_missing_response(
             kwargs.get('response', {})

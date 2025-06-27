@@ -1,15 +1,13 @@
 from typing import Optional
-import datetime
 import logging
 
 from ninja import File, Form, Query, UploadedFile
-from ninja.responses import codes_4xx, codes_5xx
 
 from app.api import CustomRouter, endpoint
 from app.controllers.boleto_controller import BoletoController
 from app.exceptions import HttpFriendlyException
 from app.models import Boleto
-from app.schemas import DeleteSchema, ReturnSchema, ListSchema, PaginatedOutSchema
+from app.schemas import ReturnSchema, ListSchema, PaginatedOutSchema
 from app.schemas.boleto_schemas import BoletoInSchema, BoletoOutSchema, BoletoPatchInSchema
 from core.auth import AllowHumansAuth
 from core.custom_request import CustomRequest
@@ -19,7 +17,7 @@ lgr = logging.getLogger(__name__)
 
 
 @boleto_router.post('/', response={201: ReturnSchema[BoletoOutSchema]})
-@endpoint
+@endpoint("Criar boleto")
 def create_boleto(
     request: CustomRequest,
     pdf: UploadedFile = File(...),
@@ -36,7 +34,7 @@ def create_boleto(
 
 
 @boleto_router.get('/{int:boleto_id}', response={200: ReturnSchema[BoletoOutSchema]})
-@endpoint
+@endpoint("Visualizar boleto")
 def view_boleto(request: CustomRequest, boleto_id: int):
     boleto: Boleto = BoletoController.get(id=boleto_id)
     if request.actor.is_human and boleto.installment.agreement.payer.user.id != request.actor.id:
@@ -46,7 +44,7 @@ def view_boleto(request: CustomRequest, boleto_id: int):
 
 # Precisa ser POST por causa do envio de arquivo
 @boleto_router.post('/{int:boleto_id}', response={200: ReturnSchema[BoletoOutSchema]})
-@endpoint
+@endpoint("Editar boleto")
 def edit_boleto(
     request: CustomRequest,
     boleto_id: int,
@@ -63,7 +61,7 @@ def edit_boleto(
 
 
 @boleto_router.get('/', response={200: ReturnSchema[PaginatedOutSchema[BoletoOutSchema]]}, auth=AllowHumansAuth())
-@endpoint
+@endpoint("Listar boletos")
 def list_boleto(request: CustomRequest, data: Query[ListSchema]):
     data.build_filters_from_query(request.GET.dict())
 
@@ -79,7 +77,8 @@ def list_boleto(request: CustomRequest, data: Query[ListSchema]):
 
 
 @boleto_router.delete('/{int:boleto_id}', response={200: ReturnSchema})
-@endpoint
+@endpoint(None)
 def delete_payer(request: CustomRequest, boleto_id: int):
+    lgr.info(f"Ator {request.actor.identification} (ID: {request.actor.id}) está deletando o boleto {boleto_id}")
     BoletoController.delete(id=boleto_id)
     return ReturnSchema(code=200)

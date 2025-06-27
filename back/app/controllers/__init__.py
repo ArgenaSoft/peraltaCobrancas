@@ -40,7 +40,7 @@ class BaseController(Generic[RepositoryT, ModelT]):
             - List[ModelT]: Lista de instancias.
         """
         instances = cls.REPOSITORY.filter(**schema.filters, include_rels=schema.include_rels)
-        instances = instances.order_by('updated_at')
+        instances = instances.order_by('-updated_at')
         paginator = Paginator(instances, schema.page_size)
         page_number = schema.page
 

@@ -1,7 +1,6 @@
 import logging
 
 from ninja import Query
-from ninja.responses import codes_4xx
 
 from app.api import CustomRouter, endpoint
 from app.controllers.payer_controller import PayerController
@@ -17,14 +16,14 @@ lgr = logging.getLogger(__name__)
 
 
 @payer_router.post('/', response={201: ReturnSchema[PayerOutSchema]})
-@endpoint
+@endpoint("Criar pagador")
 def create_payer(request: CustomRequest, data: PayerInSchema):
     new_payer: Payer = PayerController.create(data)
     return ReturnSchema(code=201, data=new_payer)
 
 
 @payer_router.get('/{int:payer_id}', response={200: ReturnSchema[PayerOutSchema]}, auth=AllowHumansAuth())
-@endpoint
+@endpoint("Visualizar pagador")
 def view_payer(request: CustomRequest, payer_id: int):
     payer: Payer = PayerController.get(id=payer_id)
     if request.actor.is_human and payer.user.id != request.actor.id:
@@ -34,14 +33,14 @@ def view_payer(request: CustomRequest, payer_id: int):
 
 
 @payer_router.patch('/{int:payer_id}', response={200: ReturnSchema[PayerOutSchema]})
-@endpoint
+@endpoint("Editar pagador")
 def edit_payer(request: CustomRequest, payer_id: int, data: PayerPatchInSchema):
     payer: Payer = PayerController.update(payer_id, data)
     return ReturnSchema(code=200, data=payer)
 
 
 @payer_router.get('/', response={200: ReturnSchema[PaginatedOutSchema[PayerOutSchema]]})
-@endpoint
+@endpoint("Listar pagadores")
 def list_payer(request: CustomRequest, data: Query[ListSchema]):
     data.build_filters_from_query(request.GET.dict())
 
@@ -53,7 +52,8 @@ def list_payer(request: CustomRequest, data: Query[ListSchema]):
 
 
 @payer_router.delete('/{int:payer_id}', response={200: ReturnSchema[DeleteSchema]})
-@endpoint
+@endpoint(None)
 def delete_payer(request: CustomRequest, payer_id: int):
+    lgr.info(f"Ator {request.actor.identification} (ID: {request.actor.id}) está deletando o pagador {payer_id}")
     PayerController.delete(id=payer_id)
     return ReturnSchema(code=200, message="Pagador deletado!")

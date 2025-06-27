@@ -1,13 +1,11 @@
 #  coding: utf-8
 from datetime import timedelta
-from random import randint
-from typing import List
 from django.core.management.base import BaseCommand
 from django.utils import timezone
 
-from app.models import Boleto, Installment, Payer
+from app.models import Boleto, Payer
 from config import ENV, PROD
-from tests.factories import AgreementFactory, ApiConsumerFactory, BoletoFactory, InstallmentFactory, PayerFactory, UserFactory
+from tests.factories import AgreementFactory, BoletoFactory, InstallmentFactory, PayerFactory, UserFactory
 
 
 class Command(BaseCommand):

@@ -1,4 +1,5 @@
 from enum import Enum
+from typing import Optional
 import uuid
 import unidecode
 
@@ -76,6 +77,10 @@ class Authenticatable(BaseModel):
     def is_anonymous(self):
         return False
 
+    @property
+    def identification(self):
+        raise NotImplementedError("Subclasses must implement the identification property")
+
     class Meta:
         abstract = True
 
@@ -109,6 +114,20 @@ class User(AbstractBaseUser, Authenticatable):
     objects = UserManager()
 
     def __str__(self):
+        return self.cpf
+    
+    @property
+    def payer(self) -> "Payer":
+        ...
+    
+    @property
+    def identification(self):
+        """
+            Retorna a identificação do usuário, que é o CPF.
+
+            Retorna:
+                - str: CPF do usuário.
+        """
         return self.cpf
 
 
@@ -186,6 +205,10 @@ class Agreement(BaseModel):
         """
         return unidecode.unidecode(self.number).replace(' ', '_').lower()
 
+    @property
+    def installments(self) -> "models.QuerySet[Installment]":
+        ...
+
 
 class Installment(BaseModel):
     """
@@ -210,6 +233,10 @@ class Installment(BaseModel):
                 - str: Nome da parcela formatado.
         """
         return unidecode.unidecode(self.number).replace(' ', '_').lower()
+
+    @property
+    def boleto(self) -> Optional["Boleto"]:
+        ...
 
 
 class Boleto(BaseModel):
@@ -274,6 +301,16 @@ class ApiConsumer(Authenticatable):
     name = models.CharField(max_length=255, unique=True)
 
     def __str__(self):
+        return self.name
+
+    @property
+    def identification(self):
+        """
+            Retorna a identificação do sistema externo, que é o nome.
+
+            Retorna:
+                - str: Nome do sistema externo.
+        """
         return self.name
 
 

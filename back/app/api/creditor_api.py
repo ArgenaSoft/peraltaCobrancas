@@ -15,28 +15,28 @@ lgr = logging.getLogger(__name__)
 
 
 @creditor_router.post('/', response={201: ReturnSchema[CreditorOutSchema]})
-@endpoint
+@endpoint("Criar credor")
 def create_creditor(request: CustomRequest, data: CreditorInSchema):
     new_creditor: Creditor = CreditorController.create(data)
     return ReturnSchema(code=201, data=new_creditor)
 
 
 @creditor_router.get('/{int:creditor_id}', response={200: ReturnSchema[CreditorOutSchema]})
-@endpoint
+@endpoint("Visualizar credor")
 def view_creditor(request: CustomRequest, creditor_id: int):
     creditor: Creditor = CreditorController.get(id=creditor_id)
     return ReturnSchema(code=200, data=creditor)
 
 
 @creditor_router.patch('/{int:creditor_id}', response={200: ReturnSchema[CreditorOutSchema]})
-@endpoint
+@endpoint("Editar credor")
 def edit_creditor(request: CustomRequest, creditor_id: int, data: CreditorPatchInSchema):
     creditor: Creditor = CreditorController.update(creditor_id, data)
     return ReturnSchema(code=200, data=creditor)
 
 
 @creditor_router.get('/', response={200: ReturnSchema[PaginatedOutSchema[CreditorOutSchema]]})
-@endpoint
+@endpoint("Listar credores")
 def list_creditor(request: CustomRequest, data: Query[ListSchema]):
     data.build_filters_from_query(request.GET.dict())
     creditors_page, paginator = CreditorController.filter_paginated(data)
@@ -47,7 +47,8 @@ def list_creditor(request: CustomRequest, data: Query[ListSchema]):
 
 
 @creditor_router.delete('/{int:creditor_id}', response={200: ReturnSchema})
-@endpoint
-def delete_payer(request: CustomRequest, creditor_id: int):
+@endpoint(None)
+def delete_creditor(request: CustomRequest, creditor_id: int):
+    lgr.info(f"Ator {request.actor.identification} (ID: {request.actor.id}) está deletando o credor {creditor_id}")
     CreditorController.delete(id=creditor_id)
     return ReturnSchema(code=200)

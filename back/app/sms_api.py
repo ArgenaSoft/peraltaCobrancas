@@ -30,9 +30,12 @@ def send_sms(phone: str, message: str) -> None:
         "mensagem": message
     }
 
+    lgr.info(f"Enviando SMS para {phone}: {message}")
     try:
         response = requests.post(url, headers=headers, json=payload, timeout=10)
         response.raise_for_status()
     except requests.RequestException as e:
         lgr.error(f"Erro ao enviar SMS para {phone}")
         lgr.exception(e)
+    
+    lgr.info(f"SMS enviado com sucesso para {phone}")

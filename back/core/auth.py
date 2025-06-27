@@ -1,5 +1,6 @@
 import logging
 
+from django.contrib.auth.models import AbstractUser
 from jwt.exceptions import ExpiredSignatureError
 from ninja_jwt.authentication import JWTAuth
 from ninja_jwt.exceptions import TokenError
@@ -29,9 +30,12 @@ class CustomJWTAuth(JWTAuth):
                 raise HttpFriendlyException(401, "Token inválido")
 
             if token_type == 'user':
-                return self.get_user(entity_id, request, validated_token)
+                user: User = self.get_user(entity_id, request, validated_token)
+                lgr.info(f"Usuário autenticado: {user.id} ({user.payer.name}) na rota {request.path}")
+                return user
             elif token_type == 'system':
-                return self.get_api_consumer(entity_id, request, validated_token)
+                consumer: ApiConsumer = self.get_api_consumer(entity_id, request, validated_token)
+                return consumer
 
             raise HttpFriendlyException(401, "Tipo de usuário não reconhecido")
 
@@ -45,9 +49,9 @@ class CustomJWTAuth(JWTAuth):
             lgr.exception(e)
             raise HttpFriendlyException(401, "Token inválido")
 
-    def get_user(self, entity_id: str, request, validated_token: AccessToken):
+    def get_user(self, entity_id: str, request, validated_token: AccessToken, *args, **kwargs) -> User:  # type: ignore[override]
         try:
-            user = UserRepository.get(id=entity_id)
+            user: User = UserRepository.get(id=entity_id)
             request.auth = validated_token
             request.actor = user
             if not self.allow_user(user):
@@ -55,6 +59,7 @@ class CustomJWTAuth(JWTAuth):
 
             return user
         except User.DoesNotExist:
+            lgr.error(f"Usuário com Entity_ID {entity_id} não encontrado")
             raise HttpFriendlyException(403, "Usuário não encontrado")
 
     def get_api_consumer(self, name: str, request, validated_token: AccessToken):
@@ -64,9 +69,10 @@ class CustomJWTAuth(JWTAuth):
             request.actor = system
             return system
         except ApiConsumer.DoesNotExist:
+            lgr.error(f"Sistema externo com nome {name} não encontrado")
             raise HttpFriendlyException(403, "Sistema externo não encontrado")
 
-    def allow_user(self, user: User):
+    def allow_user(self, user: User) -> bool:
         """
             Retorna se é possível User acessar a rota.
             Deixei o parâmetro user pois no futuro pode ser que seja necessário 
@@ -76,5 +82,5 @@ class CustomJWTAuth(JWTAuth):
 
 
 class AllowHumansAuth(CustomJWTAuth):
-    def allow_user(self, user: User):
+    def allow_user(self, user: User) -> bool:
         return True
