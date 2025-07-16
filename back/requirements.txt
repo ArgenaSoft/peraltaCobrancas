@@ -8,3 +8,5 @@ factory-boy==3.3.3
 django-ninja-jwt==5.3.7
 django-cors-headers==4.7.0
 unidecode==1.4.0
+django-storages==1.14.6
+boto3==1.39.6

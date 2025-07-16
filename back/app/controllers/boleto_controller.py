@@ -10,6 +10,7 @@ from app.controllers.installment_controller import InstallmentController
 from app.models import Agreement, Boleto, Creditor, Installment
 from app.repositories.boleto_repository import BoletoRepository
 from app.schemas.boleto_schemas import BoletoInSchema, BoletoPatchInSchema
+from app.exceptions import HttpFriendlyException
 
 lgr =  logging.getLogger(__name__)
 
@@ -30,6 +31,9 @@ class BoletoController(BaseController[BoletoRepository, Boleto]):
             - Boleto: Acordo criado.
         """
         installment: Installment = InstallmentController.get(id=schema.installment)
+        if hasattr(installment, 'boleto'):
+            raise HttpFriendlyException(400, "Já existe um boleto para essa parcela")
+
         agreement: Agreement = installment.agreement
         creditor: Creditor = agreement.creditor
 

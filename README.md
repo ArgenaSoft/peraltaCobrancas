@@ -41,6 +41,16 @@ Tanto o Back-End quanto o Front-End lêem variáveis de configuração do ambien
 3. SMS_API_ENDPOINT: Link da API de SMS sendo utilizada
 4. SMS_API_KEY: Chave de autenticação da API de SMS
 
+5. AWS_ACCESS_KEY_ID: ID da chave de acesso da AWS
+6. AWS_SECRET_ACCESS_KEY: Chave secreta de acesso da AWS
+7. AWS_STORAGE_BUCKET_NAME: Nome do bucket de armazenamento na AWS S3
+
+8. AWS_S3_ENDPOINT_URL: URL do endpoint do S3.
+9. AWS_S3_REGION_NAME: Região do bucket S3. O padrão é `us-east-1`.
+10. AWS_S3_SIGNATURE_VERSION: Versão da assinatura do S3. O padrão é `s3v4`.
+11. AWS_S3_FILE_OVERWRITE: Define se os arquivos enviados para o S3 devem sobrescrever os arquivos com o mesmo nome. O padrão é `False`.
+12. AWS_DEFAULT_ACL: Define a ACL padrão para os arquivos enviados ao S3. O padrão é `None`, o que significa que não há ACL definida (recomendado).
+
 ### Front-End
 1. NEXT_PUBLIC_API_URL: Link de onde a API está hospedada
 2. NEXT_PUBLIC_WPP_NUMBER: Número de Whatsapp para onde os usuários serão redirecionados quando clicarem nos botões de contato por Whatsapp

@@ -15,7 +15,11 @@ import logging
 import os
 from pathlib import Path
 
-from config import DEV, ENV, SMS_CODE_EXPIRATION_SECONDS
+from config import ACCESS_TOKEN_EXPIRATION_SECONDS, REFRESH_TOKEN_EXPIRATION_SECONDS, SMS_CODE_EXPIRATION_SECONDS
+from config import AWS_ACCESS_KEY_ID as AAKI, AWS_SECRET_ACCESS_KEY as ASAK, \
+    AWS_STORAGE_BUCKET_NAME as ASBN, AWS_S3_FILE_OVERWRITE as ASFO, \
+    AWS_S3_ENDPOINT_URL as ASEU, AWS_S3_REGION_NAME as ASRN, \
+    AWS_S3_SIGNATURE_VERSION as ASSV, AWS_DEFAULT_ACL as ADA
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -45,6 +49,7 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'django_extensions',
     'corsheaders',
+    'storages'
 ]
 
 MIDDLEWARE = [
@@ -180,14 +185,12 @@ REST_FRAMEWORK = {
     ]
 }
 
-ACCESS_TOKEN_LIFETIME = timedelta(minutes=30)
-REFRESH_TOKEN_LIFETIME = timedelta(hours=20)
 SMS_EXPIRATION = SMS_CODE_EXPIRATION_SECONDS
 
 NINJA_JWT = {
     "AUTH_HEADER_TYPES": ("Bearer",),
-    'ACCESS_TOKEN_LIFETIME': ACCESS_TOKEN_LIFETIME,
-    'REFRESH_TOKEN_LIFETIME': REFRESH_TOKEN_LIFETIME,
+    'ACCESS_TOKEN_LIFETIME': timedelta(seconds=ACCESS_TOKEN_EXPIRATION_SECONDS),
+    'REFRESH_TOKEN_LIFETIME': timedelta(seconds=REFRESH_TOKEN_EXPIRATION_SECONDS),
 }
 
 # Como vários sistemas podem consumir a API, é necessário permitir CORS para todos os domínios
@@ -197,3 +200,23 @@ MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
 SEND_SMS = True
+
+AWS_ACCESS_KEY_ID = AAKI
+AWS_SECRET_ACCESS_KEY = ASAK
+AWS_STORAGE_BUCKET_NAME = ASBN
+
+AWS_S3_ENDPOINT_URL = ASEU
+AWS_S3_REGION_NAME = ASRN
+AWS_S3_SIGNATURE_VERSION = ASSV
+AWS_S3_FILE_OVERWRITE = ASFO
+AWS_DEFAULT_ACL = ADA
+AWS_QUERYSTRING_AUTH = False
+
+STORAGES = {
+    "default": {
+        "BACKEND": "storages.backends.s3boto3.S3Boto3Storage",
+    },
+    "staticfiles": {
+        "BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage"
+    },
+}
