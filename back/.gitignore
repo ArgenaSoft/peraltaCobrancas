@@ -9,3 +9,4 @@ static/src/output.css
 .vscode
 local_config.py
 media/
+.env
