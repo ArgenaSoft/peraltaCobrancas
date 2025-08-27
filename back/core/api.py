@@ -1,5 +1,6 @@
 import logging
 import os
+from traceback import format_exc
 
 from ninja import NinjaAPI
 from ninja.responses import Response
@@ -58,6 +59,8 @@ def handle_wild_exceptions(request, exc: Exception):
     if ENV == DEV:
         raise exc
     else:
+        lgr.exception("Unhandled exception: %s", exc)
+        lgr.error(format_exc())
         return Response(
             ReturnSchema(code=500, message="Internal Server Error"), 
             status=500

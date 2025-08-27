@@ -1,9 +1,8 @@
 from functools import wraps
 import logging
-from typing import Any, Optional, Tuple, Union
+from traceback import format_exc
 
 from ninja import Router
-from ninja.responses import codes_3xx, codes_4xx, codes_5xx
 
 from app.exceptions import HttpFriendlyException
 from app.schemas import ReturnSchema
@@ -28,9 +27,11 @@ def endpoint(log_action: str | None = None):
             try:
                 response: ReturnSchema = func(*args, **kwargs)
             except HttpFriendlyException as e:
+                lgr.debug(f"HttpFriendlyException capturada: {e.code} - {e.message}")
                 response = ReturnSchema.from_http_friendly_exception(e)
             except Exception as e:
                 lgr.exception(e)
+                lgr.error(format_exc())
                 if ENV == DEV:
                     raise
                 response = ReturnSchema(message="Erro interno.", code=500)

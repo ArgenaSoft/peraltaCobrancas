@@ -1,0 +1,11 @@
+FROM node:20-alpine
+
+WORKDIR /app
+
+# Copia os arquivos de dependência e instala dependências
+COPY package.json package-lock.json ./
+RUN npm ci
+
+# Copia o restante do código e constrói o projeto
+COPY . .
+CMD ["npm", "run", "dev"]

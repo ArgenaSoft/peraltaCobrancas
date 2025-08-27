@@ -1,0 +1,33 @@
+services:
+  back:
+    build:
+      context: ./back
+      dockerfile: Dockerfile
+    ports:
+      - "8000:8000"
+    volumes:   # Apenas em Dev
+      - ./back:/app/back
+    env_file:
+      - ./back/.env
+    networks:
+      - peralta_network
+    command: python manage.py runserver 0.0.0.0:8000
+
+  front:
+    build:
+      context: ./front
+      dockerfile: Dockerfile-dev
+    ports:
+      - "3000:3000"
+    volumes:   # Apenas em Dev
+      - ./front:/app/front
+    env_file:
+      - ./front/.env
+    networks:
+      - peralta_network
+    command: npm run dev
+
+
+networks:
+  peralta_network:
+    driver: bridge

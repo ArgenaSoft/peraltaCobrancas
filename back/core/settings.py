@@ -133,6 +133,10 @@ LOGGING = {
             'handlers': ['console', 'file', 'audit'],
             'level': logging.DEBUG,
         },
+        '': {
+            'handlers': ['console', 'file'],
+            'level': logging.INFO,
+        },
     },
 }
 
