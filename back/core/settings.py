@@ -19,7 +19,8 @@ from config import ACCESS_TOKEN_EXPIRATION_SECONDS, REFRESH_TOKEN_EXPIRATION_SEC
 from config import AWS_ACCESS_KEY_ID as AAKI, AWS_SECRET_ACCESS_KEY as ASAK, \
     AWS_STORAGE_BUCKET_NAME as ASBN, AWS_S3_FILE_OVERWRITE as ASFO, \
     AWS_S3_ENDPOINT_URL as ASEU, AWS_S3_REGION_NAME as ASRN, \
-    AWS_S3_SIGNATURE_VERSION as ASSV, AWS_DEFAULT_ACL as ADA
+    AWS_S3_SIGNATURE_VERSION as ASSV, AWS_DEFAULT_ACL as ADA, \
+    USING_AWS as UA
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -205,6 +206,7 @@ MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
 SEND_SMS = True
 
+USING_AWS = UA
 AWS_ACCESS_KEY_ID = AAKI
 AWS_SECRET_ACCESS_KEY = ASAK
 AWS_STORAGE_BUCKET_NAME = ASBN
@@ -224,3 +226,9 @@ STORAGES = {
         "BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage"
     },
 }
+
+if not USING_AWS:
+    STORAGES['default'] = {
+        "BACKEND": "django.core.files.storage.FileSystemStorage",
+        "LOCATION": MEDIA_ROOT,
+    }
