@@ -5,6 +5,8 @@ services:
       dockerfile: Dockerfile
     env_file:
       - ./back/.env
+    volumes:
+      - ./back/media:/app/media
   front:
     build:
       context: ./front

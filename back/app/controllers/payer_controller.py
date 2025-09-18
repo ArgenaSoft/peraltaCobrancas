@@ -26,11 +26,11 @@ class PayerController(BaseController[PayerRepository, Payer]):
         Retorna:
             - Payer: Pagador criado.
         """
-        if UserRepository.exists(cpf=schema.cpf):
-            raise HttpFriendlyException(400, "Um usuário com esse cpf já existe!")
+        if UserRepository.exists(cpf_cnpj=schema.cpf_cnpj):
+            raise HttpFriendlyException(400, "Um usuário com esse CPF/CNPJ já existe!")
 
         uc_schema: UserInSchema = UserInSchema(
-            cpf=schema.cpf,
+            cpf_cnpj=schema.cpf_cnpj,
             is_active=True
         )
 

@@ -25,9 +25,9 @@ def get_code(request: WSGIRequest, data: Query[UserGetCodeSchema]):
     """
     Gera um codigo de login a ser enviado via sms
     """
-    lgr.info(f"Usuário {data.cpf} solicitou um código de acesso")
+    lgr.info(f"Usuário {data.cpf_cnpj} solicitou um código de acesso")
     filters = {
-        "cpf": re.sub(r"\D", "", data.cpf),
+        "cpf_cnpj": re.sub(r"\D", "", data.cpf_cnpj),
     }
 
     user: User = UserController.get(**filters)

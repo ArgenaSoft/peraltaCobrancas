@@ -19,7 +19,7 @@ class AuthController:
     @classmethod
     def login(cls, schema: LoginSchema) -> Tuple[RefreshToken, str]:
         try:
-            user: User = UserRepository.get(cpf=schema.cpf, friendly=False)
+            user: User = UserRepository.get(cpf_cnpj=schema.cpf_cnpj, friendly=False)
             payer: Payer = user.payer
 
             login_code = LoginCodeRepository.get(
@@ -27,9 +27,9 @@ class AuthController:
                 user=user,
                 friendly=False)
         except User.DoesNotExist:
-            raise HttpFriendlyException(401, "Cpf inválido.")
+            raise HttpFriendlyException(401, "CPF/CNPJ inválido.")
         except Payer.DoesNotExist:
-            lgr.error("Existe usuário sem payer no banco: %s", schema.cpf)
+            lgr.error("Existe usuário sem payer no banco: %s", schema.cpf_cnpj)
             raise HttpFriendlyException(500, "Problema interno. Entre em contato com o suporte")
         except LoginCode.DoesNotExist:
             raise HttpFriendlyException(401, "Código inválido.")

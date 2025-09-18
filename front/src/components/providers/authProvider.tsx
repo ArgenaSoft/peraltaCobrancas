@@ -10,7 +10,7 @@ import { registerRefreshHandler } from "../authTokenManager";
 
 interface AuthContextType {
     user: UserTokens | null;
-    login: (cpf: string, phone: string, code: string) => Promise<ApiResponse<LoginReturn>>;
+    login: (cpf_cnpj: string, phone: string, code: string) => Promise<ApiResponse<LoginReturn>>;
     refresh: () => Promise<string | null>;
 }
 export const AuthContext = createContext<AuthContextType>({} as AuthContextType);
@@ -62,8 +62,8 @@ export const AuthProvider = ({ children }: any) => {
         return user !== null || localStorage.getItem("access_token") !== null;
     }
 
-    async function login(cpf: string, phone: string, code: string): Promise<ApiResponse<LoginReturn>> {
-        let response: ApiResponse<LoginReturn> | ApiResponse = await callLogin(cpf, phone, code);
+    async function login(cpf_cnpj: string, phone: string, code: string): Promise<ApiResponse<LoginReturn>> {
+        let response: ApiResponse<LoginReturn> | ApiResponse = await callLogin(cpf_cnpj, phone, code);
         if (response.code == 200 && response.data) {
             setUser(response.data);
             updateTokenStorage(response.data.access, response.data.refresh, response.data.username);

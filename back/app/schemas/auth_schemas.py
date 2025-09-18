@@ -2,7 +2,7 @@ from app.schemas import BaseSchema
 
 
 class LoginSchema(BaseSchema):
-    cpf: str
+    cpf_cnpj: str
     phone: str
     code: str
 

@@ -24,7 +24,7 @@ class UserFactory(TimestampedModelFactory):
         model = User
 
     password = factory.Faker('password')
-    cpf = factory.Faker('numerify', text='###########')
+    cpf_cnpj = factory.Faker('numerify', text='###########')
 
 
 class PayerFactory(TimestampedModelFactory):

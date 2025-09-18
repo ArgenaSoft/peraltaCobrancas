@@ -86,13 +86,13 @@ class Command(BaseCommand):
                 # Sem boleto
                 pass
 
-    def create_payer(self, cpf: str, name: str):
+    def create_payer(self, cpf_cnpj: str, name: str):
         user = UserFactory.create(
-            cpf=cpf
+            cpf_cnpj=cpf_cnpj
         )
 
         payer = PayerFactory.create(
-            phone=cpf,
+            phone=cpf_cnpj,
             name=name,
             user=user
         )

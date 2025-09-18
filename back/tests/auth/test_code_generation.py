@@ -5,7 +5,7 @@ from tests.factories import LoginCodeFactory
 
 def test_generate_code_success(client: Client, payer: Payer):
     data = {
-        "cpf": payer.user.cpf,
+        "cpf_cnpj": payer.user.cpf_cnpj,
         "phone": payer.phone
     }
 
@@ -19,7 +19,7 @@ def test_generate_code_success(client: Client, payer: Payer):
 def test_deny_multiple_active_codes(client: Client, payer: Payer):
     previous_login_code = LoginCodeFactory.create(user=payer.user)
     response = client.get('/api/user/get_code', {
-        "cpf": payer.user.cpf,
+        "cpf_cnpj": payer.user.cpf_cnpj,
         "phone": payer.phone
     })
 

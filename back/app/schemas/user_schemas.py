@@ -4,19 +4,19 @@ from app.schemas import BaseSchema, OutSchema
 
 
 class UserInSchema(BaseSchema):
-    cpf: str
+    cpf_cnpj: str
     is_active: bool
 
 
 class UserOutSchema(OutSchema):
-    cpf: str
+    cpf_cnpj: str
     is_active: bool
     created_at: datetime
     updated_at: datetime
 
 
 class UserGetCodeSchema(BaseSchema):
-    cpf: str
+    cpf_cnpj: str
     phone: str
 
 
@@ -26,4 +26,4 @@ class UserWaitToGetCodeSchema(BaseSchema):
 
 class UserShortOutSchema(OutSchema):
     id: int
-    cpf: str
+    cpf_cnpj: str

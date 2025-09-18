@@ -55,7 +55,7 @@ interface HomeAgreement {
 
 interface User {
     id: number;
-    cpf: string;
+    cpf_cnpj: string;
 }
 
 interface Payer {

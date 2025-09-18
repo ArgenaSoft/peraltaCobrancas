@@ -13,14 +13,14 @@ export default function LoginPage() {
   const router = useRouter();
   const { show } = useContext(SnackbarContext);
   const { login } = useContext(AuthContext);
-  const [cpf, setCpf] = useState("");
+  const [cpf_cnpj, setCpf] = useState("");
   const [phone, setPhone] = useState("");
   const [code, setCode] = useState("");
   const [codeSent, setCodeSent] = useState(false);
   const [disableSend, setDisableSend] = useState(false);
 
   useEffect(() => {
-    if (phone.length < 14 || cpf.length < 14) {
+    if (phone.length < 14 || cpf_cnpj.length < 14) {
       setDisableSend(true);
     } else if (codeSent && code.length < 6) {
       setDisableSend(true);
@@ -28,10 +28,10 @@ export default function LoginPage() {
       // Habilita o botão
       setDisableSend(false);
     }
-  }, [phone, cpf, code, codeSent]);
+  }, [phone, cpf_cnpj, code, codeSent]);
 
   async function getCode() {
-    let response: ApiResponse = await callGetCode(cpf, phone);
+    let response: ApiResponse = await callGetCode(cpf_cnpj, phone);
     if(response.code == 201) {
       setCode(typeof response.data.code === "string" ? response.data.code : "");
       show("Código enviado!", "Um código foi enviado para o seu telefone", "info");
@@ -47,7 +47,7 @@ export default function LoginPage() {
       return;
     }
 
-    let response: ApiResponse<LoginReturn> = await login(cpf, phone, code);
+    let response: ApiResponse<LoginReturn> = await login(cpf_cnpj, phone, code);
     if (response.code == 200) {
       show("Sucesso", "Login realizado com sucesso", "info");
       router.push("/");
@@ -65,7 +65,7 @@ export default function LoginPage() {
         {codeSent &&
           <span className="text-black text-[12px] text-center">Um código foi enviado para o número {phone}</span>
         }
-        <TextInput mask="___.___.___-__" replacement={{ _: /\d/ }} placeholder="CPF" value={cpf} callback={setCpf} />
+        <TextInput mask="___.___.___-__" replacement={{ _: /\d/ }} placeholder="CPF/CNPJ" value={cpf_cnpj} callback={setCpf} />
         <TextInput mask="(__) _____-____" replacement={{ "_": /\d/ }} placeholder="Telefone" value={phone} callback={setPhone} />
 
         {codeSent &&

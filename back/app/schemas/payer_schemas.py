@@ -6,13 +6,13 @@ from app.schemas.user_schemas import UserOutSchema
 
 
 class PayerInSchema(BaseSchema):
-    cpf: str
+    cpf_cnpj: str
     name: str
     phone: str
 
 
 class PayerPatchInSchema(BaseSchema):
-    cpf: Optional[str] = None
+    cpf_cnpj: Optional[str] = None
     name: Optional[str] = None
     phone: Optional[str] = None
 

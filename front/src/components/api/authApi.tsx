@@ -2,10 +2,10 @@ import axios from "axios";
 import { unloggedApi } from "./baseApi";
 import { ApiResponse } from "../types";
 
-async function callGetCode(cpf: string, phone: string): Promise<ApiResponse> {
+async function callGetCode(cpf_cnpj: string, phone: string): Promise<ApiResponse> {
   try {
     const response = await unloggedApi.get("/user/get_code", {
-      params: { cpf, phone },
+      params: { cpf_cnpj, phone },
     });
     return response.data;
   } catch (error) {
@@ -23,9 +23,9 @@ interface LoginReturn {
   username: string;
 }
 
-async function callLogin(cpf: string, phone: string, code: string): Promise<ApiResponse<LoginReturn> | ApiResponse> {
+async function callLogin(cpf_cnpj: string, phone: string, code: string): Promise<ApiResponse<LoginReturn> | ApiResponse> {
   try {
-    const response = await unloggedApi.post("/auth/token", { cpf, phone, code });
+    const response = await unloggedApi.post("/auth/token", { cpf_cnpj, phone, code });
     return response.data;
   } catch (error) {
     if (axios.isAxiosError(error) && error.response) {

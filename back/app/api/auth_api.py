@@ -15,7 +15,7 @@ auth_router = CustomRouter(tags=["Autenticação"])
 
 @auth_router.post("/token", response={200: ReturnSchema[TokenOutSchema]}, auth=None)
 def login(request: WSGIRequest, data: LoginSchema):
-    data.cpf = re.sub(r"\D", "", data.cpf)
+    data.cpf_cnpj = re.sub(r"\D", "", data.cpf_cnpj)
     data.phone = re.sub(r"\D", "", data.phone)
 
     token, payer_name = AuthController.login(data)

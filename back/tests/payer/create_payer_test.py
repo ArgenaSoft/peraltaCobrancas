@@ -8,7 +8,7 @@ def test_create_payer(system_client: Client):
     data = {
         'name': 'teste',
         'phone': '44920029305',
-        'cpf': '13469282072',
+        'cpf_cnpj': '13469282072',
     }
 
     response = system_client.post('/api/payer/', data=data, content_type='application/json')
@@ -19,9 +19,9 @@ def teste_payer_cpf_is_unique(system_client: Client, payer: Payer):
     data = {
         'name': 'teste',
         'phone': '44920029305',
-        'cpf': payer.user.cpf,
+        'cpf_cnpj': payer.user.cpf_cnpj,
     }
 
     response = system_client.post('/api/payer/', data=data, content_type='application/json')
     assert response.status_code == 400
-    assert 'cpf' in response.json()['message']
+    assert 'cpf_cnpj' in response.json()['message']

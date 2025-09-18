@@ -86,10 +86,10 @@ class Authenticatable(BaseModel):
 
 
 class UserManager(BaseUserManager):
-    def create_user(self, cpf, **extra_fields):
-        if not cpf:
-            raise ValueError("CPF é obrigatório")
-        user = self.model(cpf=cpf, **extra_fields)
+    def create_user(self, cpf_cnpj, **extra_fields):
+        if not cpf_cnpj:
+            raise ValueError("CPF/CNPJ é obrigatório")
+        user = self.model(cpf_cnpj=cpf_cnpj, **extra_fields)
         user.set_unusable_password()  # não usamos senha
         user.save(using=self._db)
         return user
@@ -100,21 +100,21 @@ class User(AbstractBaseUser, Authenticatable):
         Representa um Usuário que pode se logar no sistema
 
         Atributos:
-            - cpf: CPF do Usuário.
+            - cpf_cnpj: CPF/CNPJ do Usuário.
             - is_active: Indica se o Usuário está ativo ou não.
             - staff_level: Nível de acesso do Usuário (Funcionário ou
             Administrador).
     """
     READABLE_NAME = 'Usuário'
-    USERNAME_FIELD = 'cpf'
+    USERNAME_FIELD = 'cpf_cnpj'
     is_human = True
 
-    cpf = models.CharField(max_length=11, unique=True)
+    cpf_cnpj = models.CharField(max_length=11, unique=True)
     is_active = models.BooleanField(default=True)
     objects = UserManager()
 
     def __str__(self):
-        return self.cpf
+        return self.cpf_cnpj
     
     @property
     def payer(self) -> "Payer":
@@ -123,12 +123,12 @@ class User(AbstractBaseUser, Authenticatable):
     @property
     def identification(self):
         """
-            Retorna a identificação do usuário, que é o CPF.
+            Retorna a identificação do usuário, que é o CPF/CNPJ.
 
             Retorna:
-                - str: CPF do usuário.
+                - str: CPF/CNPJ do usuário.
         """
-        return self.cpf
+        return self.cpf_cnpj
 
 
 class Creditor(SoftDeleteModel):
@@ -163,7 +163,6 @@ class Payer(BaseModel):
 
         Atributos:
             - name: Nome do Pagador.
-            - cpf: CPF do Pagador.
             - phone: Telefone do Pagador.
     """
     READABLE_NAME = 'Pagador'

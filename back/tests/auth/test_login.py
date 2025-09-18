@@ -13,7 +13,7 @@ def test_login_success(client: Client, payer: Payer):
     LoginCodeFactory.create(user=payer.user, code=code, used=False)
 
     payload = {
-        "cpf": payer.user.cpf,
+        "cpf_cnpj": payer.user.cpf_cnpj,
         "phone": payer.phone,
         "code": code
     }
@@ -30,7 +30,7 @@ def test_login_fails_with_invalid_code(client: Client, payer: Payer):
     LoginCodeFactory.create(user=payer.user, code="123456", used=False)
 
     payload = {
-        "cpf": payer.user.cpf,
+        "cpf_cnpj": payer.user.cpf_cnpj,
         "phone": payer.phone,
         "code": "000000"
     }
@@ -51,7 +51,7 @@ def test_login_fails_with_expired_code(client: Client, payer: Payer):
     )
 
     payload = {
-        "cpf": payer.user.cpf,
+        "cpf_cnpj": payer.user.cpf_cnpj,
         "phone": payer.phone,
         "code": expired_code
     }
@@ -73,7 +73,7 @@ def test_login_fails_with_used_code(client: Client, payer: Payer):
     )
 
     payload = {
-        "cpf": payer.user.cpf,
+        "cpf_cnpj": payer.user.cpf_cnpj,
         "phone": payer.phone,
         "code": used_code
     }
@@ -89,15 +89,15 @@ def test_login_fails_with_incorrect_cpf(client: Client, payer: Payer):
     LoginCodeFactory.create(user=payer.user, code=code, used=False)
 
     payload = {
-        "cpf": "00000000000",  # CPF incorreto
+        "cpf_cnpj": "00000000000",  # CPF/CNPJ incorreto
         "phone": payer.phone,
         "code": code
     }
 
     response = client.post('/api/auth/token', data=payload, content_type='application/json')
 
-    assert response.status_code == 401, "Esperado status 401 para CPF incorreto."
-    assert 'cpf' in response.json()['message'].lower(), "Mensagem de erro incorreta."
+    assert response.status_code == 401, "Esperado status 401 para CPF/CNPJ incorreto."
+    assert 'cpf_cnpj' in response.json()['message'].lower(), "Mensagem de erro incorreta."
 
 
 def test_payer_phone_update_on_login(client: Client, payer: Payer):
@@ -105,7 +105,7 @@ def test_payer_phone_update_on_login(client: Client, payer: Payer):
     LoginCodeFactory.create(user=payer.user, code=code, used=False)
 
     payload = {
-        "cpf": payer.user.cpf,
+        "cpf_cnpj": payer.user.cpf_cnpj,
         "phone": "99999999999",
         "code": code
     }
@@ -122,7 +122,7 @@ def test_login_creates_past_number(client: Client, payer: Payer):
     LoginCodeFactory.create(user=payer.user, code=code, used=False)
 
     payload = {
-        "cpf": payer.user.cpf,
+        "cpf_cnpj": payer.user.cpf_cnpj,
         "phone": "88888888888",  # Telefone que não é o atual do pagador
         "code": code
     }
@@ -139,7 +139,7 @@ def test_login_is_registered_on_database(client: Client, payer: Payer):
     LoginCodeFactory.create(user=payer.user, code=code, used=False)
 
     payload = {
-        "cpf": payer.user.cpf,
+        "cpf_cnpj": payer.user.cpf_cnpj,
         "phone": payer.phone,
         "code": code
     }
