@@ -36,6 +36,9 @@ export default function LoginPage() {
       setCode(typeof response.data.code === "string" ? response.data.code : "");
       show("Código enviado!", "Um código foi enviado para o seu telefone", "info");
       setCodeSent(true);
+    } else if (response.code == 500 && response.message === "Não foi possível enviar o SMS. Peça o código para o suporte.") {
+      show("Erro", response.message ?? '', "error");
+      setCodeSent(true);
     } else {
       show("Erro", response.message ?? '', "error");
     }

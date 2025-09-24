@@ -42,7 +42,10 @@ def get_code(request: WSGIRequest, data: Query[UserGetCodeSchema]):
             data={"wait_time_seconds": e.data["wait_time_seconds"]})
 
     return_data = {}
-    send_sms(data.phone, f"Seu codigo de acesso para a plataforma Peralta Cobranças: {code.code}.")
+    sent = send_sms(data.phone, f"Seu codigo de acesso para a plataforma Peralta Cobranças: {code.code}.")
+    if not sent:
+        return ReturnSchema(code=500, message="Não foi possível enviar o SMS. Peça o código para o suporte.")
+
     if ENV == DEV:
         print(f"Generated code: {code.code}")
         return_data = {"code": code.code}

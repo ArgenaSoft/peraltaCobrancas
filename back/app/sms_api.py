@@ -14,10 +14,10 @@ def clean_phone(phone: str) -> str:
     """
     return ''.join(filter(str.isdigit, phone))
 
-def send_sms(phone: str, message: str) -> None:
+def send_sms(phone: str, message: str) -> bool:
     if not settings.SEND_SMS:
         lgr.info("Envio de SMS desativado. Configuração SEND_SMS está como False.")
-        return
+        return True
 
     url = SMS_API_ENDPOINT
     phone = clean_phone(phone)
@@ -32,10 +32,13 @@ def send_sms(phone: str, message: str) -> None:
 
     lgr.info(f"Enviando SMS para {phone}: {message}")
     try:
+        lgr.debug(f"Url sms: {url}")
         response = requests.post(url, headers=headers, json=payload, timeout=10)
         response.raise_for_status()
+        lgr.info(f"SMS enviado com sucesso para {phone}")
     except requests.RequestException as e:
         lgr.error(f"Erro ao enviar SMS para {phone}")
         lgr.exception(e)
-    
-    lgr.info(f"SMS enviado com sucesso para {phone}")
+        return False
+
+    return True
