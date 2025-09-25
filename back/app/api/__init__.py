@@ -1,6 +1,7 @@
 from functools import wraps
 import logging
 from traceback import format_exc
+from typing import Any, Union
 
 from ninja import Router
 
@@ -43,4 +44,56 @@ def endpoint(log_action: str | None = None):
 
 
 class CustomRouter(Router):
-    pass
+    """
+        Não queria setar manualmente em todas as rotas o mesmo esquema de 
+        resposta para os códigos de erro
+    """
+
+    def add_missing_codes(self, response_schemas: Union[dict, Any], code_set: frozenset, schema: Any):
+        if not isinstance(response_schemas, dict):
+            raise TypeError("O dicionário de retornos para as rotas precisa ser um dicionário. Exemplo: 'response={200: ReturnSchema}'")
+
+        existing_codes = set(response_schemas.keys())
+        missing = code_set - existing_codes
+        response_schemas[missing] = schema
+
+    def create_missing_response(self, response_schemas: dict):
+        self.add_missing_codes(response_schemas, frozenset([400, 404, 500]), ReturnSchema)
+
+        return response_schemas
+
+    def get(self, *args, **kwargs):
+        kwargs['response'] = self.create_missing_response(
+            kwargs.get('response', {})
+        )
+
+        return super().get(*args, **kwargs)
+
+    def post(self, *args, **kwargs):
+        kwargs['response'] = self.create_missing_response(
+            kwargs.get('response', {})
+        )
+
+        return super().post(*args, **kwargs)
+    
+    def delete(self, *args, **kwargs):
+        kwargs['response'] = self.create_missing_response(
+            kwargs.get('response', {})
+        )
+
+        return super().delete(*args, **kwargs)
+
+    def patch(self, *args, **kwargs):
+        kwargs['response'] = self.create_missing_response(
+            kwargs.get('response', {})
+        )
+
+        return super().patch(*args, **kwargs)
+
+    def put(self, *args, **kwargs):
+        kwargs['response'] = self.create_missing_response(
+            kwargs.get('response', {})
+        )
+
+        return super().put(*args, **kwargs)
+

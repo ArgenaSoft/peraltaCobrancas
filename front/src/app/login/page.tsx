@@ -13,7 +13,7 @@ export default function LoginPage() {
   const router = useRouter();
   const { show } = useContext(SnackbarContext);
   const { login } = useContext(AuthContext);
-  const [cpf_cnpj, setCpf] = useState("");
+  const [cpf_cnpj, setCpfCnpj] = useState("");
   const [phone, setPhone] = useState("");
   const [code, setCode] = useState("");
   const [codeSent, setCodeSent] = useState(false);
@@ -68,7 +68,7 @@ export default function LoginPage() {
         {codeSent &&
           <span className="text-black text-[12px] text-center">Um código foi enviado para o número {phone}</span>
         }
-        <TextInput mask="___.___.___-__" replacement={{ _: /\d/ }} placeholder="CPF/CNPJ" value={cpf_cnpj} callback={setCpf} />
+        <TextInput mask="___.___.___-__" replacement={{ _: /\d/ }} placeholder="CPF/CNPJ" value={cpf_cnpj} callback={setCpfCnpj} />
         <TextInput mask="(__) _____-____" replacement={{ "_": /\d/ }} placeholder="Telefone" value={phone} callback={setPhone} />
 
         {codeSent &&

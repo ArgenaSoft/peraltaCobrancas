@@ -97,7 +97,8 @@ def test_login_fails_with_incorrect_cpf(client: Client, payer: Payer):
     response = client.post('/api/auth/token', data=payload, content_type='application/json')
 
     assert response.status_code == 401, "Esperado status 401 para CPF/CNPJ incorreto."
-    assert 'cpf_cnpj' in response.json()['message'].lower(), "Mensagem de erro incorreta."
+    msg = response.json()['message'].lower()
+    assert 'cpf/cnpj' in msg, f"Mensagem de erro incorreta.: {msg}"
 
 
 def test_payer_phone_update_on_login(client: Client, payer: Payer):

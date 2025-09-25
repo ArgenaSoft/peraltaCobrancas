@@ -19,7 +19,7 @@ lgr = logging.getLogger(__name__)
 user_router = CustomRouter(tags=["Usuários"])
 
 
-@user_router.get('/get_code', response={200: ReturnSchema, 400: ReturnSchema[UserWaitToGetCodeSchema], 404: ReturnSchema}, auth=None)
+@user_router.get('/get_code', response={201: ReturnSchema, 400: ReturnSchema[UserWaitToGetCodeSchema], 404: ReturnSchema}, auth=None)
 @endpoint(None)
 def get_code(request: WSGIRequest, data: Query[UserGetCodeSchema]):
     """
@@ -50,4 +50,4 @@ def get_code(request: WSGIRequest, data: Query[UserGetCodeSchema]):
         print(f"Generated code: {code.code}")
         return_data = {"code": code.code}
 
-    return ReturnSchema(code=200, data=return_data)
+    return ReturnSchema(code=201, data=return_data)

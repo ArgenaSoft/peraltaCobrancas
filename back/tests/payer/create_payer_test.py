@@ -24,4 +24,4 @@ def teste_payer_cpf_is_unique(system_client: Client, payer: Payer):
 
     response = system_client.post('/api/payer/', data=data, content_type='application/json')
     assert response.status_code == 400
-    assert 'cpf_cnpj' in response.json()['message']
+    assert 'CPF/CNPJ' in response.json()['message']
