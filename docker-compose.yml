@@ -7,7 +7,7 @@ services:
       - ./back/.env
     volumes:
       - ./back/media:/app/media
-      - ./banco.sqlite3:/app/db.sqlite3
+      - /docker/peraltacobrancas/banco.sqlite3:/app/db.sqlite3
   front:
     build:
       context: ./front
