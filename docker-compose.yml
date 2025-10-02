@@ -7,7 +7,7 @@ services:
       - ./back/.env
     volumes:
       - ./back/media:/app/media
-      - ./banco:/app/db.sqlite3
+      - ./banco.sqlite3:/app/db.sqlite3
   front:
     build:
       context: ./front
