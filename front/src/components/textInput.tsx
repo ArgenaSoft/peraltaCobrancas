@@ -9,6 +9,7 @@ interface TextProps {
     autoComplete?: string;
     mask?: string;
     replacement?: Record<string, RegExp>;
+    isPassword?: boolean;
 }
 
 const TextInput = (props: TextProps) => {
@@ -31,13 +32,13 @@ const TextInput = (props: TextProps) => {
 
     return (
         <input
-        type="text"
+        type={props.isPassword ? "password" : "text"}
         className={`border-black border-2 rounded-lg text-black p-2 ${props.classes}`}
         value={props.value}
         onChange={handleChange}
         placeholder={props.placeholder}
         onKeyDown={props.onKeyDown}
-        autoComplete={props.autoComplete}
+        autoComplete={props.isPassword ? "current-password" : props.autoComplete}
         />
     );
 }

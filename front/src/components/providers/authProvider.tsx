@@ -1,7 +1,7 @@
 'use client';
 import { createContext, useEffect, useMemo, useState } from "react";
-import { callLogin, callRefresh, LoginReturn } from "../api/authApi";
-import { useRouter } from "next/navigation";
+import { callLogin, callAdminLogin, callRefresh, LoginReturn } from "../api/authApi";
+import { useRouter, usePathname } from "next/navigation";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faArrowRightFromBracket, faArrowLeft, faHouse } from "@fortawesome/free-solid-svg-icons";
 import { ApiResponse, UserTokens } from "../types";
@@ -11,6 +11,7 @@ import { registerRefreshHandler } from "../authTokenManager";
 interface AuthContextType {
     user: UserTokens | null;
     login: (cpf_cnpj: string, phone: string, code: string) => Promise<ApiResponse<LoginReturn>>;
+    adminLogin: (cpf_cnpj: string, password: string) => Promise<ApiResponse<LoginReturn>>;
     refresh: () => Promise<string | null>;
 }
 export const AuthContext = createContext<AuthContextType>({} as AuthContextType);
@@ -19,6 +20,7 @@ export const AuthProvider = ({ children }: any) => {
     const [isClient, setIsClient] = useState(false); // <- garante que está no client
     const [user, setUser] = useState<UserTokens | null>(null);
     const router = useRouter();
+    const currentPath = usePathname();
 
     // Carregamento inicial
     useEffect(() => {
@@ -40,7 +42,7 @@ export const AuthProvider = ({ children }: any) => {
 
     // Verifica se o usuário está logado e redireciona para a página de login se não estiver
     useEffect(() => {
-        if (!isLogged()) {
+        if (currentPath != '/admin/login' && !isLogged()) {
             router.push('/login');
         }
     }, [user, router]);
@@ -71,6 +73,15 @@ export const AuthProvider = ({ children }: any) => {
         return response;
     }
 
+    async function adminLogin(cpf_cnpj: string, password: string): Promise<ApiResponse<LoginReturn>> {
+        let response: ApiResponse<LoginReturn> | ApiResponse = await callAdminLogin(cpf_cnpj, password);
+        if (response.code == 200 && response.data) {
+            setUser(response.data);
+            updateTokenStorage(response.data.access, response.data.refresh, response.data.username);
+        }
+        return response;
+    }
+    
     async function logout() {
         setUser(null);
         localStorage.removeItem("access_token");
@@ -98,7 +109,7 @@ export const AuthProvider = ({ children }: any) => {
     }
 
     return (
-        <AuthContext.Provider value={useMemo(() => ({ login, refresh, user }), [login, user])}>
+        <AuthContext.Provider value={useMemo(() => ({ login, adminLogin, refresh, user }), [login, user])}>
             {isClient && isLogged() &&
                 <div className="flex justify-between fixed top-0 left-0 w-full min-h-fit bg-dark-blue p-4">
                     <button

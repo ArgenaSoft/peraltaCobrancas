@@ -36,6 +36,19 @@ async function callLogin(cpf_cnpj: string, phone: string, code: string): Promise
 }
 
 
+async function callAdminLogin(cpf_cnpj: string, password: string): Promise<ApiResponse<LoginReturn> | ApiResponse> {
+  try {
+    const response = await unloggedApi.post("/auth/admin/token", { cpf_cnpj, password });
+    return response.data;
+  } catch (error) {
+    if (axios.isAxiosError(error) && error.response) {
+      return error.response.data as ApiResponse;
+    }
+    throw error;
+  }
+}
+
+
 async function callRefresh(refresh_token: string): Promise<ApiResponse<LoginReturn>> {
   try {
     const response = await unloggedApi.post("/auth/refresh", {
@@ -50,5 +63,5 @@ async function callRefresh(refresh_token: string): Promise<ApiResponse<LoginRetu
   }
 }
 
-export { callGetCode, callLogin, callRefresh };
+export { callGetCode, callLogin, callAdminLogin, callRefresh };
 export type { LoginReturn };
