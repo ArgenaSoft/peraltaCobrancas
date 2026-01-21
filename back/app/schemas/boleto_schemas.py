@@ -1,5 +1,5 @@
 import logging
-from typing import Any, Optional
+from typing import IO, Any, Optional, Union
 
 from ninja import UploadedFile
 from pydantic import field_validator
@@ -11,9 +11,8 @@ from app.schemas import BaseSchema, OutSchema
 lgr = logging.getLogger(__name__)
 
 class BoletoInSchema(BaseSchema):
-    # Preciso deixar como optional pois o arquivo não pode ser parseado junto com o resto
-    # Mas sempre terá um arquivo
-    pdf: Optional[UploadedFile] = None
+    # Arquivo é obrigatório, mas não faz parte do body JSON; vem via multipart.
+    pdf: Optional[Union[IO[bytes], Any]] = None
     installment: int
     status: Boleto.Status
 

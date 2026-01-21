@@ -1,32 +1,30 @@
-import type { Metadata } from "next";
-import { Inter } from "next/font/google";
 import "./globals.css";
-import { SnackbarProvider } from "@/components/providers/snackbarProvider";
-import { AuthProvider } from "@/components/providers/authProvider";
+import { Inter } from "next/font/google";
+import type { Metadata } from "next";
+import { AllProviders } from "@/components/providers/allProviders";
 
 const interSans = Inter({
   variable: "--font-inter-sans",
   subsets: ["latin"],
 });
 
-
 export const metadata: Metadata = {
   title: "Peralta Cobranças",
   description: "",
 };
 
-export default function RootLayout({children,}: Readonly<{children: React.ReactNode;}>) {  
+export default function RootLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
   return (
     <html lang="en">
-      <body
-        className={`${interSans.variable} antialiased`}
-      >
+      <body className={`${interSans.variable} antialiased`}>
         <div className="bg-white font-inter overflow-y-scroll">
-          <SnackbarProvider>
-            <AuthProvider>
-              {children}
-            </AuthProvider>
-          </SnackbarProvider>
+          <AllProviders>
+            {children}
+          </AllProviders>
         </div>
       </body>
     </html>

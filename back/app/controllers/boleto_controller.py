@@ -1,4 +1,5 @@
 import logging
+from typing import IO
 
 from django.core.files.base import ContentFile
 from django.core.files.storage import default_storage
@@ -37,7 +38,7 @@ class BoletoController(BaseController[BoletoRepository, Boleto]):
         agreement: Agreement = installment.agreement
         creditor: Creditor = agreement.creditor
 
-        path = cls._save_boleto_pdf(schema.pdf, creditor.slug_name, agreement.slug_name, installment.slug_name)
+        path = cls._save_boleto_pdf(schema.pdf, creditor.slug_name, agreement.slug_name, installment.slug_name) # type: ignore
 
         data = schema.model_dump()
         data['pdf'] = path
@@ -69,7 +70,7 @@ class BoletoController(BaseController[BoletoRepository, Boleto]):
         return updated
 
     @classmethod
-    def _save_boleto_pdf(cls, pdf: UploadedFile, creditor_name: str, agreement_name: str, installment_name: str) -> str:
+    def _save_boleto_pdf(cls, pdf: IO[bytes], creditor_name: str, agreement_name: str, installment_name: str) -> str:
         """
         Salva o arquivo PDF do boleto no sistema de arquivos.
 
@@ -83,5 +84,5 @@ class BoletoController(BaseController[BoletoRepository, Boleto]):
             - str: O caminho do arquivo salvo.
         """
         path = f"boletos/{creditor_name}/{agreement_name}_{installment_name}.pdf"
-        path = default_storage.save(path, ContentFile(pdf.file.read()))
+        path = default_storage.save(path, ContentFile(pdf.read()))
         return path

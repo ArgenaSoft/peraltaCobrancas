@@ -84,7 +84,6 @@ def list_agreements_for_home(request: CustomRequest, data: Query[AgreementHomeIn
             # Preciso verificar se a parcela tem boleto associado
             if not hasattr(installment, 'boleto') or not installment.boleto:
                 continue
-            
 
             boleto: Boleto = installment.boleto
             installments_data.append({

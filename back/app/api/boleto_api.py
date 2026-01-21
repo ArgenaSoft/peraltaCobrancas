@@ -25,7 +25,7 @@ def create_boleto(
     status: Boleto.Status = Form(...)
 ):
     data = BoletoInSchema(
-        pdf=pdf,
+        pdf=pdf.file,
         installment=installment,
         status=status,)
 

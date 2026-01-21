@@ -9,11 +9,11 @@ async function callGetCode(cpf_cnpj: string, phone: string): Promise<ApiResponse
     });
     return response.data;
   } catch (error) {
+    throw error;
     if (axios.isAxiosError(error) && error.response) {
       // Retorna o corpo da resposta com erro (status 400, etc)
       return error.response.data as ApiResponse;
     }
-    throw error;
   }
 }
 

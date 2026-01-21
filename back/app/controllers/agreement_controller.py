@@ -26,12 +26,12 @@ class AgreementController(BaseController[AgreementRepository, Agreement]):
         Retorna:
             - Agreement: Acordo criado.
         """
+
         data = schema.model_dump()
         data['payer'] = PayerController.get(id=schema.payer)
         data['creditor'] = CreditorController.get(id=schema.creditor)
         
         return cls.REPOSITORY.create(data)
-
 
     @classmethod
     def update(cls, id, schema: AgreementPatchInSchema) -> Agreement:

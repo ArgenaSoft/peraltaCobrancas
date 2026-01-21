@@ -77,7 +77,7 @@ export default function HomePage() {
           )
             :
             <div>
-              <h2 className="font-bold text-3xl">Você não possui acordos ativos</h2>
+              <h2 className="font-bold text-3xl p-2">Você não possui acordos ativos</h2>
             </div>
           }
         </div>

@@ -2,6 +2,7 @@
 import { callGetCode, LoginReturn } from "@/components/api/authApi";
 import { AuthContext } from "@/components/providers/authProvider";
 import { SnackbarContext } from "@/components/providers/snackbarProvider";
+import Switch from "@/components/switch";
 import TextButton from "@/components/textButton";
 import TextInput from "@/components/textInput";
 import { ApiResponse } from "@/components/types";
@@ -18,9 +19,12 @@ export default function LoginPage() {
   const [code, setCode] = useState("");
   const [codeSent, setCodeSent] = useState(false);
   const [disableSend, setDisableSend] = useState(false);
+  const [isCpf, setIsCpf] = useState(true);
+  const cpfMask = "___.___.___-__";
+  const cnpjMask = "__.___.___/____-__";
 
   useEffect(() => {
-    if (phone.length < 14 || cpf_cnpj.length < 14) {
+    if (phone.length < 11 || cpf_cnpj.length < 11) {
       setDisableSend(true);
     } else if (codeSent && code.length < 6) {
       setDisableSend(true);
@@ -59,21 +63,38 @@ export default function LoginPage() {
     }
   }
 
+  function changeDocumentType(value: boolean) {
+    setIsCpf(value);
+    setCpfCnpj("");
+  }
+
   return (
     <div className="flex flex-col gap-4 justify-center items-center h-screen">
       <div className="max-w-[70%]">
         <img src="img//logo-blue.png" alt="Logo" />
       </div>
-      <div className="flex flex-col items-center gap-2">
+      <div className="flex flex-col items-center gap-2 w-75">
         {codeSent &&
           <span className="text-black text-[12px] text-center">Um código foi enviado para o número {phone}</span>
         }
-        <TextInput mask="___.___.___-__" replacement={{ _: /\d/ }} placeholder="CPF/CNPJ" value={cpf_cnpj} callback={setCpfCnpj} />
-        <TextInput mask="(__) _____-____" replacement={{ "_": /\d/ }} placeholder="Telefone" value={phone} callback={setPhone} />
+        <div className="flex w-full items-center gap-1">
+          <Switch state={isCpf} onValue="CPF" offValue="CNPJ" setState={changeDocumentType}/>
+          <TextInput
+            classes="flex-1 min-w-0"
+            key={isCpf ? "cpf" : "cnpj"}
+            mask={isCpf ? cpfMask : cnpjMask}
+            replacement={{ _: /\d/ }}
+            placeholder={isCpf ? "CPF" : "CNPJ"}
+            value={cpf_cnpj}
+            callback={setCpfCnpj}
+          />
+        </div>
+
+        <TextInput classes="flex-1 min-w-0 w-full" mask="(__) _____-____" replacement={{ "_": /\d/ }} placeholder="Telefone" value={phone} callback={setPhone} />
 
         {codeSent &&
           <>
-            <TextInput placeholder="Código" value={code} callback={setCode} />
+            <TextInput classes="flex-1 min-w-0" placeholder="Código" value={code} callback={setCode} />
             <TextButton text="Reenviar" callback={getCode} />
           </>
         }

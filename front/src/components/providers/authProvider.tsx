@@ -10,42 +10,41 @@ import { registerRefreshHandler } from "../authTokenManager";
 
 interface AuthContextType {
     user: UserTokens | null;
+    ready: boolean;
     login: (cpf_cnpj: string, phone: string, code: string) => Promise<ApiResponse<LoginReturn>>;
     adminLogin: (cpf_cnpj: string, password: string) => Promise<ApiResponse<LoginReturn>>;
     refresh: () => Promise<string | null>;
 }
+
 export const AuthContext = createContext<AuthContextType>({} as AuthContextType);
 
 export const AuthProvider = ({ children }: any) => {
     const [isClient, setIsClient] = useState(false); // <- garante que está no client
     const [user, setUser] = useState<UserTokens | null>(null);
     const router = useRouter();
-    const currentPath = usePathname();
+    const [ready, setReady] = useState<boolean>(false);
 
     // Carregamento inicial
     useEffect(() => {
+        console.log("AuthProvider mounted");
         // Registra o handler de refresh para atualizar o token quando necessário
         registerRefreshHandler(refresh)
         // Verifica se o código está sendo executado no client
         setIsClient(true);
+        console.log("Checking localStorage for tokens");
         const accessToken = localStorage.getItem("access_token");
         const refreshToken = localStorage.getItem("refresh_token");
         const username = localStorage.getItem("username");
         if (accessToken && refreshToken) {
+            console.log("Found tokens in localStorage, setting user");
             setUser({
                 access: accessToken,
                 refresh: refreshToken,
-                username: username ?? "",
+                username: username ?? ""
             });
         }
+        setReady(true);
     }, []);
-
-    // Verifica se o usuário está logado e redireciona para a página de login se não estiver
-    useEffect(() => {
-        if (currentPath != '/admin/login' && !isLogged()) {
-            router.push('/login');
-        }
-    }, [user, router]);
 
     function updateTokenStorage(access: string | null = null, refresh: string | null = null, username: string | null = null) {
         if (access) {
@@ -57,11 +56,6 @@ export const AuthProvider = ({ children }: any) => {
         if (username) {
             localStorage.setItem("username", username);
         }
-    }
-
-    // Função para verificar se o usuário está logado
-    function isLogged(): boolean {
-        return user !== null || localStorage.getItem("access_token") !== null;
     }
 
     async function login(cpf_cnpj: string, phone: string, code: string): Promise<ApiResponse<LoginReturn>> {
@@ -108,12 +102,24 @@ export const AuthProvider = ({ children }: any) => {
         return null;
     }
 
+    async function goHome() {
+        if(!user) {
+            router.push('/login');
+            return;
+        }
+        if(user.username == "Administrador") {
+            router.push('/admin');
+        }else {
+            router.push('/');
+        }
+    }
+
     return (
-        <AuthContext.Provider value={useMemo(() => ({ login, adminLogin, refresh, user }), [login, user])}>
-            {isClient && isLogged() &&
+        <AuthContext.Provider value={useMemo(() => ({ login, adminLogin, refresh, user, ready }), [login, user])}>
+            {isClient && user &&
                 <div className="flex justify-between fixed top-0 left-0 w-full min-h-fit bg-dark-blue p-4">
                     <button
-                        onClick={() => router.push('/')}
+                        onClick={goHome}
                         className="text-white cursor-pointer"
                     >
                         <FontAwesomeIcon
@@ -134,7 +140,7 @@ export const AuthProvider = ({ children }: any) => {
                 </div>
 
             }
-            <div className={`h-screen ${isClient && isLogged() ? "pt-[120px] px-[40px]" : ""}`}>
+            <div className={`h-screen ${isClient && user ? "pt-[120px] px-[40px]" : ""}`}>
                 {children}
             </div>
         </AuthContext.Provider>

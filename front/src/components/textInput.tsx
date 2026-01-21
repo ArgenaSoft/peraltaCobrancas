@@ -17,11 +17,13 @@ const TextInput = (props: TextProps) => {
         props.callback(e.target.value);
     }
 
+    const classes =  props.classes ?? "";
+
     if(props.mask && props.replacement) {
         return <InputMask 
             mask={props.mask}
             replacement={props.replacement}
-            className={`border-black border-2 rounded-lg text-black p-2 ${props.classes}`}
+            className={`border-black border-2 rounded-lg text-black p-2 ${classes}`}
             onChange={handleChange} 
             value={props.value}
             placeholder={props.placeholder}
@@ -33,7 +35,7 @@ const TextInput = (props: TextProps) => {
     return (
         <input
         type={props.isPassword ? "password" : "text"}
-        className={`border-black border-2 rounded-lg text-black p-2 ${props.classes}`}
+        className={`border-black border-2 rounded-lg text-black p-2 ${classes}`}
         value={props.value}
         onChange={handleChange}
         placeholder={props.placeholder}
