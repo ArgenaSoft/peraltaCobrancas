@@ -6,7 +6,7 @@ from django.core.handlers.wsgi import WSGIRequest
 from app.api import CustomRouter
 from app.controllers.auth_controller import AuthController
 from app.schemas import ReturnSchema
-from app.schemas.auth_schemas import LoginSchema, RefreshInputSchema, RefreshPairSchema, TokenOutSchema
+from app.schemas.auth_schemas import AdminLoginSchema, LoginSchema, RefreshInputSchema, RefreshPairSchema, TokenOutSchema
 
 lgr = logging.getLogger(__name__)
 
@@ -23,6 +23,19 @@ def login(request: WSGIRequest, data: LoginSchema):
         "access": str(token.access_token),
         "refresh": str(token),
         "username": payer_name
+    }
+
+    return ReturnSchema(code=200, data=return_data)
+
+@auth_router.post("/admin/token", response={200: ReturnSchema[TokenOutSchema]}, auth=None)
+def admin_login(request: WSGIRequest, data: AdminLoginSchema):
+    data.cpf_cnpj = re.sub(r"\D", "", data.cpf_cnpj)
+
+    token = AuthController.admin_login(data)
+    return_data = {
+        "access": str(token.access_token),
+        "refresh": str(token),
+        "username": "Administrador"
     }
 
     return ReturnSchema(code=200, data=return_data)

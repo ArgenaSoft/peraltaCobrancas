@@ -9,7 +9,7 @@ from app.exceptions import HttpFriendlyException
 from app.models import ApiConsumer, LoginCode, Payer, User
 from app.repositories.login_code_repository import LoginCodeRepository
 from app.repositories.user_repository import UserRepository
-from app.schemas.auth_schemas import LoginSchema, RefreshInputSchema
+from app.schemas.auth_schemas import AdminLoginSchema, LoginSchema, RefreshInputSchema
 from app.schemas.payer_schemas import PayerPatchInSchema
 from app.repositories.login_history_repository import LoginHistoryRepository
 
@@ -17,7 +17,21 @@ lgr = logging.getLogger(__name__)
 
 class AuthController:
     @classmethod
-    def login(cls, schema: LoginSchema) -> Tuple[RefreshToken, str]:
+    def admin_login(cls, schema: AdminLoginSchema) -> RefreshToken | Token:
+        try:
+            user: User = UserRepository.get(cpf_cnpj=schema.cpf_cnpj, friendly=False)
+        except User.DoesNotExist:
+            raise HttpFriendlyException(401, "CPF/CNPJ inválido.")
+
+        print(user.check_password(schema.password))
+        if user.check_password(schema.password):
+            token = cls.get_token(user.id, "admin")
+            return token
+        else:
+            raise HttpFriendlyException(401, "Senha inválida.")
+
+    @classmethod
+    def login(cls, schema: LoginSchema) -> Tuple[RefreshToken | Token, str]:
         try:
             user: User = UserRepository.get(cpf_cnpj=schema.cpf_cnpj, friendly=False)
             payer: Payer = user.payer
@@ -83,6 +97,7 @@ class AuthController:
                 "refresh": str(new_refresh),
             }
         except Exception as e:
+            lgr.error(f"Erro ao atualizar token: {str(e)}")
             raise HttpFriendlyException(401, f"Token inválido ou expirado: {str(e)}")
     
     @staticmethod

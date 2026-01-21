@@ -3,6 +3,7 @@ import os
 from django.core.management import call_command
 from django.core.management.base import BaseCommand
 from django.db import connection
+from django.db.utils import OperationalError
 
 from config import ENV, PROD
 
@@ -17,12 +18,16 @@ class Command(BaseCommand):
 
         should_seed = options.get('seed', False)
 
-        with connection.cursor() as cursor:
-            cursor.execute("PRAGMA writable_schema = 1;")
-            cursor.execute("delete from sqlite_master where type in ('table', 'index', 'trigger');")
-            cursor.execute("PRAGMA writable_schema = 0;")
-            cursor.execute("VACUUM;")
-            cursor.execute("PRAGMA INTEGRITY_CHECK;")
+        try:
+            with connection.cursor() as cursor:
+                cursor.execute("PRAGMA writable_schema = 1;")
+                cursor.execute("delete from sqlite_master where type in ('table', 'index', 'trigger');")
+                cursor.execute("PRAGMA writable_schema = 0;")
+                cursor.execute("VACUUM;")
+                cursor.execute("PRAGMA INTEGRITY_CHECK;")
+        except OperationalError as e:
+            self.stdout.write(self.style.ERROR(f'Erro ao resetar o banco de dados: {e}'))
+            self.stdout.write(self.style.ERROR(f'Prosseguindo apenas com a remoção das migrations...'))
 
         # Deletando todos os arquivos de migrations
         prefix = __file__.split('management')[0] + 'migrations/'

@@ -1,7 +1,12 @@
 from datetime import datetime
 
 from app.schemas import BaseSchema, OutSchema
+from app.models import User
 
+class AdminInSchema(BaseSchema):
+    cpf_cnpj: str
+    is_active: bool = True
+    staff_level: str = User.StaffLevel.ADMIN
 
 class UserInSchema(BaseSchema):
     cpf_cnpj: str

@@ -29,9 +29,14 @@ class CustomJWTAuth(JWTAuth):
             if not token_type or not entity_id:
                 raise HttpFriendlyException(401, "Token inválido")
 
-            if token_type == 'user':
+            if token_type in ['user', 'admin']:
                 user: User = self.get_user(entity_id, request, validated_token)
-                lgr.info(f"Usuário autenticado: {user.id} ({user.payer.name}) na rota {request.path}")
+                
+                id_string = f"{user.id}"
+                if user.staff_level != User.StaffLevel.ADMIN:
+                    id_string += f" ({user.payer.name})"
+                
+                lgr.info(f"Usuário autenticado: {id_string} na rota {request.path}")
                 return user
             elif token_type == 'system':
                 consumer: ApiConsumer = self.get_api_consumer(entity_id, request, validated_token)
@@ -79,6 +84,12 @@ class CustomJWTAuth(JWTAuth):
             para algum tipo de filtragem, como permitir staff
         """
         return False
+
+
+class AllowAdminAuth(CustomJWTAuth):
+
+    def allow_user(self, user: User) -> bool:
+        return user.staff_level == User.StaffLevel.ADMIN
 
 
 class AllowHumansAuth(CustomJWTAuth):

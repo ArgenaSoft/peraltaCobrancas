@@ -34,7 +34,7 @@ def endpoint(log_action: str | None = None):
                 lgr.exception(e)
                 lgr.error(format_exc())
                 if ENV == DEV:
-                    raise
+                    raise e
                 response = ReturnSchema(message="Erro interno.", code=500)
 
             return response.code, response.model_dump()

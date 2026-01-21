@@ -6,7 +6,7 @@ services:
     ports:
       - "8000:8000"
     volumes:   # Apenas em Dev
-      - ./back:/app/back
+      - ./back:/app
     env_file:
       - ./back/.env
     networks:

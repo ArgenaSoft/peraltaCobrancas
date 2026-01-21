@@ -10,3 +10,6 @@ static/src/output.css
 local_config.py
 media/
 .env
+*.csv
+*.zip
+*.txt

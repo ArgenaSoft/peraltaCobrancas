@@ -6,18 +6,19 @@ from ninja import NinjaAPI
 from ninja.responses import Response
 from ninja.errors import ValidationError
 
-from app.api.payer_api import payer_router
-from app.api.user_api import user_router
-from app.api.auth_api import auth_router
-from app.api.creditor_api import creditor_router
 from app.api.agreement_api import agreement_router
-from app.api.installment_api import installment_router
+from app.api.auth_api import auth_router
 from app.api.boleto_api import boleto_router
+from app.api.creditor_api import creditor_router
+from app.api.installment_api import installment_router
 from app.api.login_history_api import login_history_router
+from app.api.payer_api import payer_router
+from app.api.spreadsheet_api import spreadsheet_router
+from app.api.user_api import user_router
 from app.exceptions import HttpFriendlyException
 from app.schemas import ReturnSchema
 from config import DEV, ENV
-from core.auth import CustomJWTAuth
+from core.auth import AllowAdminAuth, CustomJWTAuth
 
 
 lgr = logging.getLogger(__name__)
@@ -75,3 +76,4 @@ api.add_router('/agreement', agreement_router)
 api.add_router('/installment', installment_router)
 api.add_router('/boleto', boleto_router)
 api.add_router('/login_history', login_history_router)
+api.add_router('/admin/spreadsheet', spreadsheet_router, auth=AllowAdminAuth())

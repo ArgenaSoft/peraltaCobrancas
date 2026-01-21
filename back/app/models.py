@@ -74,10 +74,6 @@ class Authenticatable(BaseModel):
         return True
 
     @property
-    def is_anonymous(self):
-        return False
-
-    @property
     def identification(self):
         raise NotImplementedError("Subclasses must implement the identification property")
 
@@ -86,11 +82,15 @@ class Authenticatable(BaseModel):
 
 
 class UserManager(BaseUserManager):
-    def create_user(self, cpf_cnpj, **extra_fields):
+    def create_user(self, cpf_cnpj, password=None, **extra_fields):
         if not cpf_cnpj:
             raise ValueError("CPF/CNPJ é obrigatório")
         user = self.model(cpf_cnpj=cpf_cnpj, **extra_fields)
-        user.set_unusable_password()  # não usamos senha
+        if password:
+            user.set_password(password)
+        else:
+            user.set_unusable_password()
+
         user.save(using=self._db)
         return user
 
@@ -102,15 +102,19 @@ class User(AbstractBaseUser, Authenticatable):
         Atributos:
             - cpf_cnpj: CPF/CNPJ do Usuário.
             - is_active: Indica se o Usuário está ativo ou não.
-            - staff_level: Nível de acesso do Usuário (Funcionário ou
-            Administrador).
+            - staff_level: Nível de acesso do Usuário (customer, admin).
     """
+    class StaffLevel:
+        CUSTOMER = 'customer'
+        ADMIN = 'admin'
+
     READABLE_NAME = 'Usuário'
     USERNAME_FIELD = 'cpf_cnpj'
     is_human = True
 
     cpf_cnpj = models.CharField(max_length=11, unique=True)
     is_active = models.BooleanField(default=True)
+    staff_level = models.CharField(default='customer')
     objects = UserManager()
 
     def __str__(self):

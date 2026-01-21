@@ -14,7 +14,6 @@ from app.schemas.user_schemas import UserGetCodeSchema, UserWaitToGetCodeSchema
 from app.sms_api import send_sms
 from config import DEV, ENV
 
-
 lgr = logging.getLogger(__name__)
 user_router = CustomRouter(tags=["Usuários"])
 

@@ -7,6 +7,11 @@ class LoginSchema(BaseSchema):
     code: str
 
 
+class AdminLoginSchema(BaseSchema):
+    cpf_cnpj: str
+    password: str
+
+
 class TokenOutSchema(BaseSchema):
     access: str
     refresh: str

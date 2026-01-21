@@ -20,7 +20,7 @@ from config import AWS_ACCESS_KEY_ID as AAKI, AWS_SECRET_ACCESS_KEY as ASAK, \
     AWS_STORAGE_BUCKET_NAME as ASBN, AWS_S3_FILE_OVERWRITE as ASFO, \
     AWS_S3_ENDPOINT_URL as ASEU, AWS_S3_REGION_NAME as ASRN, \
     AWS_S3_SIGNATURE_VERSION as ASSV, AWS_DEFAULT_ACL as ADA, \
-    USING_AWS as UA
+    USING_AWS as UA, ENV, DEV, PROD
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -54,6 +54,7 @@ INSTALLED_APPS = [
 ]
 
 MIDDLEWARE = [
+    'corsheaders.middleware.CorsMiddleware',
     'core.custom_request.InjectActorOnRequestMiddleware',
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
@@ -62,7 +63,6 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
-    'corsheaders.middleware.CorsMiddleware',
 ]
 
 ROOT_URLCONF = 'core.urls'
@@ -87,6 +87,10 @@ WSGI_APPLICATION = 'core.wsgi.application'
 
 # Database
 # https://docs.djangoproject.com/en/5.2/ref/settings/#databases
+
+# Certifica de que a pasta data existe
+data_path = BASE_DIR / 'data'
+data_path.mkdir(parents=True, exist_ok=True)
 
 DATABASES = {
     'default': {
@@ -133,10 +137,12 @@ LOGGING = {
         'app': {
             'handlers': ['console', 'file', 'audit'],
             'level': logging.DEBUG,
+            'propagate': False
         },
         '': {
             'handlers': ['console', 'file'],
             'level': logging.INFO,
+            'propagate': False
         },
     },
 }
@@ -204,7 +210,7 @@ CORS_ALLOW_ALL_ORIGINS = True
 MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
-SEND_SMS = True
+SEND_SMS = not ENV == DEV
 
 USING_AWS = UA
 AWS_ACCESS_KEY_ID = AAKI
