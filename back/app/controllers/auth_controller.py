@@ -23,7 +23,9 @@ class AuthController:
         except User.DoesNotExist:
             raise HttpFriendlyException(401, "CPF/CNPJ inválido.")
 
-        print(user.check_password(schema.password))
+        if user.staff_level != "admin":
+            raise HttpFriendlyException(401, "Usuário não é administrador.")
+
         if user.check_password(schema.password):
             token = cls.get_token(user.id, "admin")
             return token

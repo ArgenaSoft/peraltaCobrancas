@@ -30,3 +30,8 @@ class ShouldWaitToGenerateAnotherCode(HttpFriendlyException):
             f"Aguarde {beautify_timedelta(wait_time)} para gerar um novo código",
             {"wait_time_seconds": wait_time.total_seconds()}
         )
+
+
+class InvalidCsvDelimiterException(HttpFriendlyException):
+    def __init__(self, message: str = "Delimitador CSV inválido. Use vírgula (,) ou ponto e vírgula (;) como delimitador."):
+        super().__init__(400, message)

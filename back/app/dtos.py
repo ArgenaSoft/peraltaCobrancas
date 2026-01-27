@@ -1,8 +1,12 @@
 from datetime import date
-from typing import List, Optional
-from pydantic import BaseModel
+import logging
+from typing import Dict, List, Optional
+from pydantic import BaseModel, PrivateAttr, computed_field
 
 from app.models import Creditor, Installment, User
+
+
+lgr = logging.getLogger(__name__)
 
 
 class BoletoDTO(BaseModel):
@@ -108,9 +112,14 @@ class CreditorDTO(BaseModel):
 
 class SpreadsheetDTO(BaseModel):
     payers: List[PayerDTO]
-    creditors: List[CreditorDTO]
+    _creditor_cache: Dict[str, CreditorDTO] = PrivateAttr(default_factory=dict)
     errors: List[str]
     warnings: List[str]
+
+    @computed_field
+    @property
+    def creditors(self) -> List[CreditorDTO]:
+        return list(self._creditor_cache.values())
 
     def add_node(self, payer: PayerDTO, agreement: Optional[AgreementDTO] = None, installment: Optional[InstallmentDTO] = None):
         # Adiciona o pagador se não existir
@@ -131,3 +140,29 @@ class SpreadsheetDTO(BaseModel):
                 existing_installment = next((i for i in existing_agreement.installments if i.number == installment.number), None)
                 if not existing_installment:
                     existing_agreement.installments.append(installment)
+    
+    def add_creditor(self, creditor: CreditorDTO):
+        lgr.debug("====================")
+        lgr.debug(self._creditor_cache)
+        lgr.debug("====================")
+        if creditor.name not in self._creditor_cache:
+            self._creditor_cache[creditor.name] = creditor
+            return
+        
+        lgr.debug(f"Credor {creditor.name} já existe nos resultados, não adicionando novamente.")
+
+    @classmethod
+    def from_json(cls, data: Dict) -> 'SpreadsheetDTO':
+        # Reconstrói o DTO a partir dos dados JSON
+        dto = cls(
+            payers=[PayerDTO(**payer) for payer in data.get('payers', [])],
+            errors=data.get('errors', []),
+            warnings=data.get('warnings', []),
+        )
+
+        # Reconstrói o cache de credores
+        for creditor in data.get('creditors', []):
+            creditor_dto = CreditorDTO(**creditor)
+            dto._creditor_cache[creditor_dto.name] = creditor_dto
+
+        return dto

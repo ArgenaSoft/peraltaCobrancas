@@ -23,8 +23,17 @@ class UserFactory(TimestampedModelFactory):
     class Meta:
         model = User
 
-    password = factory.Faker('password')
+    password = "replaced"
     cpf_cnpj = factory.Faker('numerify', text='###########')
+    staff_level = 'customer'
+
+    @classmethod
+    def create(cls, **kwargs):
+        password = kwargs.pop('password', cls.password)
+        user = super().create(**kwargs)
+        user.set_password(password)
+        user.save()
+        return user
 
 
 class PayerFactory(TimestampedModelFactory):

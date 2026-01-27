@@ -348,7 +348,7 @@ class LoginHistory(BaseModel):
     phone_used = models.CharField(max_length=20, blank=True)
 
     def __str__(self):
-        if self.user.payer:
+        if hasattr(self.user, 'payer') and self.user.payer:
             return f"{self.user.payer.name} - {self.timestamp}"
         else:
             return f"{self.user} - {self.timestamp}"

@@ -1,6 +1,7 @@
 import csv
 from datetime import date, datetime
 from enum import Enum
+from io import TextIOWrapper
 import logging
 import os
 from pathlib import Path
@@ -16,6 +17,7 @@ from app.controllers.payer_controller import PayerController
 from app.controllers.agreement_controller import AgreementController
 from app.controllers.installment_controller import InstallmentController
 from app.dtos import AgreementDTO, BoletoDTO, CreditorDTO, InstallmentDTO, PayerDTO, SpreadsheetDTO, UserDTO
+from app.exceptions import HttpFriendlyException, InvalidCsvDelimiterException
 from app.models import Agreement, Boleto, Creditor, Installment, Payer
 from app.schemas.agreement_schemas import AgreementInSchema
 from app.schemas.boleto_schemas import BoletoInSchema
@@ -80,8 +82,7 @@ class SpreadsheetController:
             SpreadsheetDTO: Objeto contendo todos os itens a serem criados
         """
         result_data = SpreadsheetDTO(**{
-            "creditors": [], "payers": [],
-            "errors": [], "warnings": []
+            "payers": [],"errors": [], "warnings": []
         })
         
         try:
@@ -93,10 +94,11 @@ class SpreadsheetController:
             
             # Lê os PDFs de boleto disponíveis
             boletos_pdfs = cls._read_boletos(operation_uuid)
-            
             # Processa cada linha da planilha
-            with open(spreadsheet_path, "r", encoding="utf-8") as file:
-                reader = csv.reader(file)
+            with open(spreadsheet_path, "r", encoding="latin-1") as file:
+                delimiter = cls._determine_csv_delimiter(file)
+
+                reader = csv.reader(file, delimiter=delimiter)
                 next(reader)  # Pula o cabeçalho
                 
                 process_cache: Cache = {
@@ -106,19 +108,102 @@ class SpreadsheetController:
                     "installments": {}
                 }
                 for line_num, row in enumerate(reader, start=2):
+                    lgr.debug("Processando linha %d: %s", line_num, row)
                     try:
                         cls._process_line(row, boletos_pdfs, result_data, line_num, process_cache)
                     except Exception as e:
                         error_msg = f"Erro na linha {line_num}: {str(e)}"
                         lgr.error(error_msg)
                         result_data.errors.append(error_msg)
-            
+        except HttpFriendlyException as hfe:
+            error_msg = f"Erro ao processar planilha: {hfe.message}"
+            lgr.error(error_msg)
+            raise hfe
         except Exception as e:
             error_msg = f"Erro ao processar planilha: {str(e)}"
             lgr.error(error_msg)
             result_data.errors.append(error_msg)
 
+        f_not_in_db = open(Path(MEDIA_ROOT) / f"{operation_uuid}/not_in_db.csv", 'w')
+        f_in_db = open(Path(MEDIA_ROOT) / f"{operation_uuid}/in_db.csv", 'w')
+
+        writer_db = csv.writer(f_in_db)
+        writer_not_db = csv.writer(f_not_in_db)
+        writer_not_db.writerow(['Nome', 'Documento'])
+        writer_db.writerow(['Nome', 'Documento'])
+
+        result_data.payers = sorted(result_data.payers, key=lambda x: x.name)
+
+        for p in result_data.payers:
+            if p.readonly:
+                writer_db.writerow([p.name, p.user.cpf_cnpj])
+            else:
+                writer_not_db.writerow([p.name, p.user.cpf_cnpj])
+
+        f_not_in_db.close()
+        f_in_db.close()
+
         return result_data
+
+    @classmethod
+    def save_results_to_database(cls, job_id: str, data: SaveSpreadsheetSchema) -> None:
+        """
+            Salva os resultados processados no banco de dados.
+
+            Args:
+                job_id: ID do job de processamento
+                data: Dados processados a serem salvos
+        """
+        new_creditors: Dict[str, Creditor] = {}
+        for raw_creditor in data.creditors:
+            if raw_creditor.deleted:
+                continue
+
+            creditor_schema = CreditorInSchema(
+                **raw_creditor.model_dump()
+            )
+            new_creditors[raw_creditor.name] = CreditorController.create(creditor_schema)
+
+        for raw_payer in data.payers:
+            if raw_payer.deleted:
+                continue
+            
+            if list(filter(lambda a: not a.deleted, raw_payer.agreements)) == []:
+                lgr.debug("Nenhum acordo válido para o pagador, pulando...")
+                continue
+
+            if not raw_payer.readonly:
+                lgr.debug(f"Criando pagador {raw_payer.user.cpf_cnpj}")
+                payer_schema: PayerInSchema = PayerInSchema(
+                    **raw_payer.model_dump(), 
+                    cpf_cnpj=raw_payer.user.cpf_cnpj
+                )
+                saved_payer = PayerController.create(payer_schema)
+            else:
+                lgr.debug(f"Buscando pagador {raw_payer.user.cpf_cnpj} existente")
+                saved_payer = PayerController.get(silent=False, user__cpf_cnpj=raw_payer.user.cpf_cnpj)
+
+            cls._save_agreements(saved_payer, new_creditors, raw_payer.agreements)
+
+    @classmethod
+    def _determine_csv_delimiter(cls, file: TextIOWrapper) -> str:
+        """
+        Determina o delimitador do CSV com base nas primeiras linhas do arquivo.
+        """
+        sample = file.readline()
+        file.seek(0)  # Reseta o ponteiro do arquivo após a leitura
+
+        semicolon_count = sample.count(";")
+        comma_count = sample.count(",")
+        if semicolon_count == 9:
+            return ";"
+        elif comma_count == 9 or sample[-2] == ",":
+            # o sample[-2] coloquei pois fiz um teste adicionando uma linha em 
+            # uma planilha, e por algum motivo o libreoffice adicionou uma 
+            # vírgula no fim da primeira linha. Melhor prevenir
+            return ","
+        else:
+            raise InvalidCsvDelimiterException()
 
     @classmethod
     def _process_line(cls, row: List[str], boletos: Dict[str, Dict[int, BoletoPdf]], result: SpreadsheetDTO, line_num: int, cache: Cache) -> None:
@@ -155,15 +240,13 @@ class SpreadsheetController:
             if is_new:
                 result.add_node(payer)
 
-
             creditor: CreditorDTO
             creditor, is_new = cls._get_creditor_from_line(cache, row_data)
             if is_new:
-                result.creditors.append(creditor)
+                result.add_creditor(creditor)
 
             agreement: AgreementDTO
             agreement, is_new = cls._get_agreement_from_line(cache, row_data)
-            print(f"{agreement.number} é novo: {is_new} ===========")
             if is_new:
                 result.add_node(payer, agreement)
 
@@ -171,6 +254,8 @@ class SpreadsheetController:
             installment, is_new = cls._get_installment_from_line(cache, row_data)
             if is_new:
                 result.add_node(payer, agreement, installment)
+                # Caso o credor já exista no banco, não foi adicionado antes.
+                result.add_creditor(creditor)
 
             # O boleto sempre será salvo (caso seja enviado o PDF)
             boleto: Optional[BoletoDTO] = None
@@ -215,7 +300,7 @@ class SpreadsheetController:
             payer = cache['payers'][document]
             lgr.debug(f"Usando pagador em cache para CPF/CNPJ {document}")
         else:
-            db_payer = PayerController.get(silent=True, user__cpf_cnpj=document)
+            db_payer = PayerController.get(silent=True, user__cpf_cnpj__contains=document)
             if not db_payer:
                 is_new = True
                 payer = PayerDTO(
@@ -375,7 +460,6 @@ class SpreadsheetController:
 
         return data
 
-    # Métodos utilitários
     @staticmethod
     def _sanitize_agreement_number(raw_agr: str) -> str:
         """Remove caracteres não numéricos do número do acordo."""
@@ -402,59 +486,31 @@ class SpreadsheetController:
         
         day, month, year = parts
         return datetime(int(year), int(month), int(day)).date()
- 
-    @classmethod
-    def save_results_to_database(cls, job_id: str, data: SaveSpreadsheetSchema) -> None:
-        """
-            Salva os resultados processados no banco de dados.
-
-            Args:
-                job_id: ID do job de processamento
-                data: Dados processados a serem salvos
-        """
-        creditors: Dict[str, Creditor] = {}
-        for raw_creditor in data.creditors:
-            if raw_creditor.deleted:
-                continue
-
-            creditor_schema = CreditorInSchema(
-                **raw_creditor.model_dump()
-            )
-            creditors[raw_creditor.name] = CreditorController.create(creditor_schema)
-
-        for raw_payer in data.payers:
-            if raw_payer.deleted:
-                continue
-            
-            if filter(lambda a: not a.deleted, raw_payer.agreements) == []:
-                lgr.debug("Nenhum acordo válido para o pagador, pulando...")
-                continue
-
-            if not raw_payer.readonly:
-                lgr.debug(f"Criando pagador {raw_payer.user.cpf_cnpj}")
-                payer_schema: PayerInSchema = PayerInSchema(
-                    **raw_payer.model_dump(), 
-                    cpf_cnpj=raw_payer.user.cpf_cnpj
-                )
-                saved_payer = PayerController.create(payer_schema)
-            else:
-                lgr.debug(f"Buscando pagador {raw_payer.user.cpf_cnpj} existente")
-                saved_payer = PayerController.get(silent=False, user__cpf_cnpj=raw_payer.user.cpf_cnpj)
-
-            cls._save_agreements(saved_payer, creditors, raw_payer.agreements)
 
     @classmethod
-    def _save_agreements(cls, payer: Payer, creditors: Dict[str, Creditor], raw_agreements: List[AgreementSchema]) -> None:
+    def _save_agreements(cls, payer: Payer, new_creditors: Dict[str, Creditor], raw_agreements: List[AgreementSchema]) -> None:
         for raw_agree in raw_agreements:
             if raw_agree.deleted:
                 continue
 
             if not raw_agree.readonly:
                 lgr.debug(f"Criando acordo {raw_agree.number} para pagador {payer.user.cpf_cnpj}")
+                
+                creditor = new_creditors.get(
+                    raw_agree.creditor_name,
+                    CreditorController.get(silent=False, name=raw_agree.creditor_name)
+                )
+                
+                if not creditor:
+                    raise HttpFriendlyException(
+                        404,
+                        f"Credor {raw_agree.creditor_name} não encontrado ao criar acordo {raw_agree.number}"
+                    )
+
                 agreement_schema: AgreementInSchema = AgreementInSchema(
                     **raw_agree.model_dump(),
                     payer=payer.id,
-                    creditor=creditors[raw_agree.creditor_name].id
+                    creditor=new_creditors[raw_agree.creditor_name].id
                 )
 
                 saved_agreement = AgreementController.create(agreement_schema)

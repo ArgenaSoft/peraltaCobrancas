@@ -22,18 +22,17 @@ export default function AdminPage() {
         if (response.code == 201) {
             emitSnack("Sucesso", "Planilha processada com sucesso.","info");
             router.push("admin/spreadsheet_results/" + response.data?.job_id);
-        }else if(response.code == 201){
-            emitSnack("Atenção", response.message,"info");
-
+        }else if(response.code == 200 && response.message) {
+            emitSnack("", response.message, "info");
         } else {
-            emitSnack("Erro", response.message ?? "Erro ao processar planilha.","error");
+            emitSnack("Erro", "Erro ao processar planilha.","error");
         }
     }
 
     return (
         <div>
+            <div className="flex flex-col gap-4 items-center">
             <h1 className="text-black text-4xl mb-10">Olá, {user?.username}</h1>
-            <div className="flex flex-col gap-4 items-center h-screen">
                 <div className="flex flex-col gap-4">
                     <div className="text-black flex gap-2 items-center">
                         <FileInput label="Selecionar planilha" name="spreadsheet" accept=".csv" callback={setSpreadsheet}/>

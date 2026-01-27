@@ -37,7 +37,11 @@ def endpoint(log_action: str | None = None):
                     raise e
                 response = ReturnSchema(message="Erro interno.", code=500)
 
-            return response.code, response.model_dump()
+            teste = response.code, response
+            print(response.code)
+            print(response.model_dump())
+            print('---------------')
+            return teste
 
         return wrapper
     return decorator

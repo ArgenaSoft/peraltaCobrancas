@@ -23,7 +23,7 @@ lgr = logging.getLogger(__name__)
 spreadsheet_router = CustomRouter(tags=["Planilhas"])
 
 
-@spreadsheet_router.post('/process', response={201: ReturnSchema[ProcessSpreadsheetResponse]})
+@spreadsheet_router.post('/process', response={201: ReturnSchema[ProcessSpreadsheetResponse], 200: ReturnSchema})
 @endpoint("Processar planilha")
 def process_spreadsheet(
     request: CustomRequest,
@@ -52,9 +52,9 @@ def process_spreadsheet(
                 code=200,
                 message='Não existem novas informações a serem processadas!'
             )
+        
         # Salva o resultado em JSON usando o método model_dump do Pydantic
         results_json = results.model_dump(mode='json')
-
 
         default_storage.save(
             f'{operation_uuid}/results.json',
@@ -93,8 +93,7 @@ def get_spreadsheet_results(
             results_data = json.load(f)
 
         # Reconstrói o DTO a partir dos dados JSON
-        results_dto = SpreadsheetDTO.model_validate(results_data)
-
+        results_dto = SpreadsheetDTO.from_json(results_data)
         return ReturnSchema(
             code=200,
             data=results_dto
