@@ -11,6 +11,7 @@ from django.core.files.base import ContentFile
 from ninja import File, UploadedFile
 
 from app.api import CustomRouter, endpoint
+from app.controllers.installment_controller import InstallmentController
 from app.controllers.spreadsheet_controller import SpreadsheetController
 from app.dtos import SpreadsheetDTO
 from app.schemas import ReturnSchema
@@ -43,6 +44,9 @@ def process_spreadsheet(
 
         # Salva a planilha
         default_storage.save(f'{operation_uuid}/spreadsheet.csv', s.file)
+
+        # Remove parcelas vencidas do banco
+        InstallmentController.remove_overdue_installments()
 
         # Processa a planilha
         results = SpreadsheetController.process_spreadsheet(operation_uuid)
