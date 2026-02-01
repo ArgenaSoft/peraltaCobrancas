@@ -1,9 +1,9 @@
 'use client';
 import { createContext, useEffect, useMemo, useState } from "react";
 import { callLogin, callAdminLogin, callRefresh, LoginReturn } from "../api/authApi";
-import { useRouter, usePathname } from "next/navigation";
+import { useRouter } from "next/navigation";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faArrowRightFromBracket, faArrowLeft, faHouse } from "@fortawesome/free-solid-svg-icons";
+import { faArrowRightFromBracket, faHouse } from "@fortawesome/free-solid-svg-icons";
 import { ApiResponse, UserTokens } from "../types";
 import { registerRefreshHandler } from "../authTokenManager";
 
@@ -118,7 +118,7 @@ export const AuthProvider = ({ children }: any) => {
         <AuthContext.Provider value={useMemo(() => ({ login, adminLogin, refresh, user, ready }), [login, user])}>
             <div className="min-h-screen">
                 {isClient && user &&
-                    <div className="flex justify-between sticky top-0 left-0 w-full min-h-fit bg-dark-blue p-4 mb-10">
+                    <div className="flex justify-between sticky top-0 left-0 w-full min-h-fit bg-dark-blue p-4 z-50">
                         <button
                             onClick={goHome}
                             className="text-white cursor-pointer"

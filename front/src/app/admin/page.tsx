@@ -5,11 +5,13 @@ import { FileInput } from "@/components/fileInput";
 import { emitSnack } from "@/components/snackEmitter";
 import { callSendFiles } from "@/components/api/spreadsheetApi";
 import { useRouter } from "next/navigation";
+import Loader from "@/components/loader";
 
 export default function AdminPage() {
     const { user } = useContext(AuthContext);
     const [spreadsheet, setSpreadsheet] = useState<File | null>(null);
     const [boletos, setBoletos] = useState<File | null>(null);
+    const [sending, setSending] = useState<boolean>(false);
     const router = useRouter();
     
     async function sendFiles() {
@@ -17,6 +19,7 @@ export default function AdminPage() {
             emitSnack("Dados faltantes", "Selecione ambos os arquivos.","error");
             return;
         }
+        setSending(true);
 
         let response = await callSendFiles(spreadsheet, boletos);
         if (response.code == 201) {
@@ -41,11 +44,12 @@ export default function AdminPage() {
                 </div>
 
                 <button 
-                    className={`bg-dark-blue rounded-lg p-3 text-lg cursor-pointer`} 
+                    className={`bg-dark-blue rounded-lg p-3 text-lg cursor-pointer ${sending ? "opacity-50 cursor-not-allowed" : ""}`} 
                     type="submit"
                     onClick={sendFiles}
+                    disabled={sending}
                 >
-                    Processar planilha
+                    {sending ? <Loader /> : "Processar planilha"}
                 </button>
             </div>
         </div>

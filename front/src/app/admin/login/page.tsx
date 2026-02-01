@@ -41,7 +41,6 @@ export default function LoginPage() {
         <img src="/img/logo-blue.png" alt="Logo" />
       </div>
       <div className="flex flex-col items-center gap-2">
-        {process.env.NEXT_PUBLIC_API_URL}
         <TextInput mask="___.___.___-__" replacement={{ _: /\d/ }} placeholder="CPF/CNPJ" value={cpf_cnpj} callback={setCpfCnpj} />
         <TextInput isPassword={true} placeholder="Senha" value={password} callback={setPassword} />
 
