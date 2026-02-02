@@ -84,7 +84,7 @@ export default function SpreadsheetResultsPage() {
   }
 
   return (
-    <div className="h-screen max-h-screen flex flex-col overflow-hidden">
+    <div className="h-[80vh] max-h-screen flex flex-col overflow-hidden">
       <div className="text-black flex flex-col items-center justify-center p-2 flex-1 min-h-0">
         <h1 className="text-[35px] flex-shrink-0 mb-4">Confirmar dados</h1>
 
