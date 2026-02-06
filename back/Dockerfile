@@ -16,8 +16,8 @@ WORKDIR /app
 COPY . .
 
 # Instala as dependências do projeto
-RUN uv sync && \
-    uv add
+RUN pip install uv && \
+    uv sync
 
 # Copia o script de entrada e torna-o executável
 COPY /entrypoint.sh /entrypoint.sh

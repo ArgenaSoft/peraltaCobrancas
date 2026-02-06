@@ -124,25 +124,7 @@ class SpreadsheetController:
             lgr.error(error_msg)
             result_data.errors.append(error_msg)
 
-        f_not_in_db = open(Path(MEDIA_ROOT) / f"{operation_uuid}/not_in_db.csv", 'w')
-        f_in_db = open(Path(MEDIA_ROOT) / f"{operation_uuid}/in_db.csv", 'w')
-
-        writer_db = csv.writer(f_in_db)
-        writer_not_db = csv.writer(f_not_in_db)
-        writer_not_db.writerow(['Nome', 'Documento'])
-        writer_db.writerow(['Nome', 'Documento'])
-
         result_data.payers = sorted(result_data.payers, key=lambda x: x.name)
-
-        for p in result_data.payers:
-            if p.readonly:
-                writer_db.writerow([p.name, p.user.cpf_cnpj])
-            else:
-                writer_not_db.writerow([p.name, p.user.cpf_cnpj])
-
-        f_not_in_db.close()
-        f_in_db.close()
-
         return result_data
 
     @classmethod
