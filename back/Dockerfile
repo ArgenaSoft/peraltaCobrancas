@@ -1,32 +1,25 @@
-FROM python:3.12-alpine
+FROM python:3.12-slim
 
-# Instala dependências do sistema
-RUN apk add --no-cache \
-    build-base \
-    libpq \
-    linux-headers \
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    build-essential \
+    libpq-dev \
     libffi-dev \
-    openssl-dev \
-    curl
+    libssl-dev \
+    curl \
+ && rm -rf /var/lib/apt/lists/*
 
-# Diretório de trabalho
 WORKDIR /app
 
-# Copia o restante da aplicação
+COPY pyproject.toml uv.lock ./
+RUN pip install --no-cache-dir uv && uv sync
+
 COPY . .
 
-# Instala as dependências do projeto
-RUN pip install uv && \
-    uv sync
-
-# Copia o script de entrada e torna-o executável
-COPY /entrypoint.sh /entrypoint.sh
+COPY entrypoint.sh /entrypoint.sh
 RUN chmod +x /entrypoint.sh
-ENTRYPOINT ["/entrypoint.sh"]
 
-# Define variável de ambiente
 ENV PYTHONDONTWRITEBYTECODE=1
 ENV PYTHONUNBUFFERED=1
 
-CMD ["gunicorn", "core.wsgi:application", "--bind", "0.0.0.0:8000"]
-
+ENTRYPOINT ["/entrypoint.sh"]
+CMD ["uv", "run", "gunicorn", "core.wsgi:application", "--bind", "0.0.0.0:8000"]
