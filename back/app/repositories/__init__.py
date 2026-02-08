@@ -1,5 +1,6 @@
 import logging
 from django.db.models.query import QuerySet
+from django.core.exceptions import FieldError
 
 from typing import Dict, Generic, List, Optional, Type, TypeVar
 from app.exceptions import HttpFriendlyException
@@ -113,6 +114,15 @@ class BaseRepository(Generic[T]):
         Retorna:
             - QuerySet com as instâncias correspondentes.
         """
+
+        # Verifica se existe valores booleanos passados como string e converte para booleano
+        for key, value in kwargs.items():
+            if isinstance(value, str):
+                if value.lower() == 'true':
+                    kwargs[key] = True
+                elif value.lower() == 'false':
+                    kwargs[key] = False
+
         try:
             qs = cls.model.objects.filter(**kwargs)
 
@@ -128,6 +138,8 @@ class BaseRepository(Generic[T]):
             return qs
         except cls.model.DoesNotExist:
             raise HttpFriendlyException(404, f"{cls.model.READABLE_NAME} não encontrado")
+        except FieldError as e:
+            raise HttpFriendlyException(400, f"Campo(s) inválido(s) para {cls.model.READABLE_NAME}: {str(e)}")
 
     @classmethod
     def filter_first(cls, **kwargs) -> T:
