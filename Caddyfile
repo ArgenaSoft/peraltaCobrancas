@@ -1,0 +1,15 @@
+boleto.peraltacobrancas.com.br {
+
+    handle /media/* {
+        root * /peralta
+        file_server
+    }
+
+    handle /api/* {
+        reverse_proxy back:8000
+    }
+
+    handle {
+        reverse_proxy front:3000
+    }
+}
