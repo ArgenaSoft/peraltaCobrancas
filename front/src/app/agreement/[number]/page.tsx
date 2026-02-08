@@ -90,7 +90,7 @@ export default function AgreementPage() {
 
     function getPdfUrl(uri: string): string {
         if (!uri) return "";
-        return process.env.NEXT_PUBLIC_API_URL + uri;
+        return process.env.NEXT_PUBLIC_API_URL + '/api' + uri;
     }
 
     function getMoreInfoWppUrl(agreement: Agreement, installment: Installment): string {
