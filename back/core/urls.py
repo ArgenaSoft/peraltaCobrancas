@@ -26,5 +26,6 @@ urlpatterns = [
     path('api/', api.urls)
 ]
 
+# Os arquivos são servidos pelo Caddy em produção
 if ENV == DEV:
-    urlpatterns += static('api/' + settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
