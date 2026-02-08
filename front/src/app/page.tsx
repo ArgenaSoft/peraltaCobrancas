@@ -13,10 +13,20 @@ function AgreementComponent(agreement: Readonly<HomeAgreement>) {
     router.push(`/agreement/${agreement.number}`);
   }
 
+
+  if (agreement.installments.length === 0) {
+    return (
+      <div className="flex flex-col rounded-2xl border-1 border-white p-2">
+        <h3 className="text-xl">{agreement.creditor.name}</h3>
+        <span className="text-md ml-4">Nenhuma parcela com boleto encontrada</span>
+        <span className="text-lg self-end cursor-pointer" onClick={handleAgreementClick}>Ver acordo -&gt;</span>
+      </div>
+    );
+  }
+
   const orderedInstallments = agreement.installments.toSorted(
     (a, b) => { return parseLocalDate(a.due_date).getTime() - parseLocalDate(b.due_date).getTime() }
   );
-
 
   // Sempre terá essa parcela pendente pois o backend só envia acordos abertos
   let lastPendingInstallment = orderedInstallments.find((installment) => installment.boleto.status === "pending") as Installment;

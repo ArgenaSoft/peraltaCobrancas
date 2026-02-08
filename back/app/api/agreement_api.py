@@ -55,7 +55,7 @@ def list_agreement(request: CustomRequest, data: Query[ListSchema]):
 
 @agreement_router.delete('/{int:agreement_id}', response={200: ReturnSchema})
 @endpoint(None)
-def delete_payer(request: CustomRequest, agreement_id: int):
+def delete_agreement(request: CustomRequest, agreement_id: int):
     lgr.info(f"Ator {request.actor.identification} (ID: {request.actor.id}) está deletando o acordo {agreement_id}")
     AgreementController.delete(id=agreement_id)
 
