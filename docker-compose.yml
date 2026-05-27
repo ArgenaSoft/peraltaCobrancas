@@ -1,5 +1,6 @@
 services:
   back:
+    restart: unless-stopped
     build:
       context: ./back
       dockerfile: Dockerfile
@@ -9,6 +10,7 @@ services:
       - ./back/media:/app/media
       - /data:/app/data
   front:
+    restart: unless-stopped
     build:
       context: ./front
       dockerfile: Dockerfile
@@ -16,9 +18,9 @@ services:
       - ./front/.env
 
   caddy:
+    restart: unless-stopped
     container_name: caddy
     image: caddy
-    restart: always
     ports:
       - 80:80
       - 443:443
@@ -27,3 +29,4 @@ services:
       - ./caddy-data:/data
       - ./Caddyfile:/etc/caddy/Caddyfile
       - ./back/media:/peralta/media
+      - ./caddy-log:/log
