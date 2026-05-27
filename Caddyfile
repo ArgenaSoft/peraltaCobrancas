@@ -1,4 +1,6 @@
 boleto.peraltacobrancas.com.br {
+    @block_server_actions header Next-Action *
+    respond @block_server_actions 403
 
     handle /media/* {
         root * /peralta
