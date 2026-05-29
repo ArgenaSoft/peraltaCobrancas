@@ -29,7 +29,7 @@ export default function RouterProvider({children,}: Readonly<{children: React.Re
   if(user || pathname.includes('login')) {
     return <>{children}</>;
   } else {
-    return <span className="text-black">Erro no routing. Contate a administração e informe esta mensagem</span>;
+    return <span className="text-black">Carregando usuário...</span>;
   }
 
 }

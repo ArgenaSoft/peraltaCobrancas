@@ -141,7 +141,7 @@ export const AuthProvider = ({ children }: any) => {
                     </div>
 
                 }
-                <div className={`${isClient && user ? "px-[40px]" : ""}`}>
+                <div className={`${isClient && user ? "px-8" : ""} mt-8`}>
                     {children}
                 </div>
             </div>

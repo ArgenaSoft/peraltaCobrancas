@@ -109,6 +109,10 @@ export default function AgreementPage() {
         return `https://wa.me/${process.env.NEXT_PUBLIC_WPP_NUMBER}?text=${encodeURIComponent(message)}`;
     }
 
+    function strong(text: string){
+        return <strong>{text}</strong>;
+    }
+
     if (!agreement || !agreement.id || !agreement.installments) {
         return (
             <div className="flex flex-col gap-4 text-black justify-center items-center h-screen">
@@ -121,11 +125,12 @@ export default function AgreementPage() {
 
     let now = new Date();
     return (
-        <div className="flex flex-col text-black justify-center items-start">
+        <div className="flex flex-col text-black justify-center gap-2 items-start">
             <h1 className="text-4xl mb-3">Acordo com <strong>{agreement.creditor.name}</strong></h1>
-            <h2 className="text-lg opacity-50">Sinistro {number}</h2>
-            <h2 className="text-lg opacity-50">{agreement.installments.length} parcelas</h2>
-            <div className="flex flex-col gap-4 mt-4 w-full">
+            <h2 className="text-lg opacity-50">
+                Sinistro {number} - {agreement.installments.length} parcela{agreement.installments.length !== 1 ? 's' : ''}</h2>
+            <h2 className="text-md italic opacity-50">{strong("Obs:")} Se o boleto exigir {strong("senha")}, basta digitar somente os {strong("5 primeiros dígitos do seu CPF")}</h2>
+            <div className="flex flex-col gap-4 w-full">
                 {agreement.installments.slice().reverse().map((installment, index) => {
                     index = agreement.installments.length - index; // Inverte o índice
 
@@ -141,7 +146,7 @@ export default function AgreementPage() {
                     if(installment.boleto){
                         isPending = installment.boleto.status === "pending";
                         isLate = dueDate < now && isPending;
-                        // agreement.creditor.reissue_margin  é um inteiro indicando o número de dias antes do vencimento quando o boleto já deve ser reemitido
+                        // agreement.creditor.reissue_margin é um inteiro indicando o número de dias antes do vencimento quando o boleto já deve ser reemitido
                         if(isLate && (dueDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24) <= agreement.creditor.reissue_margin){
                             crossedReissueMargin = true;
                         }
