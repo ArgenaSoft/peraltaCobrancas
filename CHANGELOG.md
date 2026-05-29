@@ -1,4 +1,4 @@
-## 0.1.0 (2026-05-29)
+## 2.1.0 (2026-05-29)
 
 ### Feat
 
@@ -9,3 +9,11 @@
 - Volume nomeado errado
 - Faltou verificar se era client ou server antes de acessar isLogged fix: stale state no componente de Snackbar
 - Requirements faltava biblioteca.
+
+### Feat
+
+- Inserção de dados por planilha
+
+### Feat
+
+- Aplicação inicial
