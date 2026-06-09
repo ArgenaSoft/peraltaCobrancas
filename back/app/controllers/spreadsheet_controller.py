@@ -200,7 +200,21 @@ class SpreadsheetController:
             cache: Cache para evitar buscas repetidas no banco de dados
         """
         try:
+            # Valida que a linha tem colunas suficientes
+            required_cols = max(m.value for m in ColumnOrder) + 1
+            if len(row) < required_cols:
+                # identifica quais colunas (pelos nomes do enum) estão faltando
+                missing_cols = [m.name for m in ColumnOrder if m.value >= len(row)]
+                msg = (
+                    f"Linha {line_num} possui colunas insuficientes: esperado {required_cols}, "
+                    f"encontrado {len(row)}; colunas faltando: {', '.join(missing_cols)}"
+                )
+                lgr.error(msg)
+                result.errors.append(msg)
+                return
+
             # Extrai dados da linha
+            # Telefone será os 11 primeiros dígitos do CPF/CNPJ, pois não temos essa informação na planilha.
             document = cls._sanitize_cpf_cnpj(row[ColumnOrder.CPF_CNPJ.value])
             row_data: RowData = {
                 "creditor_name": row[ColumnOrder.CREDITOR.value].strip(),
@@ -213,8 +227,9 @@ class SpreadsheetController:
             }
 
             # Validações básicas
-            if None in row_data.values() or "" in row_data.values():
-                result.errors.append(f"Linha {line_num} possui campos obrigatórios em branco")
+            empties = any(v is None or (isinstance(v, str) and v.strip() == "") for v in row_data.values())
+            if empties:
+                result.errors.append(f"Linha {line_num} possui campos obrigatórios em branco ou apenas espaços")
                 return
             
             payer: PayerDTO
@@ -241,7 +256,9 @@ class SpreadsheetController:
 
             # O boleto sempre será salvo (caso seja enviado o PDF)
             boleto: Optional[BoletoDTO] = None
-            agreement_installments = boletos.get(agreement.number, {})
+            # Normaliza o número do acordo antes de buscar nos PDFs lidos
+            agreement_key = cls._sanitize_agreement_number(str(agreement.number))
+            agreement_installments = boletos.get(agreement_key, {})
             if not agreement_installments:
                 result.warnings.append(
                     f"Linha {line_num}: Acordo {agreement.number} não possui boletos no ZIP"
@@ -258,7 +275,8 @@ class SpreadsheetController:
                         f"Linha {line_num}: Parcela {installment.number} do acordo {agreement.number} não possui boleto no ZIP"
                     )
                     lgr.debug(f"Parcela {installment.number} do acordo {agreement.number} não possui boleto no ZIP")
-            installment.boleto = boleto
+
+                installment.boleto = boleto
 
 
         except Exception as e:
@@ -282,6 +300,7 @@ class SpreadsheetController:
             payer = cache['payers'][document]
             lgr.debug(f"Usando pagador em cache para CPF/CNPJ {document}")
         else:
+            # Uso contains pois quem exportar a planilha pode ter formatado o documento como int e nao str
             db_payer = PayerController.get(silent=True, user__cpf_cnpj__contains=document)
             if not db_payer:
                 is_new = True
@@ -534,11 +553,23 @@ class SpreadsheetController:
     
     @classmethod
     def _save_boleto(cls, installment: Installment, boleto: BoletoSchema):
-        with open(boleto.path, 'rb') as boleto_file:
-            boleto_schema: BoletoInSchema = BoletoInSchema(
-                pdf=boleto_file,
-                installment=installment.id,
-                status=Boleto.Status.PENDING
-            )
-            lgr.debug(f"Criando boleto para parcela {installment.number} do acordo {installment.agreement.number}")
-            BoletoController.create(boleto_schema)
+        try:
+            boleto_path = Path(boleto.path)
+            if not boleto_path.exists() or not boleto_path.is_file():
+                lgr.error(f"Arquivo do boleto não encontrado: {boleto_path} (acordo={getattr(installment.agreement, 'number', None)} parcela={installment.number})")
+                raise HttpFriendlyException(404, f"Arquivo do boleto não encontrado: {boleto_path}")
+
+            lgr.debug(f"Salvando boleto: agreement={getattr(installment.agreement, 'number', None)} installment={installment.number} path={boleto_path}")
+            with open(boleto_path, 'rb') as boleto_file:
+                boleto_schema: BoletoInSchema = BoletoInSchema(
+                    pdf=boleto_file,
+                    installment=installment.id,
+                    status=Boleto.Status.PENDING
+                )
+                BoletoController.create(boleto_schema)
+        except HttpFriendlyException:
+            # Propaga HttpFriendlyException sem re-logar duplicadamente
+            raise
+        except Exception as e:
+            lgr.exception(f"Erro ao salvar boleto (acordo={getattr(installment.agreement, 'number', None)} parcela={getattr(installment, 'number', None)} path={getattr(boleto, 'path', None)}): {e}")
+            raise

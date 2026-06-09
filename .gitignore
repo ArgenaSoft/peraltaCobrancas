@@ -1,0 +1,8 @@
+compose.yml
+docker-compose.yml
+*.log
+*.txt
+*.json
+*.ipynb
+back.log*
+front.log*
