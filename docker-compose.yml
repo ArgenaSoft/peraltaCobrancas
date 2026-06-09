@@ -9,6 +9,7 @@ services:
     volumes:
       - ./back/media:/app/media
       - /data:/app/data
+      - ./logs:/app/logs
   front:
     restart: unless-stopped
     build:

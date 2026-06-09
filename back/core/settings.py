@@ -99,6 +99,7 @@ DATABASES = {
     }
 }
 
+(BASE_DIR / 'logs').mkdir(exist_ok=True)
 
 LOGGING = {
     'version': 1,
@@ -110,27 +111,27 @@ LOGGING = {
         },
     },
     'handlers': {
-            'console': {
-                'level': logging.DEBUG,
-                'class': 'logging.StreamHandler',
-                'formatter': 'verbose'
-            },
-            'file': {
-                'level': logging.DEBUG,
-                'class': 'logging.FileHandler',
-                'filename': '/'.join(
-                    [f"{BASE_DIR.as_posix()}", "back.log"]
-                ),
-                'formatter': 'verbose'
-            },
-            'audit': {
-                'level': logging.INFO,
-                'class': 'logging.FileHandler',
-                'filename': '/'.join(
-                    [f"{BASE_DIR.as_posix()}", "audit.log"]
-                ),
-                'formatter': 'verbose'
-            },
+        'console': {
+            'level': logging.DEBUG,
+            'class': 'logging.StreamHandler',
+            'formatter': 'verbose'
+        },
+        'file': {
+            'level': logging.DEBUG,
+            'class': 'logging.handlers.RotatingFileHandler',
+            'filename': BASE_DIR / 'logs' / 'back.log',
+            'maxBytes': 1024 * 1024 * 10,  # 10 MB
+            'backupCount': 5,
+            'formatter': 'verbose'
+        },
+        'audit': {
+            'level': logging.INFO,
+            'class': 'logging.handlers.RotatingFileHandler',
+            'filename': BASE_DIR / 'logs' / 'audit.log',
+            'maxBytes': 1024 * 1024 * 10,  # 10 MB
+            'backupCount': 5,
+            'formatter': 'verbose'
+        },
     },
     'loggers': {
         # Começa com app para pegar apenas os logs gerados dentro de back/app
