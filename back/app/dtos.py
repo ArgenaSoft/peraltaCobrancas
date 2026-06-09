@@ -140,7 +140,9 @@ class SpreadsheetDTO(BaseModel):
                 existing_installment = next((i for i in existing_agreement.installments if i.number == installment.number), None)
                 if not existing_installment:
                     existing_agreement.installments.append(installment)
-    
+                elif installment.boleto:
+                    existing_installment.boleto = installment.boleto  # Atualiza o boleto se a parcela já existir
+
     def add_creditor(self, creditor: CreditorDTO):
         lgr.debug("====================")
         lgr.debug(self._creditor_cache)

@@ -269,14 +269,15 @@ class SpreadsheetController:
                     boleto = BoletoDTO(
                         path=boleto_data["filepath"],
                     )
+                    installment.boleto = boleto
+                    if not is_new:
+                        result.add_node(payer, agreement, installment)
                     lgr.debug(f"Boleto adicionado ao cache para acordo {agreement.number} parcela {installment.number}")
                 else:
                     result.warnings.append(
                         f"Linha {line_num}: Parcela {installment.number} do acordo {agreement.number} não possui boleto no ZIP"
                     )
                     lgr.debug(f"Parcela {installment.number} do acordo {agreement.number} não possui boleto no ZIP")
-
-                installment.boleto = boleto
 
 
         except Exception as e:
