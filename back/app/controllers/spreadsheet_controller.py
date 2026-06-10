@@ -68,53 +68,39 @@ class RowData(TypedDict):
 
 
 class SpreadsheetController:
-    
+
     @classmethod
     def process_spreadsheet(cls, operation_uuid: UUID) -> SpreadsheetDTO:
-        """
-        Processa a planilha e retorna todos os itens que precisam ser criados
-        no banco de dados, sem efetivamente criá-los.
-        
-        Args:
-            operation_uuid: UUID da operação de upload
-            
-        Returns:
-            SpreadsheetDTO: Objeto contendo todos os itens a serem criados
-        """
         result_data = SpreadsheetDTO(**{
-            "payers": [],"errors": [], "warnings": []
+            "payers": [], "errors": [], "warnings": []
         })
-        
+
         try:
             spreadsheet_path = Path(MEDIA_ROOT) / f"{operation_uuid}/spreadsheet.csv"
-            
+
             if not spreadsheet_path.exists():
                 result_data.errors.append(f"Planilha não encontrada: {spreadsheet_path}")
                 return result_data
-            
-            # Lê os PDFs de boleto disponíveis
+
             boletos_pdfs = cls._read_boletos(operation_uuid)
-            # Processa cada linha da planilha
+
             with open(spreadsheet_path, "r", encoding="latin-1") as file:
                 delimiter = cls._determine_csv_delimiter(file)
-
                 reader = csv.reader(file, delimiter=delimiter)
-                next(reader)  # Pula o cabeçalho
-                
-                process_cache: Cache = {
-                    "payers": {},
-                    "agreements": {},
-                    "creditors": {},
-                    "installments": {}
-                }
-                for line_num, row in enumerate(reader, start=2):
-                    lgr.debug("Processando linha %d: %s", line_num, row)
-                    try:
-                        cls._process_line(row, boletos_pdfs, result_data, line_num, process_cache)
-                    except Exception as e:
-                        error_msg = f"Erro na linha {line_num}: {str(e)}"
-                        lgr.error(error_msg)
-                        result_data.errors.append(error_msg)
+                next(reader)
+                rows = list(reader)
+
+            process_cache = cls._build_cache(rows)
+
+            for line_num, row in enumerate(rows, start=2):
+                lgr.debug("Processando linha %d: %s", line_num, row)
+                try:
+                    cls._process_line(row, boletos_pdfs, result_data, line_num, process_cache)
+                except Exception as e:
+                    error_msg = f"Erro na linha {line_num}: {str(e)}"
+                    lgr.error(error_msg)
+                    result_data.errors.append(error_msg)
+
         except HttpFriendlyException as hfe:
             error_msg = f"Erro ao processar planilha: {hfe.message}"
             lgr.error(error_msg)
@@ -128,28 +114,64 @@ class SpreadsheetController:
         return result_data
 
     @classmethod
-    def save_results_to_database(cls, job_id: str, data: SaveSpreadsheetSchema) -> None:
+    def _build_cache(cls, rows: List[List[str]]) -> Cache:
         """
-            Salva os resultados processados no banco de dados.
+        Pré-carrega todos os dados relevantes do banco em 4 queries,
+        evitando N queries dentro do loop de processamento.
+        """
+        required_cols = max(m.value for m in ColumnOrder) + 1
+        agreement_numbers = set()
+        cpf_cnpjs = set()
+        creditor_names = set()
 
-            Args:
-                job_id: ID do job de processamento
-                data: Dados processados a serem salvos
-        """
+        for row in rows:
+            if len(row) < required_cols:
+                continue
+            agreement_numbers.add(cls._sanitize_agreement_number(row[ColumnOrder.CONTRACT.value]))
+            cpf_cnpjs.add(cls._sanitize_cpf_cnpj(row[ColumnOrder.CPF_CNPJ.value]))
+            creditor_names.add(row[ColumnOrder.CREDITOR.value].strip())
+
+        cache: Cache = {
+            "payers": {
+                p.user.cpf_cnpj: PayerDTO.from_database(p)
+                for p in PayerController.filter(user__cpf_cnpj__in=cpf_cnpjs)
+            },
+            "creditors": {
+                c.name: CreditorDTO.from_database(c)
+                for c in CreditorController.filter(name__in=creditor_names)
+            },
+            "agreements": {
+                a.number: AgreementDTO.from_database(a)
+                for a in AgreementController.filter(number__in=agreement_numbers)
+            },
+            "installments": {
+                (i.agreement.number, int(i.number)): InstallmentDTO.from_database(i)
+                for i in InstallmentController.filter(
+                    agreement__number__in=agreement_numbers
+                ).select_related('agreement')
+            },
+        }
+
+        lgr.debug(
+            "Cache pré-carregado: %d pagadores, %d credores, %d acordos, %d parcelas",
+            len(cache["payers"]), len(cache["creditors"]),
+            len(cache["agreements"]), len(cache["installments"])
+        )
+        return cache
+
+    @classmethod
+    def save_results_to_database(cls, job_id: str, data: SaveSpreadsheetSchema) -> None:
         new_creditors: Dict[str, Creditor] = {}
         for raw_creditor in data.creditors:
             if raw_creditor.deleted:
                 continue
-
-            creditor_schema = CreditorInSchema(
-                **raw_creditor.model_dump()
-            )
+            creditor_schema = CreditorInSchema(**raw_creditor.model_dump())
             new_creditors[raw_creditor.name] = CreditorController.create(creditor_schema)
 
         for raw_payer in data.payers:
             if raw_payer.deleted:
                 continue
-            
+
             if list(filter(lambda a: not a.deleted, raw_payer.agreements)) == []:
                 lgr.debug("Nenhum acordo válido para o pagador, pulando...")
                 continue
@@ -157,7 +179,7 @@ class SpreadsheetController:
             if not raw_payer.readonly:
                 lgr.debug(f"Criando pagador {raw_payer.user.cpf_cnpj}")
                 payer_schema: PayerInSchema = PayerInSchema(
-                    **raw_payer.model_dump(), 
+                    **raw_payer.model_dump(),
                     cpf_cnpj=raw_payer.user.cpf_cnpj
                 )
                 saved_payer = PayerController.create(payer_schema)
@@ -169,41 +191,23 @@ class SpreadsheetController:
 
     @classmethod
     def _determine_csv_delimiter(cls, file: TextIOWrapper) -> str:
-        """
-        Determina o delimitador do CSV com base nas primeiras linhas do arquivo.
-        """
         sample = file.readline()
-        file.seek(0)  # Reseta o ponteiro do arquivo após a leitura
+        file.seek(0)
 
         semicolon_count = sample.count(";")
         comma_count = sample.count(",")
         if semicolon_count == 9:
             return ";"
         elif comma_count == 9 or sample[-2] == ",":
-            # o sample[-2] coloquei pois fiz um teste adicionando uma linha em 
-            # uma planilha, e por algum motivo o libreoffice adicionou uma 
-            # vírgula no fim da primeira linha. Melhor prevenir
             return ","
         else:
             raise InvalidCsvDelimiterException()
 
     @classmethod
     def _process_line(cls, row: List[str], boletos: Dict[str, Dict[int, BoletoPdf]], result: SpreadsheetDTO, line_num: int, cache: Cache) -> None:
-        """
-        Processa uma linha da planilha e adiciona os itens necessários ao resultado.
-        
-        Args:
-            row: Linha da planilha
-            boletos: Dicionário com os boletos disponíveis
-            result: Resultado sendo construído
-            line_num: Número da linha (para logs)
-            cache: Cache para evitar buscas repetidas no banco de dados
-        """
         try:
-            # Valida que a linha tem colunas suficientes
             required_cols = max(m.value for m in ColumnOrder) + 1
             if len(row) < required_cols:
-                # identifica quais colunas (pelos nomes do enum) estão faltando
                 missing_cols = [m.name for m in ColumnOrder if m.value >= len(row)]
                 msg = (
                     f"Linha {line_num} possui colunas insuficientes: esperado {required_cols}, "
@@ -213,8 +217,6 @@ class SpreadsheetController:
                 result.errors.append(msg)
                 return
 
-            # Extrai dados da linha
-            # Telefone será os 11 primeiros dígitos do CPF/CNPJ, pois não temos essa informação na planilha.
             document = cls._sanitize_cpf_cnpj(row[ColumnOrder.CPF_CNPJ.value])
             row_data: RowData = {
                 "creditor_name": row[ColumnOrder.CREDITOR.value].strip(),
@@ -226,37 +228,28 @@ class SpreadsheetController:
                 "due_date_str": row[ColumnOrder.DUE_DATE.value].strip(),
             }
 
-            # Validações básicas
             empties = any(v is None or (isinstance(v, str) and v.strip() == "") for v in row_data.values())
             if empties:
                 result.errors.append(f"Linha {line_num} possui campos obrigatórios em branco ou apenas espaços")
                 return
-            
-            payer: PayerDTO
+
             payer, is_new = cls._get_payer_from_line(cache, row_data)
             if is_new:
                 result.add_node(payer)
 
-            creditor: CreditorDTO
-            creditor, is_new = cls._get_creditor_from_line(cache, row_data)
-            if is_new:
+            creditor, is_new_creditor = cls._get_creditor_from_line(cache, row_data)
+            if is_new_creditor:
                 result.add_creditor(creditor)
 
-            agreement: AgreementDTO
-            agreement, is_new = cls._get_agreement_from_line(cache, row_data)
-            if is_new:
+            agreement, is_new_agreement = cls._get_agreement_from_line(cache, row_data)
+            if is_new_agreement:
                 result.add_node(payer, agreement)
 
-            installment: InstallmentDTO
-            installment, is_new = cls._get_installment_from_line(cache, row_data)
-            if is_new:
+            installment, is_new_installment = cls._get_installment_from_line(cache, row_data)
+            if is_new_installment:
                 result.add_node(payer, agreement, installment)
-                # Caso o credor já exista no banco, não foi adicionado antes.
                 result.add_creditor(creditor)
 
-            # O boleto sempre será salvo (caso seja enviado o PDF)
-            boleto: Optional[BoletoDTO] = None
-            # Normaliza o número do acordo antes de buscar nos PDFs lidos
             agreement_key = cls._sanitize_agreement_number(str(agreement.number))
             agreement_installments = boletos.get(agreement_key, {})
             if not agreement_installments:
@@ -266,19 +259,16 @@ class SpreadsheetController:
             else:
                 boleto_data = agreement_installments.get(installment.number)
                 if boleto_data:
-                    boleto = BoletoDTO(
-                        path=boleto_data["filepath"],
-                    )
+                    boleto = BoletoDTO(path=boleto_data["filepath"])
                     installment.boleto = boleto
-                    if not is_new:
+                    if not is_new_installment:
                         result.add_node(payer, agreement, installment)
-                    lgr.debug(f"Boleto adicionado ao cache para acordo {agreement.number} parcela {installment.number}")
+                    lgr.debug(f"Boleto adicionado para acordo {agreement.number} parcela {installment.number}")
                 else:
                     result.warnings.append(
                         f"Linha {line_num}: Parcela {installment.number} do acordo {agreement.number} não possui boleto no ZIP"
                     )
                     lgr.debug(f"Parcela {installment.number} do acordo {agreement.number} não possui boleto no ZIP")
-
 
         except Exception as e:
             error_msg = f"Erro ao processar linha {line_num}: {str(e)}"
@@ -287,176 +277,91 @@ class SpreadsheetController:
 
     @classmethod
     def _get_payer_from_line(cls, cache: Cache, row_data: RowData) -> Tuple[PayerDTO, bool]:
-        """
-        Obtém o pagador a partir da linha da planilha, verificando o cache e o banco de dados.
-
-        Args:
-            cpf_cnpj: CPF/CNPJ do pagador
-            cache: Cache para evitar buscas repetidas no banco de dados
-            row_data: Dados extraídos da linha da planilha
-        """
         document = row_data['cpf_cnpj']
-        is_new = False
         if document in cache['payers']:
-            payer = cache['payers'][document]
             lgr.debug(f"Usando pagador em cache para CPF/CNPJ {document}")
-        else:
-            # Uso contains pois quem exportar a planilha pode ter formatado o documento como int e nao str
-            db_payer = PayerController.get(silent=True, user__cpf_cnpj__contains=document)
-            if not db_payer:
-                is_new = True
-                payer = PayerDTO(
-                    name=row_data['payer_name'],
-                    user=UserDTO(cpf_cnpj=document),
-                    phone=row_data['phone'],
-                    agreements=[]
-                )
-                lgr.debug(f"Pagador não encontrado no banco para CPF/CNPJ {document}, criando novo DTO")
-            else:
-                payer = PayerDTO.from_database(db_payer)
-                lgr.debug(f"Pagador encontrado no banco para CPF/CNPJ {document}")
+            return cache['payers'][document], False
 
-            cache['payers'][document] = payer
-            lgr.debug(f"Pagador adicionado ao cache para CPF/CNPJ {document}")
-        
+        is_new = True
+        payer = PayerDTO(
+            name=row_data['payer_name'],
+            user=UserDTO(cpf_cnpj=document),
+            phone=row_data['phone'],
+            agreements=[]
+        )
+        cache['payers'][document] = payer
+        lgr.debug(f"Pagador não encontrado no banco para CPF/CNPJ {document}, criando novo DTO")
         return payer, is_new
-    
+
     @classmethod
     def _get_creditor_from_line(cls, cache: Cache, row_data: RowData) -> Tuple[CreditorDTO, bool]:
-        """
-        Obtém o credor a partir da linha da planilha, verificando o cache e o banco de dados.
-        Args:
-            cache: Cache para evitar buscas repetidas no banco de dados
-            row_data: Dados extraídos da linha da planilha
-        """
-        is_new = False
         name = row_data['creditor_name']
         if name in cache['creditors']:
-            creditor = cache['creditors'][name]
             lgr.debug(f"Usando credor em cache para nome {name}")
-        else:
-            db_creditor = CreditorController.get(silent=True, name=name)
-            if not db_creditor:
-                is_new = True
-                creditor = CreditorDTO(
-                    name=name,
-                    reissue_margin=0  # Valor padrão
-                )
-                lgr.debug(f"Credor não encontrado no banco para nome {name}, criando novo DTO")
-            else:
-                creditor = CreditorDTO.from_database(db_creditor)
-                lgr.debug(f"Credor encontrado no banco para nome {name}")
+            return cache['creditors'][name], False
 
-            cache['creditors'][name] = creditor
-            lgr.debug(f"Credor adicionado ao cache para nome {name}")
-
-        return creditor, is_new
+        creditor = CreditorDTO(name=name, reissue_margin=0)
+        cache['creditors'][name] = creditor
+        lgr.debug(f"Credor não encontrado no banco para nome {name}, criando novo DTO")
+        return creditor, True
 
     @classmethod
     def _get_agreement_from_line(cls, cache: Cache, row_data: RowData) -> Tuple[AgreementDTO, bool]:
-        """
-        Obtém o acordo a partir da linha da planilha, verificando o cache e o banco de dados.
-        Args:
-            cache: Cache para evitar buscas repetidas no banco de dados
-            row_data: Dados extraídos da linha da planilha
-        """
-        is_new = False
-        document = row_data['cpf_cnpj']
-        creditor_name = row_data['creditor_name']
         number = row_data['agreement_num']
         if number in cache["agreements"]:
-            agreement = cache["agreements"][number]
             lgr.debug(f"Usando acordo em cache para número {number}")
-        else:
-            db_agreement = AgreementController.get(silent=True, number=number)
-            if not db_agreement:
-                is_new = True
-                agreement = AgreementDTO(
-                    number=number,
-                    payer_cpf_cnpj=document,
-                    creditor_name=creditor_name,
-                    installments=[]
-                )
-                lgr.debug(f"Acordo não encontrado no banco para número {number}, criando novo DTO")
-            else:
-                agreement = AgreementDTO.from_database(db_agreement)
-                lgr.debug(f"Acordo encontrado no banco para número {number}")
-            
-            cache["agreements"][number] = agreement
-            lgr.debug(f"Acordo adicionado ao cache para número {number}")
-        
-        return agreement, is_new
+            return cache["agreements"][number], False
+
+        agreement = AgreementDTO(
+            number=number,
+            payer_cpf_cnpj=row_data['cpf_cnpj'],
+            creditor_name=row_data['creditor_name'],
+            installments=[]
+        )
+        cache["agreements"][number] = agreement
+        lgr.debug(f"Acordo não encontrado no banco para número {number}, criando novo DTO")
+        return agreement, True
 
     @classmethod
     def _get_installment_from_line(cls, cache: Cache, row_data: RowData) -> Tuple[InstallmentDTO, bool]:
-        """
-        Obtém a parcela a partir da linha da planilha, verificando o cache e o
-        banco de dados.
-        Args:
-            cache: Cache para evitar buscas repetidas no banco de dados
-            row_data: Dados extraídos da linha da planilha
-        """
-        is_new = False
         agreement_num = row_data['agreement_num']
         installment_num = row_data['installment_num']
-        if (agreement_num, installment_num) in cache["installments"]:
-            installment = cache["installments"][(agreement_num, installment_num)]
-            lgr.debug(f"Usando parcela em cache para acordo {agreement_num} parcela {installment_num}")
-        else:
-            db_installment = InstallmentController.get(
-                silent=True,
-                agreement__number=agreement_num,
-                number=installment_num,
-            )
-            if not db_installment:
-                is_new = True
-                installment = InstallmentDTO(
-                    number=installment_num,
-                    agreement_num=agreement_num,
-                    due_date=cls._parse_due_date(row_data['due_date_str'])
-                )
-                lgr.debug(f"Parcela não encontrada no banco para acordo {agreement_num} parcela {installment_num}, criando novo DTO")
-            else:
-                installment = InstallmentDTO.from_database(db_installment)
-                lgr.debug(f"Parcela encontrada no banco para acordo {agreement_num} parcela {installment_num}")
-            
-            cache["installments"][(agreement_num, installment_num)] = installment
-            lgr.debug(f"Parcela adicionada ao cache para acordo {agreement_num} parcela {installment_num}")
+        key = (agreement_num, installment_num)
 
-        return installment, is_new
+        if key in cache["installments"]:
+            lgr.debug(f"Usando parcela em cache para acordo {agreement_num} parcela {installment_num}")
+            return cache["installments"][key], False
+
+        installment = InstallmentDTO(
+            number=installment_num,
+            agreement_num=agreement_num,
+            due_date=cls._parse_due_date(row_data['due_date_str'])
+        )
+        cache["installments"][key] = installment
+        lgr.debug(f"Parcela não encontrada no banco para acordo {agreement_num} parcela {installment_num}, criando novo DTO")
+        return installment, True
 
     @classmethod
     def _read_boletos(cls, operation_uuid: UUID) -> Dict[str, Dict[int, BoletoPdf]]:
-        """
-        Lê os PDFs de boleto disponíveis e organiza por acordo e parcela.
-
-        Returns:
-            Dicionário indexado por número do acordo, contendo dicionário 
-            indexado por número da parcela com informações do boleto.
-        """
         boletos_path = Path(MEDIA_ROOT) / f"{operation_uuid}/boletos"
 
         if not boletos_path.exists():
             lgr.warning(f"Diretório de boletos não encontrado: {boletos_path}")
             return {}
 
-        boletos = os.listdir(boletos_path)
         data: Dict[str, Dict[int, BoletoPdf]] = {}
-
-        for bol in boletos:
+        for bol in os.listdir(boletos_path):
             match = re.match(r'(.*) PARC (\d+).*', bol)
             if match:
                 agreement = cls._sanitize_agreement_number(match.group(1))
                 installment = int(match.group(2))
-                bol_data: BoletoPdf = {
+                if agreement not in data:
+                    data[agreement] = {}
+                data[agreement][installment] = {
                     "filepath": str(boletos_path / bol),
                     "agreement": agreement,
                     "installment": installment
                 }
-
-                if agreement not in data:
-                    data[agreement] = {}
-                data[agreement][installment] = bol_data
             else:
                 lgr.warning(f"Não foi possível extrair dados do arquivo: {bol}")
 
@@ -464,28 +369,23 @@ class SpreadsheetController:
 
     @staticmethod
     def _sanitize_agreement_number(raw_agr: str) -> str:
-        """Remove caracteres não numéricos do número do acordo."""
         return re.sub(r'\D', '', raw_agr)
 
     @staticmethod
     def _sanitize_cpf_cnpj(cpf_cnpj: str) -> str:
-        """Remove caracteres não numéricos do CPF/CNPJ."""
         return re.sub(r'\D', '', cpf_cnpj)
 
     @staticmethod
     def _extract_installment_number(installment_str: str) -> int:
-        """Extrai o número da parcela (formato pode ser 'X/Y' ou 'X')."""
         if '/' in installment_str:
             return int(installment_str.split('/')[0])
         return int(installment_str)
 
     @staticmethod
     def _parse_due_date(due_date_str: str) -> date:
-        """Converte string de data no formato DD/MM/YYYY para date."""
         parts = due_date_str.split('/')
         if len(parts) != 3:
             raise ValueError(f"Formato de data inválido: {due_date_str}")
-        
         day, month, year = parts
         return datetime(int(year), int(month), int(day)).date()
 
@@ -497,31 +397,24 @@ class SpreadsheetController:
 
             if not raw_agree.readonly:
                 lgr.debug(f"Criando acordo {raw_agree.number} para pagador {payer.user.cpf_cnpj}")
-                
                 creditor = new_creditors.get(
                     raw_agree.creditor_name,
                     CreditorController.get(silent=False, name=raw_agree.creditor_name)
                 )
-                
                 if not creditor:
                     raise HttpFriendlyException(
                         404,
                         f"Credor {raw_agree.creditor_name} não encontrado ao criar acordo {raw_agree.number}"
                     )
-
                 agreement_schema: AgreementInSchema = AgreementInSchema(
                     **raw_agree.model_dump(),
                     payer=payer.id,
                     creditor=new_creditors[raw_agree.creditor_name].id
                 )
-
                 saved_agreement = AgreementController.create(agreement_schema)
             else:
                 lgr.debug(f"Buscando acordo {raw_agree.number} existente")
-                saved_agreement = AgreementController.get(
-                    silent=False,
-                    number=raw_agree.number
-                )
+                saved_agreement = AgreementController.get(silent=False, number=raw_agree.number)
 
             cls._save_installments(saved_agreement, raw_agree.installments)
 
@@ -531,7 +424,6 @@ class SpreadsheetController:
             if raw_install.deleted:
                 continue
 
-            
             if not raw_install.readonly:
                 lgr.debug(f"Criando parcela {raw_install.number} para acordo {agreement.number}")
                 installment_schema = InstallmentInSchema(
@@ -539,7 +431,6 @@ class SpreadsheetController:
                     due_date=raw_install.due_date,
                     agreement=agreement.id
                 )
-
                 saved_installment = InstallmentController.create(installment_schema)
             else:
                 lgr.debug(f"Buscando parcela {raw_install.number} existente para acordo {agreement.number}")
@@ -551,7 +442,7 @@ class SpreadsheetController:
 
             if raw_install.boleto:
                 cls._save_boleto(saved_installment, raw_install.boleto)
-    
+
     @classmethod
     def _save_boleto(cls, installment: Installment, boleto: BoletoSchema):
         try:
@@ -569,7 +460,6 @@ class SpreadsheetController:
                 )
                 BoletoController.create(boleto_schema)
         except HttpFriendlyException:
-            # Propaga HttpFriendlyException sem re-logar duplicadamente
             raise
         except Exception as e:
             lgr.exception(f"Erro ao salvar boleto (acordo={getattr(installment.agreement, 'number', None)} parcela={getattr(installment, 'number', None)} path={getattr(boleto, 'path', None)}): {e}")
