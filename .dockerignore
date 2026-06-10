@@ -1,4 +1,4 @@
 .env
-back/media
-back/logs
-back/data
+media
+logs
+data
