@@ -1,1 +1,4 @@
 .env
+back/media
+back/logs
+back/data
