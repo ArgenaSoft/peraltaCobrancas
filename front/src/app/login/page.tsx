@@ -87,10 +87,11 @@ export default function LoginPage() {
             placeholder={isCpf ? "CPF" : "CNPJ"}
             value={cpf_cnpj}
             callback={setCpfCnpj}
+            autoComplete="username"
           />
         </div>
 
-        <TextInput classes="flex-1 min-w-0 w-full" mask="(__) _____-____" replacement={{ "_": /\d/ }} placeholder="Telefone" value={phone} callback={setPhone} />
+        <TextInput autoComplete="tel" classes="flex-1 min-w-0 w-full" mask="(__) _____-____" replacement={{ "_": /\d/ }} placeholder="Telefone" value={phone} callback={setPhone} />
 
         {codeSent &&
           <>
