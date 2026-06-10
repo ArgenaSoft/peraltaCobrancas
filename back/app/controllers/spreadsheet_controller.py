@@ -132,6 +132,8 @@ class SpreadsheetController:
             cpf_cnpjs.add(cls._sanitize_cpf_cnpj(row[ColumnOrder.CPF_CNPJ.value]))
             creditor_names.add(row[ColumnOrder.CREDITOR.value].strip())
 
+        lgr.debug("Pré-carregando cache: %d acordos, %d CPF/CNPJs, %d credores", len(agreement_numbers), len(cpf_cnpjs), len(creditor_names))
+
         cache: Cache = {
             "payers": {
                 p.user.cpf_cnpj: PayerDTO.from_database(p)
