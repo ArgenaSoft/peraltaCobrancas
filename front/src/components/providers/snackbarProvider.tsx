@@ -17,21 +17,28 @@ interface SnackbarProps extends SnackType {
     id: number;
 }
 
-const msg_levels: Record<string, string> = {
+const msg_levels_bg: Record<string, string> = {
     "success": "bg-green-500",
     "info": "bg-dark-blue",
     "error": "bg-burnt-red",
     "warning": "bg-yellow-500",
 }
 
+const msg_levels_color: Record<string, string> = {
+    "success": "text-black",
+    "info": "text-white",
+    "error": "text-white",
+    "warning": "text-black",
+}
+
 const Snackbar = (props: SnackbarProps) => {
     const callback = props.callback ?? (() => {});
 
     return (
-        <div className={`${msg_levels[props.level]} rounded-lg p-3 flex flex-row justify-between items-center gap-5`} onClick={() => callback(props.id)}>
+        <div className={`${msg_levels_bg[props.level]} rounded-lg p-3 flex flex-row justify-between items-center gap-5`} onClick={() => callback(props.id)}>
             <div className="flex flex-row items-center gap-3">
-                {props.title && <span className="font-bold text-[20px]">{props.title}</span>}
-                {props.message && <span className="mt-1 text-[15px]">{props.message}</span>}
+                {props.title && <span className={`font-bold text-[20px] ${msg_levels_color[props.level]}`}>{props.title}</span>}
+                {props.message && <span className={`mt-1 text-[15px] ${msg_levels_color[props.level]}`}>{props.message}</span>}
             </div>
         </div>
     );
