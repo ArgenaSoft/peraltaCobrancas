@@ -1,15 +1,16 @@
-import csv
 from datetime import date, datetime
 from enum import Enum
 from io import TextIOWrapper
-import logging
-import os
 from pathlib import Path
-import re
 from traceback import format_exc
-from typing import Dict, List, Optional, Tuple
+from typing import Dict, List, Tuple
 from typing_extensions import TypedDict
 from uuid import UUID
+import csv
+import logging
+import os
+import re
+import shutil
 
 from app.controllers.boleto_controller import BoletoController
 from app.controllers.creditor_controller import CreditorController
@@ -188,6 +189,18 @@ class SpreadsheetController:
                 saved_payer = PayerController.get(silent=False, user__cpf_cnpj=raw_payer.user.cpf_cnpj)
 
             cls._save_agreements(saved_payer, new_creditors, raw_payer.agreements)
+        
+        cls._cleanup_operation_files(job_id)
+
+    @classmethod
+    def _cleanup_operation_files(cls, operation_uuid: str) -> None:
+        operation_path = Path(MEDIA_ROOT) / str(operation_uuid)
+        if operation_path.exists():
+            shutil.rmtree(operation_path)
+            lgr.info(f"Arquivos temporários removidos: {operation_path}")
+        else:
+            lgr.warning(f"Diretório de operação não encontrado para limpeza: {operation_path}")
+
 
     @classmethod
     def _determine_csv_delimiter(cls, file: TextIOWrapper) -> str:
