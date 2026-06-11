@@ -86,7 +86,7 @@ class BoletoFactory(TimestampedModelFactory):
             content_type="application/pdf")
         agreement: Agreement = self.installment.agreement
 
-        return BoletoController._save_boleto_pdf(pdf, agreement.creditor.slug_name, agreement.slug_name, self.installment.slug_name)
+        return BoletoController.save_boleto_pdf(pdf, agreement.creditor.slug_name, agreement.slug_name, self.installment.slug_name)
 
 
 class ApiConsumerFactory(TimestampedModelFactory):

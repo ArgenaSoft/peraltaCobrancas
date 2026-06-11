@@ -3,7 +3,6 @@ from typing import IO
 
 from django.core.files.base import ContentFile
 from django.core.files.storage import default_storage
-from ninja import UploadedFile
 
 from app.controllers import BaseController
 from app.controllers.agreement_controller import AgreementController
@@ -11,7 +10,6 @@ from app.controllers.installment_controller import InstallmentController
 from app.models import Agreement, Boleto, Creditor, Installment
 from app.repositories.boleto_repository import BoletoRepository
 from app.schemas.boleto_schemas import BoletoInSchema, BoletoPatchInSchema
-from app.exceptions import HttpFriendlyException
 
 lgr =  logging.getLogger(__name__)
 
@@ -32,15 +30,16 @@ class BoletoController(BaseController[BoletoRepository, Boleto]):
             - Boleto: Acordo criado.
         """
         installment: Installment = InstallmentController.get(id=schema.installment)
-        if hasattr(installment, 'boleto'):
-            raise HttpFriendlyException(400, "Já existe um boleto para essa parcela")
+        if hasattr(installment, 'boleto') and installment.boleto:
+            installment.boleto.delete()
 
         agreement: Agreement = installment.agreement
         creditor: Creditor = agreement.creditor
 
-        path = cls._save_boleto_pdf(schema.pdf, creditor.slug_name, agreement.slug_name, installment.slug_name) # type: ignore
+        path = cls.save_boleto_pdf(schema.pdf, creditor.slug_name, agreement.slug_name, installment.slug_name) # type: ignore
 
         data = schema.model_dump()
+        lgr.debug(f"Dados do boleto a ser criado: {data}")
         data['pdf'] = path
         data['installment'] = installment
 
@@ -61,7 +60,7 @@ class BoletoController(BaseController[BoletoRepository, Boleto]):
             agreement: Agreement = installment.agreement
             creditor: Creditor = agreement.creditor
 
-            path = cls._save_boleto_pdf(schema.pdf, creditor.slug_name, agreement.slug_name, installment.slug_name)
+            path = cls.save_boleto_pdf(schema.pdf, creditor.slug_name, agreement.slug_name, installment.slug_name)
             data['pdf'] = path
 
         updated: Boleto = cls.REPOSITORY.update(instance, **data)
@@ -70,7 +69,7 @@ class BoletoController(BaseController[BoletoRepository, Boleto]):
         return updated
 
     @classmethod
-    def _save_boleto_pdf(cls, pdf: IO[bytes], creditor_name: str, agreement_name: str, installment_name: str) -> str:
+    def save_boleto_pdf(cls, pdf: IO[bytes], creditor_name: str, agreement_name: str, installment_name: str) -> str:
         """
         Salva o arquivo PDF do boleto no sistema de arquivos.
 

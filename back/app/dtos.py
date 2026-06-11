@@ -31,11 +31,12 @@ class InstallmentDTO(BaseModel):
 
     @classmethod
     def from_database(cls, installment: Installment) -> "InstallmentDTO":
-        if hasattr(installment, 'boleto'):
+        try:
             boleto_dto = BoletoDTO.from_database(installment.boleto)
-        else:
+        except Exception as e:
+            lgr.error(f"(A: {installment.agreement.id} P: {installment.id} Erro ao carregar boleto da parcela {installment.number}: {e}")
             boleto_dto = None
-
+        
         return cls(
             agreement_num=installment.agreement.number,
             number=int(installment.number),
@@ -144,9 +145,6 @@ class SpreadsheetDTO(BaseModel):
                     existing_installment.boleto = installment.boleto  # Atualiza o boleto se a parcela já existir
 
     def add_creditor(self, creditor: CreditorDTO):
-        lgr.debug("====================")
-        lgr.debug(self._creditor_cache)
-        lgr.debug("====================")
         if creditor.name not in self._creditor_cache:
             self._creditor_cache[creditor.name] = creditor
             return

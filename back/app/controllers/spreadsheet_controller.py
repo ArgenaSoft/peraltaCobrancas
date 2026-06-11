@@ -26,6 +26,7 @@ from app.schemas.creditor_schemas import CreditorInSchema
 from app.schemas.installment_schemas import InstallmentInSchema
 from app.schemas.payer_schemas import PayerInSchema
 from app.schemas.spreadsheet_schemas import AgreementSchema, BoletoSchema, InstallmentSchema, SaveSpreadsheetSchema
+from app.controllers.boleto_controller import BoletoController
 from core.settings import MEDIA_ROOT
 
 
@@ -151,7 +152,7 @@ class SpreadsheetController:
                 (i.agreement.number, int(i.number)): InstallmentDTO.from_database(i)
                 for i in InstallmentController.filter(
                     agreement__number__in=agreement_numbers
-                ).select_related('agreement')
+                ).select_related('agreement', 'boleto')
             },
         }
 
@@ -261,9 +262,6 @@ class SpreadsheetController:
                 result.add_node(payer, agreement)
 
             installment, is_new_installment = cls._get_installment_from_line(cache, row_data)
-            if is_new_installment:
-                result.add_node(payer, agreement, installment)
-                result.add_creditor(creditor)
 
             agreement_key = cls._sanitize_agreement_number(str(agreement.number))
             agreement_installments = boletos.get(agreement_key, {})
@@ -273,17 +271,18 @@ class SpreadsheetController:
                 )
             else:
                 boleto_data = agreement_installments.get(installment.number)
-                if boleto_data:
-                    boleto = BoletoDTO(path=boleto_data["filepath"])
-                    installment.boleto = boleto
-                    if not is_new_installment:
-                        result.add_node(payer, agreement, installment)
-                    lgr.debug(f"Boleto adicionado para acordo {agreement.number} parcela {installment.number}")
-                else:
+                if not boleto_data:
                     result.warnings.append(
                         f"Linha {line_num}: Parcela {installment.number} do acordo {agreement.number} não possui boleto no ZIP"
                     )
                     lgr.debug(f"Parcela {installment.number} do acordo {agreement.number} não possui boleto no ZIP")
+                    return
+
+                if is_new_installment or not installment.boleto:
+                    boleto = BoletoDTO(path=boleto_data["filepath"])
+                    installment.boleto = boleto
+                    result.add_node(payer, agreement, installment)
+                    result.add_creditor(creditor)
 
         except Exception as e:
             error_msg = f"Erro ao processar linha {line_num}: {str(e)}"
@@ -344,8 +343,11 @@ class SpreadsheetController:
         key = (agreement_num, installment_num)
 
         if key in cache["installments"]:
-            lgr.debug(f"Usando parcela em cache para acordo {agreement_num} parcela {installment_num}")
-            return cache["installments"][key], False
+            installment = cache["installments"][key]
+            lgr.debug(f"[CACHE HIT] acordo={agreement_num} parcela={installment_num} boleto={installment.boleto} readonly={installment.readonly}")
+            return installment, False
+
+        lgr.debug(f"[CACHE MISS] acordo={agreement_num} parcela={installment_num} | primeiras chaves: {list(cache['installments'].keys())[:3]}")
 
         installment = InstallmentDTO(
             number=installment_num,
@@ -353,7 +355,6 @@ class SpreadsheetController:
             due_date=cls._parse_due_date(row_data['due_date_str'])
         )
         cache["installments"][key] = installment
-        lgr.debug(f"Parcela não encontrada no banco para acordo {agreement_num} parcela {installment_num}, criando novo DTO")
         return installment, True
 
     @classmethod

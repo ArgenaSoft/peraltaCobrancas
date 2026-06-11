@@ -39,10 +39,12 @@ def process_spreadsheet(
 
     try:
         # Extrai os boletos
+        lgr.debug(f"Salvando arquivo de boletos para operação {operation_uuid}")
         with ZipFile(b.file) as zip_file:
             zip_file.extractall(Path(MEDIA_ROOT) / str(operation_uuid) / 'boletos')
 
         # Salva a planilha
+        lgr.debug(f"Salvando arquivo de planilha para operação {operation_uuid}")
         default_storage.save(f'{operation_uuid}/spreadsheet.csv', s.file)
 
         # Remove parcelas vencidas do banco
@@ -50,7 +52,7 @@ def process_spreadsheet(
 
         # Processa a planilha
         results = SpreadsheetController.process_spreadsheet(operation_uuid)
-        
+        lgr.debug(f"Resultados do processamento da planilha para operação {operation_uuid}: {len(results.payers)} pagadores, {len(results.creditors)} credores")
         if len(results.payers) == 0 and len(results.creditors) == 0:
             return ReturnSchema(
                 code=200,
