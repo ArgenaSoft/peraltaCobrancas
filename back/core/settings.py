@@ -123,20 +123,12 @@ LOGGING = {
             'maxBytes': 1024 * 1024 * 10,  # 10 MB
             'backupCount': 5,
             'formatter': 'verbose'
-        },
-        'audit': {
-            'level': logging.INFO,
-            'class': 'logging.handlers.RotatingFileHandler',
-            'filename': BASE_DIR / 'logs' / 'audit.log',
-            'maxBytes': 1024 * 1024 * 10,  # 10 MB
-            'backupCount': 5,
-            'formatter': 'verbose'
-        },
+        }
     },
     'loggers': {
         # Começa com app para pegar apenas os logs gerados dentro de back/app
         'app': {
-            'handlers': ['console', 'file', 'audit'],
+            'handlers': ['console', 'file'],
             'level': logging.DEBUG,
             'propagate': False
         },

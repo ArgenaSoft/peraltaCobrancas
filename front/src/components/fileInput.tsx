@@ -35,7 +35,7 @@ export function FileInput({ label = "Selecionar arquivo", accept, name, callback
 
       <button
         type="button"
-        className="rounded-md bg-gray p-1 border-black border-1"
+        className="rounded-md bg-white text-dark-blue p-1 border-dark-blue border-1"
         onClick={() => inputRef.current?.click()}
       >
         {fileName}
