@@ -30,6 +30,7 @@ async function callLogin(cpf_cnpj: string, phone: string, code: string): Promise
     if (axios.isAxiosError(error) && error.response) {
       return error.response.data as ApiResponse;
     }
+    console.log("Erro desconhecido ao fazer login:", error);
     throw error;
   }
 }

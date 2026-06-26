@@ -24,6 +24,8 @@ AWS_S3_SIGNATURE_VERSION = os.getenv('AWS_S3_SIGNATURE_VERSION', 's3v4')
 AWS_S3_FILE_OVERWRITE = bool(os.getenv('AWS_S3_FILE_OVERWRITE', 'False'))
 AWS_DEFAULT_ACL = os.getenv('AWS_DEFAULT_ACL', None)
 
+SHOW_SMS_CODE = os.getenv('SHOW_CODE', 'False').strip().lower() in ('1', 'true', 'yes')
+
 print("Está usando AWS?" , USING_AWS)
 if USING_AWS and (not AWS_ACCESS_KEY_ID or not AWS_SECRET_ACCESS_KEY or not AWS_STORAGE_BUCKET_NAME):
     raise Exception("Se for usar AWS, precisa configurar AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY e AWS_STORAGE_BUCKET_NAME")

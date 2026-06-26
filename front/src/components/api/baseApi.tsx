@@ -54,6 +54,10 @@ function createApi({ withAuth = false }: { withAuth?: boolean }): AxiosInstance 
         return Promise.reject(error);
       }
 
+      if (error.response) {
+        return Promise.resolve(error.response);
+      }
+
       return Promise.reject(error);
     }
   );

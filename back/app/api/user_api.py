@@ -12,7 +12,7 @@ from app.models import LoginCode, User
 from app.schemas import ReturnSchema
 from app.schemas.user_schemas import UserGetCodeSchema, UserWaitToGetCodeSchema
 from app.sms_api import send_sms
-from config import DEV, ENV
+from config import SHOW_SMS_CODE
 
 lgr = logging.getLogger(__name__)
 user_router = CustomRouter(tags=["Usuários"])
@@ -45,7 +45,7 @@ def get_code(request: WSGIRequest, data: Query[UserGetCodeSchema]):
     if not sent:
         return ReturnSchema(code=500, message="Não foi possível enviar o SMS. Peça o código para o suporte.")
 
-    if ENV == DEV:
+    if SHOW_SMS_CODE:
         print(f"Generated code: {code.code}")
         return_data = {"code": code.code}
 
