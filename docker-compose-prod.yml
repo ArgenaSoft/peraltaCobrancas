@@ -20,6 +20,10 @@ services:
       - ALL 
     cap_add:
       - NET_BIND_SERVICE
+    environment:
+      - HTTP_PROXY=http://squid:3128
+      - HTTPS_PROXY=http://squid:3128
+      - NO_PROXY=caddy,front,localhost
 
   front:
     restart: unless-stopped
@@ -60,6 +64,15 @@ services:
       - ALL
     cap_add:
       - NET_BIND_SERVICE
+
+  squid:
+    image: ubuntu/squid
+    networks:
+      - internal
+      - external
+    volumes:
+      - ./squid.conf:/etc/squid/squid.conf:ro
+    restart: unless-stopped
 
 networks:
   internal:
