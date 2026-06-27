@@ -39,7 +39,7 @@ class BoletoController(BaseController[BoletoRepository, Boleto]):
         path = cls.save_boleto_pdf(schema.pdf, creditor.slug_name, agreement.slug_name, installment.slug_name) # type: ignore
 
         data = schema.model_dump()
-        lgr.debug(f"Dados do boleto a ser criado: {data}")
+        lgr.debug(f"Criando boleto em {path}")
         data['pdf'] = path
         data['installment'] = installment
 
